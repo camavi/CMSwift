@@ -2319,6 +2319,8 @@
     field._select = root;
     field._dispose = root._dispose;
 
+    loadOptions();
+
     return field;
   }
   if (CMSwift.isDev?.()) {
