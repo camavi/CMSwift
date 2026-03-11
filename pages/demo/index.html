@@ -34,6 +34,9 @@
       .demo-section {
         margin-top: var(--cms-s-xs);
       }
+      .wrap-class .cms-control {
+        border: 1px solid red;
+      }
     </style>
   </head>
   <body>
@@ -70,7 +73,7 @@
           ],
         },
         _ui.Row(
-          _ui.Col({ class: "cms-gutter-sm" }, content.code),
+          _ui.Col({ class: "cms-gutter-sm", col: 12 }, content.code),
           _ui.Col(
             {
               col: 24,

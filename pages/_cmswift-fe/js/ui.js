@@ -362,7 +362,6 @@
     topLabel: "Label displayed above the control.",
     trapFocus: "Keeps focus trapped inside the dialog/popover.",
     type: "Variant or native input type.",
-    useInput: "Uses an input field to allow custom typing.",
     value: "Current value (controlled).",
     vertical: "Vertical orientation instead of horizontal.",
     warning: "Marks the component with warning state styling.",
@@ -1151,13 +1150,17 @@
       }, UI.Icon({ name: "close" })) : null;
 
       const clearNode = CMSwift.ui.renderSlot(slots, "clear", {
-        clear,
+
         disabled: !!props.disabled,
         readonly: !!props.readonly,
         hasValue: getHasValue()
       }, defaultClear);
 
       if (clearNode) {
+        clearNode.onclick = (e) => {
+          e.stopPropagation();
+          clear();
+        }
         renderSlotToArray(null, "default", {}, clearNode).forEach(n => control.appendChild(n));
       }
 
@@ -1642,7 +1645,7 @@
   }
 
   UI.Select = (props = {}) => {
-    const filterable = props.filterable || props.useInput;
+    const filterable = props.filterable;
     const isMulti = !!props.multiple || !!props.multi;
     const allowCustom = !!props.allowCustom || !!props.allowCustomValue;
     const slots = props.slots || {};
@@ -2344,7 +2347,6 @@
 
         clearable: "boolean",
         filterable: "boolean",
-        useInput: "boolean (alias filterable)",
         multiple: "boolean",
         multi: "boolean (alias multiple)",
         allowCustom: "boolean (consenti valori custom dal filtro)",

@@ -447,7 +447,7 @@
   }
 
   function isContentProp(key) {
-    return key === "innerHTML" || key === "innerText" || key === "textContent";
+    return key === "innerHTML" || key === "innerText" || key === "textContent" || key === "value";
   }
 
   function createElement(tag, ...args) {
@@ -464,7 +464,6 @@
     function setProp(key, value) {
       if (isContentProp(key)) {
         el[key] = value ?? "";
-        console.log("setProp", key, value);
         return;
       }
       if (key === "class") {
@@ -487,6 +486,17 @@
       if (typeof value === "function") {
         CMSwift.reactive.effect(() => {
           setProp(key, value());
+        });
+        return;
+      }
+      if (key === "value" && isRod(value) && tag === "input") {
+        CMSwift.reactive.effect(() => {
+          const next = value.value ?? "";
+          if (el.value !== String(next)) setProp("value", next);
+        });
+        el.addEventListener("input", () => {
+          const next = el.value;
+          if (value.value !== next) value.value = next;
         });
         return;
       }
@@ -3094,8 +3104,8 @@
     }
     return out;
   };
-  // DocTable genera una tabella di documentazione
 
+  // DocTable genera una tabella di documentazione
   CMSwift.ui.DocTable = (name) => {
     if (!CMSwift.isDev()) return _h.div(); // non fa niente in prod
 
@@ -3129,7 +3139,10 @@
               wrap: true,
               label: p.name,
               content: _h.div({ class: "cms-p-md" },
-                _h.p(_h.b("Type: "), p.type ? p.type.split("|").map((v) => _ui.Chip({ color: "secondary", dense: true }, v)) : "—"),
+                _h.p(
+                  _h.h3("Name: " + p.name),
+                  _h.div(_h.b("Type: "), p.type ? p.type.split("|").map((v) => _ui.Chip({ color: "secondary", dense: true }, v)) : "—")
+                ),
                 _h.p(_h.b("Default: "), _h.span(p.default == null ? "—" : String(p.default))),
                 _h.p(
                   _h.h3("Values: "),
@@ -3174,7 +3187,7 @@
             name: k, wrap: true, label: k, content:
               _h.div({ class: "cms-p-md", },
                 _h.div(
-                  _h.h3("Type: "),
+                  _h.h3("Name: " + k),
                   _h.div({ class: "cms-p-l-md" }, v.type || "—")
                 ),
                 _h.div(
