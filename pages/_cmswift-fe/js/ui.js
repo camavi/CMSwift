@@ -3520,6 +3520,8 @@
         topRight: "String|Node|Function|Array",
         bottomLeft: "String|Node|Function|Array",
         bottomRight: "String|Node|Function|Array",
+        centerLeft: "String|Node|Function|Array",
+        centerRight: "String|Node|Function|Array",
         left: "String|Node|Function|Array",
         right: "String|Node|Function|Array",
         slots: "{ label?, default?, notification?, topLeft?, topRight?, bottomLeft?, bottomRight?, left?, right? }",
@@ -3534,6 +3536,8 @@
         topRight: "Icon anchored top-right",
         bottomLeft: "Icon anchored bottom-left",
         bottomRight: "Icon anchored bottom-right",
+        centerLeft: "Icon anchored center-left",
+        centerRight: "Icon anchored center-right",
         left: "Icon anchored left",
         right: "Icon anchored right"
       },
