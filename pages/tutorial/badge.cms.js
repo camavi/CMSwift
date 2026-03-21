@@ -125,7 +125,7 @@ const listSample = {
       }, "Inbox"),
       _ui.Badge({
         color: "warning",
-        topLeft: "star",
+        bottomLeft: "star",
         slots: {
           right: () => _ui.Icon({ name: badgeEnergy[0]() > 90 ? "mode_heat" : "wb_incandescent", size: 13 }),
           label: () => `Energy ${badgeEnergy[0]()}%`
@@ -133,27 +133,26 @@ const listSample = {
       })
     ],
     sample: [
-      '/* custom label slot */',
       '_ui.Badge({',
       '  color: "secondary",',
       '  slots: {',
-      '    label: () => _h.span({ style: { display: "inline-flex", gap: "6px", alignItems: "center" } },',
-      '      _ui.Icon({ name: "theater_comedy", size: 13 }),',
-      '      "Scene Mode"',
-      '    )',
+      '    label: () => _h.span({ style: { display: "inline-flex", gap: "6px", alignItems: "center" } }, _ui.Icon({ name: "theater_comedy", size: 13 }), "Scene Mode")',
       '  }',
       '});',
       '',
-      '/* custom notification slot */',
       '_ui.Badge({',
       '  color: "primary",',
       '  notification: badgeNotifications,',
       '  slots: {',
-      '    notification: ({ notification }) => _h.span({ style: { minWidth: "22px", textAlign: "center", fontWeight: "700" } },',
-      '      notification > 9 ? "9+" : notification',
-      '    )',
+      '    notification: ({ notification }) => _h.span({ style: { minWidth: "22px", textAlign: "center", fontWeight: "700" } }, notification > 9 ? "9+" : notification)',
       '  }',
       '}, "Inbox");',
+      '',
+      '_ui.Badge({',
+      '  color: "warning",',
+      '  bottomLeft: "star",',
+      '  slots: {',
+      '    right: () => _ui.Icon({ name: badgeEnergy[0]() > 90 ? "mode_heat" : "wb_incandescent", size: 13 }),',
     ]
   },
   reactive: {
@@ -163,7 +162,7 @@ const listSample = {
           _ui.Badge({
             color: "primary",
             notification: badgeNotifications,
-            topRight: "mail",
+            bottomRight: "mail",
             label: () => badgeNotifications[0]() > 12 ? "Inbox on fire" : "Inbox"
           }),
           _ui.Badge({
@@ -215,7 +214,7 @@ const listSample = {
       '_ui.Badge({',
       '  color: "primary",',
       '  notification: badgeNotifications,',
-      '  topRight: "mail",',
+      '  bottomRight: "mail",',
       '  label: () => badgeNotifications[0]() > 12 ? "Inbox on fire" : "Inbox"',
       '});',
       '',

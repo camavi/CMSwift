@@ -43,6 +43,118 @@
     <div id="app"></div>
   </body>
   <script>
+    const listThemes = [
+      { label: "Default", icon: "label", iconRight: "sell" },
+      {
+        label: "Success",
+        color: "success",
+        icon: "task_alt",
+        iconRight: "verified",
+      },
+      {
+        label: "Warning",
+        color: "warning",
+        icon: "warning_amber",
+        iconRight: "priority_high",
+      },
+      {
+        label: "Danger",
+        color: "danger",
+        icon: "dangerous",
+        iconRight: "report",
+      },
+      {
+        label: "Info",
+        color: "info",
+        icon: "info",
+        iconRight: "tips_and_updates",
+      },
+      {
+        label: "Primary",
+        color: "primary",
+        icon: "rocket_launch",
+        iconRight: "bolt",
+      },
+      {
+        label: "Secondary",
+        color: "secondary",
+        icon: "palette",
+        iconRight: "auto_awesome",
+      },
+      {
+        label: "Dark",
+        color: "dark",
+        icon: "dark_mode",
+        iconRight: "nights_stay",
+      },
+      {
+        label: "Light",
+        color: "light",
+        icon: "light_mode",
+        iconRight: "wb_sunny",
+      },
+    ];
+
+    const buttonThemeMap = Object.fromEntries(
+      listThemes.map((theme) => [theme.label, theme]),
+    );
+
+    const sizeConfigs = [
+      { theme: "Success", label: "Success xxs", size: "xxs" },
+      { theme: "Success", label: "Success xs", size: "xs" },
+      { theme: "Warning", label: "Warning sm", size: "sm" },
+      { theme: "Danger", label: "Danger md", size: "md" },
+      { theme: "Info", label: "Info lg", size: "lg" },
+      { theme: "Primary", label: "Primary xl", size: "xl" },
+      { theme: "Secondary", label: "Secondary xxl", size: "xxl" },
+    ];
+
+    const iconModes = {
+      None: "both",
+      Success: "both",
+      Warning: "right",
+      Danger: "both",
+      Info: "both",
+      Primary: "both",
+      Secondary: "both",
+      Dark: "both",
+      Light: "both",
+    };
+
+    const gradientValues = [true, true, -90, 90, 1, 25, -25, 270, true];
+    const serializeValue = (value) =>
+      typeof value === "string" ? `"${value}"` : String(value);
+
+    const serializeOptions = (options) => {
+      const entries = Object.entries(options).filter(([key, value]) => value);
+      //remove la class
+      entries.splice(
+        entries.findIndex(([key]) => key === "class"),
+        1,
+      );
+      return entries
+        .map(([key, value]) => `${key}: ${serializeValue(value)}`)
+        .join(", ");
+    };
+
+    const getIconOptions = (theme, mode = "left") => {
+      const options = {};
+      if (mode === "left" || mode === "both") options.icon = theme.icon;
+      if (mode === "right" || mode === "both")
+        options.iconRight = theme.iconRight;
+      return options;
+    };
+
+    const makeOptions = (theme, extraOptions = {}, mode = "left") => {
+      const options = {};
+
+      if (theme.color) options.color = theme.color;
+
+      Object.assign(options, getIconOptions(theme, mode), extraOptions);
+
+      return options;
+    };
+
     const boxCode = (title, content) => {
       const openCode = _rod(false);
       return _ui.Card(
