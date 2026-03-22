@@ -225,6 +225,7 @@
     import { drawer } from "../tutorial/drawer.cms.js";
     import { badge } from "../tutorial/badge.cms.js";
     import { item } from "../tutorial/item.cms.js";
+    import { icon } from "../tutorial/icon.cms.js";
     function layoutPage(
       _content = null,
       _header = null,
@@ -390,7 +391,7 @@
         _ui.Footer(
           _h.div(
             "CMSwift UI Demo • Layout completo con componenti attivi",
-            _ui.Icon({ color: "red", name: "#heart" }),
+            _ui.Icon({ textColor: "red", name: "#heart" }),
           ),
         );
 
@@ -426,6 +427,7 @@
     CMSwift.router.add("/demo/component/radio", () => radio);
     CMSwift.router.add("/demo/component/badge", () => badge);
     CMSwift.router.add("/demo/component/item", () => item);
+    CMSwift.router.add("/demo/component/icon", () => icon);
 
     CMSwift.router.start();
     /* */

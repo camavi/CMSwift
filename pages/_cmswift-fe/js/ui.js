@@ -3299,6 +3299,7 @@
     if (!hasName && children.length) {
       name = children.length === 1 ? children[0] : children;
     }
+    applyCommonProps(props);
 
     const slots = props.slots || {};
 
@@ -3306,11 +3307,21 @@
     const color = uiUnwrap(props.color);
     const isFill = String(name).endsWith("-fill");
     const style = { ...(props.style || {}) };
+    const sizeClass = uiComputed(props.size, () => {
+      const v = uiUnwrap(props.size);
+      return (typeof v === "string" && sizeMap[v]) ? v : "";
+    });
 
-    if (color) style.color = color;
+    const hasVisualSurface = !!(props.color || props.clickable || props.border || props.glossy || props.glow || props.glass || props.shadow || props.outline || props.gradient || props.textGradient || props.lightShadow || props.radius);
 
-    const cls = uiClass(["cms-icon", "material-icons", props.class]);
-    const p = CMSwift.omit(props, ["name", "size", "color", "class", "style", "slots"]);
+    const cls = uiClass([
+      "cms-icon",
+      "material-icons",
+      ...(hasVisualSurface ? ["cms-clear-set", "cms-singularity"] : []),
+      sizeClass,
+      props.class
+    ]);
+    const p = CMSwift.omit(props, ["name", "size", "class", "style", "label", "border", "color", "icon", "iconRight", "removable", "onRemove", "dense", "flat", "glossy", "outline", "slots"]);
     p.class = cls;
     if (Object.keys(style).length) p.style = style;
 
@@ -3343,6 +3354,7 @@
       icon.style.setProperty("--set-icon-size", v);
     }
 
+    setPropertyProps(icon, props);
     return icon;
   };
   if (CMSwift.isDev?.()) {
@@ -3353,6 +3365,17 @@
         name: "string|Node|Function",
         size: "number|string",
         color: "string",
+        shadow: "boolean|string",
+        lightShadow: "boolean",
+        clickable: "boolean",
+        border: "boolean",
+        glossy: "boolean",
+        glow: "boolean",
+        glass: "boolean",
+        gradient: "boolean|number",
+        outline: "boolean",
+        textGradient: "boolean",
+        radius: "number|string",
         slots: "{ default? }",
         class: "string",
         style: "object"
