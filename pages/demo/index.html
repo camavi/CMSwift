@@ -226,13 +226,121 @@
     import { badge } from "../tutorial/badge.cms.js";
     import { item } from "../tutorial/item.cms.js";
     import { icon } from "../tutorial/icon.cms.js";
+    import { form } from "../tutorial/form.cms.js";
+    import { formField } from "../tutorial/form-field.cms.js";
+
+    const createComponentItem = (label, path, onNavigate = null) => ({
+      label,
+      onClick: () => {
+        CMSwift.router.navigate(path);
+        onNavigate?.();
+      },
+    });
+
+    let currentLayout = null;
+
+    const componentItems = [
+      {
+        label: "Layout & Structure",
+        icon: "mobile_layout",
+        items: [
+          createComponentItem("tapPanel", "/demo/component/tap-panel"),
+          {
+            label: "AppShell",
+            onClick: () => {
+              currentLayout.page().innerHTML = "";
+              currentLayout.page().appendChild(cardContent());
+            },
+          },
+          createComponentItem("Layout", "/demo/component/layout"),
+          createComponentItem("Page", "/demo/component/page"),
+          createComponentItem("Header", "/demo/component/header"),
+          createComponentItem("Footer", "/demo/component/footer"),
+          createComponentItem("Container", "/demo/component/container"),
+          createComponentItem("Parallax", "/demo/component/parallax"),
+          createComponentItem("Row", "/demo/component/row"),
+          createComponentItem("Col", "/demo/component/col"),
+          createComponentItem("Grid", "/demo/component/grid"),
+          createComponentItem("Grid Col", "/demo/component/gridcol"),
+        ],
+      },
+      {
+        label: "Surface & Feedback",
+        icon: "newsmode",
+        items: [
+          createComponentItem("Card", "/demo/component/card"),
+          createComponentItem("CardHeader", "/demo/component/cardheader"),
+          createComponentItem("CardBody", "/demo/component/cardbody"),
+          createComponentItem("CardFooter", "/demo/component/cardfooter"),
+          createComponentItem("Tooltip", "/demo/component/tooltip"),
+          createComponentItem("Banner", "/demo/component/banner"),
+          createComponentItem("Spinner", "/demo/component/spinner"),
+          createComponentItem("Progress", "/demo/component/progress"),
+          createComponentItem("Loading Bar", "/demo/component/loadingbar"),
+          createComponentItem("Badge", "/demo/component/badge"),
+          createComponentItem("Chip", "/demo/component/chip", () =>
+            hljs.highlightAll(),
+          ),
+        ],
+      },
+      {
+        label: "Navigation & Actions",
+        icon: "burst_mode",
+        items: [
+          createComponentItem("Toolbar", "/demo/component/toolbar"),
+          createComponentItem("Tabs", "/demo/component/tabs"),
+          createComponentItem("RouteTab", "/demo/component/routetab"),
+          createComponentItem("Menu", "/demo/component/menu"),
+          createComponentItem("ContextMenu", "/demo/component/contextmenu"),
+          createComponentItem("Breadcrumbs", "/demo/component/breadcrumbs"),
+          createComponentItem("Drawer", "/demo/component/drawer"),
+          createComponentItem("Btn", "/demo/component/btn", () =>
+            hljs.highlightAll(),
+          ),
+          createComponentItem("Icon", "/demo/component/icon"),
+        ],
+      },
+      {
+        label: "Forms & Inputs",
+        icon: "list_alt",
+        items: [
+          createComponentItem("Form", "/demo/component/form"),
+          createComponentItem("FormField", "/demo/component/formfield"),
+          createComponentItem("InputRaw", "/demo/component/inputraw"),
+          createComponentItem("Input", "/demo/component/input"),
+          createComponentItem("Select", "/demo/component/select"),
+          createComponentItem("Checkbox", "/demo/component/checkbox"),
+          createComponentItem("Radio", "/demo/component/radio"),
+          createComponentItem("Toggle", "/demo/component/toggle"),
+          createComponentItem("Slider", "/demo/component/slider"),
+          createComponentItem("Rating", "/demo/component/rating"),
+          createComponentItem("Date", "/demo/component/date"),
+          createComponentItem("Time", "/demo/component/time"),
+        ],
+      },
+      {
+        label: "Data & Overlays",
+        icon: "date_range",
+        items: [
+          createComponentItem("List", "/demo/component/list"),
+          createComponentItem("Table", "/demo/component/table"),
+          createComponentItem("Pagination", "/demo/component/pagination"),
+          createComponentItem("Dialog", "/demo/component/dialog"),
+          createComponentItem("Popover", "/demo/component/popover"),
+          createComponentItem("Avatar", "/demo/component/avatar"),
+          createComponentItem("Item", "/demo/component/item"),
+          createComponentItem("Separator", "/demo/component/separator"),
+          createComponentItem("Spacer", "/demo/component/spacer"),
+        ],
+      },
+    ];
+
     function layoutPage(
       _content = null,
       _header = null,
       _drawer = null,
       _footer = null,
     ) {
-      let currentLayout = null;
       const header =
         _header ||
         _ui.Header({
@@ -275,115 +383,8 @@
           stateKey: "demo:drawer",
           header: _h.h3({ class: "cms-t-center" }, "Menu principale"),
           items: [
-            { label: "Home", to: "/demo", icon: "🏠" },
-
-            { label: "Layout", to: "/demo/layout", icon: "📰" },
-            {
-              label: "Component",
-              items: [
-                {
-                  label: "tapPanel",
-                  onClick: () => {
-                    CMSwift.router.navigate("/demo/component/tap-panel");
-                  },
-                },
-                {
-                  label: "AppShell",
-                  onClick: () => {
-                    currentLayout.page().innerHTML = "";
-                    currentLayout.page().appendChild(cardContent());
-                  },
-                },
-                {
-                  label: "Layout",
-                  onClick: () => {
-                    CMSwift.router.navigate("/demo/component/layout");
-                  },
-                },
-                { label: "Page", to: "/demo/component/page" },
-                { label: "Header", to: "/demo/component/header" },
-                { label: "Footer", to: "/demo/component/footer" },
-                { label: "Container", to: "/demo/component/container" },
-                { label: "Parallax", to: "/demo/component/parallax" },
-
-                { label: "Row", to: "/demo/component/row" },
-                { label: "Col", to: "/demo/component/col" },
-
-                { label: "Grid", to: "/demo/component/grid" },
-                { label: "Grid Col", to: "/demo/component/gridcol" },
-
-                {
-                  label: "Card",
-                  onClick: () => {
-                    CMSwift.router.navigate("/demo/component/card");
-                  },
-                },
-                { label: "CardHeader", to: "/demo/component/cardheader" },
-                { label: "CardBody", to: "/demo/component/cardbody" },
-                { label: "CardFooter", to: "/demo/component/cardfooter" },
-
-                { label: "Tooltip", to: "/demo/component/tooltip" },
-                { label: "Banner", to: "/demo/component/banner" },
-                { label: "Toolbar", to: "/demo/component/toolbar" },
-
-                { label: "Spinner", to: "/demo/component/spinner" },
-                { label: "Progress", to: "/demo/component/progress" },
-                { label: "Loading Bar", to: "/demo/component/loadingbar" },
-
-                { label: "Tabs", to: "/demo/component/tabs" },
-                { label: "RouteTab", to: "/demo/component/routetab" },
-
-                { label: "Menu", to: "/demo/component/menu" },
-                { label: "ContextMenu", to: "/demo/component/contextmenu" },
-                { label: "Breadcrumbs", to: "/demo/component/breadcrumbs" },
-                { label: "Drawer", to: "/demo/component/drawer" },
-
-                { label: "Form", to: "/demo/component/form" },
-                { label: "FormField", to: "/demo/component/formfield" },
-                { label: "InputRaw", to: "/demo/component/inputraw" },
-                {
-                  label: "Btn",
-                  onClick: () => {
-                    CMSwift.router.navigate("/demo/component/btn");
-                    hljs.highlightAll();
-                  },
-                },
-                { label: "Input", to: "/demo/component/input" },
-                { label: "Select", to: "/demo/component/select" },
-
-                { label: "Checkbox", to: "/demo/component/checkbox" },
-                { label: "Radio", to: "/demo/component/radio" },
-
-                { label: "Toggle", to: "/demo/component/toggle" },
-                { label: "Slider", to: "/demo/component/slider" },
-                { label: "Rating", to: "/demo/component/rating" },
-
-                { label: "Date", to: "/demo/component/date" },
-                { label: "Time", to: "/demo/component/time" },
-
-                { label: "List", to: "/demo/component/list" },
-                { label: "Table", to: "/demo/component/table" },
-                { label: "Pagination", to: "/demo/component/pagination" },
-
-                { label: "Dialog", to: "/demo/component/dialog" },
-                { label: "Popover", to: "/demo/component/popover" },
-
-                { label: "Icon", to: "/demo/component/icon" },
-                { label: "Avatar", to: "/demo/component/avatar" },
-                { label: "Badge", to: "/demo/component/badge" },
-                {
-                  label: "Chip",
-                  onClick: () => {
-                    CMSwift.router.navigate("/demo/component/chip");
-                    hljs.highlightAll();
-                  },
-                },
-                { label: "Item", to: "/demo/component/item" },
-
-                { label: "Separator", to: "/demo/component/separator" },
-                { label: "Spacer", to: "/demo/component/spacer" },
-              ],
-            },
+            { label: "Home", to: "/demo", icon: "home" },
+            ...componentItems,
           ],
         });
       const footer =
@@ -428,6 +429,8 @@
     CMSwift.router.add("/demo/component/badge", () => badge);
     CMSwift.router.add("/demo/component/item", () => item);
     CMSwift.router.add("/demo/component/icon", () => icon);
+    CMSwift.router.add("/demo/component/form", () => form);
+    CMSwift.router.add("/demo/component/formfield", () => formField);
 
     CMSwift.router.start();
     /* */

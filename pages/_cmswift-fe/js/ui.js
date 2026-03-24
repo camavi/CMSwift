@@ -4996,8 +4996,8 @@
     const header = props.header ?? null;
     const stateKey = props.stateKey ?? null;
     const closeOnSelect = props.closeOnSelect ?? true;
-    const groupOpenIcon = props.groupOpenIcon ?? _ui.Icon("arrow_drop_down", { size: "lg" });
-    const groupCloseIcon = props.groupCloseIcon ?? _ui.Icon("arrow_drop_up", { size: "lg" });
+    const groupOpenIcon = props.groupOpenIcon;
+    const groupCloseIcon = props.groupCloseIcon;
     const className = props.class ?? null;
 
     if (stateKey) {
@@ -5018,9 +5018,13 @@
 
     const shouldClose = (it) => closeOnSelect && !it.keepOpen;
 
-    const makeIcon = (icon, side = "left") => (icon ? _h.span({
-      class: uiClass(["cms-drawer-item-icon", side === "right" ? "right" : "left"]),
-    }, icon) : null);
+    const makeIcon = (icon, side = "left") => {
+      // deve accettare function, oggetti node e stringhe
+      if (icon == null) return null;
+      if (typeof icon === "function") return icon;
+      if (typeof icon === "string") return _ui.Icon(icon);
+      return icon;
+    };
 
     const getItemIcons = (it) => {
       const side = it.iconPosition || "left";
@@ -5054,10 +5058,13 @@
         const stateKey = path.concat(keyPart).join("::");
         const { left: itemIconLeft, right: itemIconRight } = getItemIcons(it);
 
+        const btnOpenIcon = groupOpenIcon ?? _ui.Icon("arrow_drop_down", { size: "lg" });
+        const btnCloseIcon = groupCloseIcon ?? _ui.Icon("arrow_drop_up", { size: "lg" });
+
         if (Array.isArray(children) && children.length) {
           let open = readGroupOpen(stateKey, !!it.expanded);
-          const openIcon = it.openIcon || groupOpenIcon;
-          const closeIcon = it.closeIcon || groupCloseIcon;
+          const openIcon = it.openIcon || btnOpenIcon;
+          const closeIcon = it.closeIcon || btnCloseIcon;
           const openIconSide = it.iconSidePosition || it.openIconSide || it.openIconPosition || "left";
           const closeIconSide = it.iconSidePosition || it.closeIconSide || it.closeIconPosition || "left";
           const toggleIconEl = _h.span({ class: "cms-drawer-group-icon" });
