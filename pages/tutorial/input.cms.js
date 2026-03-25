@@ -1,4 +1,3 @@
-import { icon } from "./icon.cms";
 
 const input = _.div({ class: "cms-panel cms-page" },
   _.h1("Input"),
@@ -13,7 +12,7 @@ const input = _.div({ class: "cms-panel cms-page" },
   _.docTable("Input"),
   _.h2("Esempio completo"),
   _.Card({ header: "Demo" },
-    _.Input({ label: "Nome", placeholder: "Inserisci nome", hint: "Helper text", icon: "#home", prefix: "home" }),
+    _.Input({ label: "Nome", placeholder: "Inserisci nome", hint: "Helper text", icon: "home", prefix: "home" }),
     _.Input({ label: "Nome", color: "primary", placeholder: "Inserisci nome", hint: "Helper text", icon: "#home", prefix: "home", iconRight: "#home", suffix: "home" }),
     _.Input({ label: "Nome", color: "secondary", placeholder: "Inserisci nome", hint: "Helper text", icon: "#home", prefix: "home", iconRight: "#home", suffix: "home" }),
     _.Input({ label: "Nome", color: "danger", placeholder: "Inserisci nome", hint: "Helper text", icon: "#home", prefix: "home", iconRight: "#home", suffix: "home" }),

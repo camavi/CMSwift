@@ -2156,17 +2156,17 @@
 
 
   // ===============================
-  // Plugin system (CMSwift.use)
+  // Plugin system (CMSwift.usePlugin)
   // ===============================
   CMSwift._plugins = new Set();
 
-  CMSwift.use = function (plugin, options) {
+  CMSwift.usePlugin = function (plugin, options) {
     if (!plugin) return;
 
     // evita doppia installazione
     if (CMSwift._plugins.has(plugin)) {
       if (CMSwift.config?.debug) {
-        console.warn("[CMSwift.use] plugin già installato:", plugin.name || plugin);
+        console.warn("[CMSwift.usePlugin] plugin già installato:", plugin.name || plugin);
       }
       return;
     }
@@ -2185,7 +2185,7 @@
       return;
     }
 
-    console.warn("[CMSwift.use] plugin non valido:", plugin);
+    console.warn("[CMSwift.usePlugin] plugin non valido:", plugin);
   };
 
   //-- RESTA come esempio --
