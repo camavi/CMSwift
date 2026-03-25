@@ -15,7 +15,7 @@
 
 
 // Alias for readability
-const UI = _ui;
+const UI = _;
 
 const BRAND_OPTIONS = [
   { label: "Default", value: "" },

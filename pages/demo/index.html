@@ -156,15 +156,15 @@
     };
 
     const boxCode = (title, content) => {
-      const openCode = _rod(false);
-      return _ui.Card(
+      const openCode = _.rod(false);
+      return _.Card(
         {
           class: "cms-m-t-sm",
           gradient: true,
           identifier: title,
           header: [
-            _ui.Spacer(),
-            _ui.Btn({
+            _.Spacer(),
+            _.Btn({
               icon: "code",
               class: "cms-m-l-auto",
               dense: true,
@@ -172,21 +172,21 @@
                 openCode.value = !openCode.value;
               },
             }),
-            _ui.Btn({
+            _.Btn({
               icon: "#brand-github",
               class: "cms-m-l-auto",
               dense: true,
             }),
-            _ui.Btn({
+            _.Btn({
               icon: "#brand-codepen",
               class: "cms-m-l-auto",
               dense: true,
             }),
           ],
         },
-        _ui.Row(
-          _ui.Col({ class: "cms-gutter-sm", col: 12 }, content.code),
-          _ui.Col(
+        _.Row(
+          _.Col({ class: "cms-gutter-sm", col: 12 }, content.code),
+          _.Col(
             {
               col: 24,
               class: "cms-scroll-locked",
@@ -194,8 +194,8 @@
                 height: () => (openCode.value ? "fit-content" : "0px"),
               },
             },
-            _h.pre(
-              _h.code(
+            _.pre(
+              _.code(
                 {
                   class: "cms-r-md language-javascript",
                 },
@@ -343,24 +343,24 @@
     ) {
       const header =
         _header ||
-        _ui.Header({
+        _.Header({
           title: "CMSwift",
           subtitle: "Demo componenti UI",
-          right: _ui.Toolbar(
-            _ui.Btn(
+          right: _.Toolbar(
+            _.Btn(
               {
                 icon: "#bell",
-                onClick: () => _ui.Notify.info("Hai nuove notifiche"),
+                onClick: () => _.Notify.info("Hai nuove notifiche"),
               },
               "Notifiche",
             ),
-            _ui.Btn(
+            _.Btn(
               {
                 variant: "primary",
                 icon: "#plus",
                 onClick: () => {
                   drawerOpen.value = false;
-                  _ui.Notify.info("Nuovo elemento");
+                  _.Notify.info("Nuovo elemento");
                   CMSwift.router.navigate("/demo/component/card");
                 },
               },
@@ -370,18 +370,18 @@
         });
       const content =
         _content ||
-        _ui.Container(
-          _h.div(
+        _.Container(
+          _.div(
             { style: { margin: "16px 0" } },
-            _h.h2("CMSwift UI Kit"),
-            _h.p("Tutti i componenti in azione su una singola pagina."),
+            _.h2("CMSwift UI Kit"),
+            _.p("Tutti i componenti in azione su una singola pagina."),
           ),
         );
       const drawer =
         _drawer ||
-        _ui.Drawer({
+        _.Drawer({
           stateKey: "demo:drawer",
-          header: _h.h3({ class: "cms-t-center" }, "Menu principale"),
+          header: _.h3({ class: "cms-t-center" }, "Menu principale"),
           items: [
             { label: "Home", to: "/demo", icon: "home" },
             ...componentItems,
@@ -389,16 +389,16 @@
         });
       const footer =
         _footer ||
-        _ui.Footer(
-          _h.div(
+        _.Footer(
+          _.div(
             "CMSwift UI Demo • Layout completo con componenti attivi",
-            _ui.Icon({ textColor: "red", name: "#heart" }),
+            _.Icon({ textColor: "red", name: "#heart" }),
           ),
         );
 
-      const drawerOpen = _rod(true);
+      const drawerOpen = _.rod(true);
 
-      currentLayout = _ui.Layout({
+      currentLayout = _.Layout({
         header: header,
         aside: drawer,
         page: content,
@@ -409,7 +409,7 @@
 
       return currentLayout;
     }
-    let contentPage = _h.div("Start");
+    let contentPage = _.div("Start");
     const layoutApp = layoutPage(contentPage);
     CMSwift.mount("#app", layoutApp);
     const p = ColorTokensDemoPage();

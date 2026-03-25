@@ -6,60 +6,7 @@
 
   window.CMSwift = window.CMSwift || {};
   const CMSwift = window.CMSwift;
-  const publicRoot = window._ || {};
-  const PUBLIC_UI_EXPORT_EXCLUDE = new Set(["meta", "slot", "slots", "inspect", "renderSlot", "renderSlotToArray", "can", "canAny"]);
-  const PUBLIC_UI_CAMEL_EXPORTS = new Set(["cardHeader", "cardBody", "cardFooter"]);
-  let publicHyperscript = null;
-  let publicRodFactory = null;
-  const publicSignal = (...args) => CMSwift.reactive.signal(...args);
-  const publicEffect = (...args) => CMSwift.reactive.effect(...args);
-  const publicRoute = (...args) => CMSwift.router.add(...args);
-  const publicNavigate = (...args) => CMSwift.router.navigate(...args);
-  const publicMount = (...args) => CMSwift.mount(...args);
-  const publicReady = (...args) => CMSwift.ready(...args);
-  const publicRodBind = (...args) => CMSwift.rodBind(...args);
-  const publicRodFromSignal = (...args) => CMSwift.rodFromSignal(...args);
-  const publicRodModel = (...args) => CMSwift.rodModel(...args);
-  const publicSignalModel = (...args) => CMSwift.signalModel(...args);
-  const syncPublicRoot = () => {
-    window._ = publicRoot;
-    if (publicHyperscript) Object.assign(publicRoot, publicHyperscript);
-    if (publicRodFactory) publicRoot.rod = publicRodFactory;
-
-    publicRoot.signal = publicSignal;
-    publicRoot.effect = publicEffect;
-    publicRoot.route = publicRoute;
-    publicRoot.navigate = publicNavigate;
-    publicRoot.mount = publicMount;
-    publicRoot.ready = publicReady;
-    publicRoot.dom = CMSwift.dom;
-    publicRoot.router = CMSwift.router;
-    publicRoot.store = CMSwift.store;
-    publicRoot.http = CMSwift.http;
-    publicRoot.overlay = CMSwift.overlay;
-    publicRoot.useRouter = CMSwift.useRouter;
-    publicRoot.useRoute = CMSwift.useRoute;
-    publicRoot.rodBind = publicRodBind;
-    publicRoot.rodFromSignal = publicRodFromSignal;
-    publicRoot.rodModel = publicRodModel;
-    publicRoot.signalModel = publicSignalModel;
-    publicRoot.config = CMSwift.config;
-    publicRoot.isDev = CMSwift.isDev;
-
-    const ui = CMSwift.ui;
-    if (ui && typeof ui === "object") {
-      for (const key of Object.keys(ui)) {
-        if (PUBLIC_UI_EXPORT_EXCLUDE.has(key)) continue;
-        if (!/^[A-Z]/.test(key) && !PUBLIC_UI_CAMEL_EXPORTS.has(key)) continue;
-        publicRoot[key] = ui[key];
-      }
-    }
-
-    return publicRoot;
-  };
-  CMSwift.syncPublicRoot = syncPublicRoot;
-  window._ = publicRoot;
-  window.cms = publicRoot; // legacy alias, deprecated: use `_.`
+  window._ = window.CMSwift; // legacy alias, deprecated: use `_.`
 
 
   CMSwift.config = CMSwift.config || {};
@@ -883,14 +830,11 @@
     "feColorMatrix"
   ];
   DOM_ELEMENTS.forEach(tag => {
-    _h[tag] = (...args) => createElement(tag, ...args);
+    window._[tag] = (...args) => createElement(tag, ...args);
   });
-  window._h = _h; // legacy alias, deprecated: use `_.`
-  publicHyperscript = _h;
-  syncPublicRoot();
 
-  _h.fragment = (...children) => children;
-  _h.dynamic = function (renderFn) {
+  _.fragment = (...children) => children;
+  _.dynamic = function (renderFn) {
     const anchor = document.createComment("dyn");
     const parent = document.createDocumentFragment();
     parent.appendChild(anchor);
@@ -1180,7 +1124,7 @@
     return obj;
   }
 
-  window._rod = function _rod(data, key = "value") {
+  _.rod = function _rod(data, key = "value") {
     const comp = rodCreateComponent(data);
     rodMakeReactive(comp, key);
 
@@ -1192,8 +1136,6 @@
     }
     return comp;
   }; // legacy alias, deprecated: use `_.rod`
-  publicRodFactory = window._rod;
-  syncPublicRoot();
 
   CMSwift.rodBind = function (el, react, config = { key: "auto" }) {
     CMSwift.debug?.inc("rodBinds");
@@ -1211,7 +1153,7 @@
 
 
   CMSwift.rodFromSignal = function (get, set) {
-    const r = _rod(get());
+    const r = _.rod(get());
     let syncing = false;
 
     r.action((v) => {
@@ -3098,9 +3040,6 @@
   CMSwift.ui = CMSwift.ui || {};
   CMSwift.ui.meta = CMSwift.ui.meta || {};
 
-  window._ui = CMSwift.ui; // legacy alias, deprecated: use `_.`
-  syncPublicRoot();
-
   CMSwift.ui.slot = function slot(value, opts = {}) {
     const UI = CMSwift.ui;
     const {
@@ -3111,7 +3050,7 @@
     } = opts;
 
     const makeTextNode = (v) => document.createTextNode(String(v));
-    const makeSpan = (v) => _h.span(String(v));
+    const makeSpan = (v) => _.span(String(v));
 
     const normalizeOne = (v) => {
       if (v == null || v === false) return null;
@@ -3164,11 +3103,11 @@
   };
 
   // docTable genera una tabella di documentazione
-  CMSwift.ui.docTable = (name) => {
-    if (!CMSwift.isDev()) return _h.div(); // non fa niente in prod
+  CMSwift.docTable = (name) => {
+    if (!CMSwift.isDev()) return _.div(); // non fa niente in prod
 
     const meta = CMSwift.ui.meta?.[name];
-    if (!meta) return _h.div({ class: "cms-muted" }, `Meta non trovata: ${name}`);
+    if (!meta) return _.div({ class: "cms-muted" }, `Meta non trovata: ${name}`);
 
     const formatValues = (values) => {
       if (!values) return "—";
@@ -3187,7 +3126,7 @@
     });
     const propsTab = Object.keys(list).map((v) => {
       return {
-        name: v, wrap: true, label: v, content: _ui.TabPanel({
+        name: v, wrap: true, label: v, content: _.TabPanel({
           orientation: "vertical",
           animated: true,
           radius: "0 0 0 var(--cms-r-default)",
@@ -3196,19 +3135,19 @@
               name: p.name,
               wrap: true,
               label: p.name,
-              content: _h.div({ class: "cms-p-md" },
-                _h.p(
-                  _h.h3("Name: " + p.name),
-                  _h.div(_h.b("Type: "), p.type ? p.type.split("|").map((v) => _ui.Chip({ color: "secondary", dense: true }, v)) : "—")
+              content: _.div({ class: "cms-p-md" },
+                _.p(
+                  _.h3("Name: " + p.name),
+                  _.div(_.b("Type: "), p.type ? p.type.split("|").map((v) => _.Chip({ color: "secondary", dense: true }, v)) : "—")
                 ),
-                _h.p(_h.b("Default: "), _h.span(p.default == null ? "—" : String(p.default))),
-                _h.p(
-                  _h.h3("Values: "),
-                  _h.div({ class: "cms-p-l-md" }, _h.span(formatValues(p.values)))
+                _.p(_.b("Default: "), _.span(p.default == null ? "—" : String(p.default))),
+                _.p(
+                  _.h3("Values: "),
+                  _.div({ class: "cms-p-l-md" }, _.span(formatValues(p.values)))
                 ),
-                _h.p(
-                  _h.h3("Description: "),
-                  _h.div({ class: "cms-p-l-md" }, p.description || "—")
+                _.p(
+                  _.h3("Description: "),
+                  _.div({ class: "cms-p-l-md" }, p.description || "—")
                 )
               )
             }
@@ -3221,12 +3160,12 @@
     if (meta.events) {
       if (Array.isArray(meta.events)) {
         eventsRows = meta.events.map((ev) => {
-          return { name: ev.name, wrap: true, label: ev.name, content: _h.div({ class: "cms-p-md" }, ev.description) }
+          return { name: ev.name, wrap: true, label: ev.name, content: _.div({ class: "cms-p-md" }, ev.description) }
         }
         );
       } else {
         eventsRows = Object.entries(meta.events || {}).map(([k, v]) => {
-          return { name: k, wrap: true, label: k, content: _h.div({ class: "cms-p-md" }, v) }
+          return { name: k, wrap: true, label: k, content: _.div({ class: "cms-p-md" }, v) }
         }
         );
       }
@@ -3243,26 +3182,26 @@
         slotsRows = Object.entries(meta.slots || {}).map(([k, v]) => {
           return {
             name: k, wrap: true, label: k, content:
-              _h.div({ class: "cms-p-md", },
-                _h.div(
-                  _h.h3("Name: " + k),
-                  _h.div({ class: "cms-p-l-md" }, v.type || "—")
+              _.div({ class: "cms-p-md", },
+                _.div(
+                  _.h3("Name: " + k),
+                  _.div({ class: "cms-p-l-md" }, v.type || "—")
                 ),
-                _h.div(
-                  _h.h3("Description:"),
-                  _h.div({ class: "cms-p-l-md" }, v.description || "—"))
+                _.div(
+                  _.h3("Description:"),
+                  _.div({ class: "cms-p-l-md" }, v.description || "—"))
               )
           };
         });
       }
     }
-    const tabPanelModel = _rod(null);
+    const tabPanelModel = _.rod(null);
     const taps = [];
     if (slotsRows.length) taps.push({
       name: "Slots",
       wrap: true,
       label: "Slots",
-      content: _ui.TabPanel({
+      content: _.TabPanel({
         animated: true,
         radius: "0 0 0 var(--cms-r-default)",
         orientation: "vertical",
@@ -3274,7 +3213,7 @@
       name: "Events",
       wrap: true,
       label: "Events",
-      content: _ui.TabPanel({
+      content: _.TabPanel({
         animated: true,
         radius: "0 0 0 var(--cms-r-default)",
         orientation: "vertical",
@@ -3287,17 +3226,17 @@
       if (b.name === first) return 1;
       return a.name.localeCompare(b.name);
     })
-    return CMSwift.ui.Card(
-      _h.h3(`_.${name}`),
-      meta.signature ? _h.p({ class: "cms-muted" }, String(meta.signature).replaceAll("UI.", "_.")) : null,
-      _h.h4("Props"),
-      _ui.TabPanel({
+    return _.Card(
+      _.h3(`_.${name}`),
+      meta.signature ? _.p({ class: "cms-muted" }, String(meta.signature).replaceAll("UI.", "_.")) : null,
+      _.h4("Props"),
+      _.TabPanel({
         border: true,
         animated: true,
         orientation: "horizontal",
         tabs: taps, model: tabPanelModel
       }),
-      meta.returns ? _h.p({ class: "cms-muted", style: { marginTop: "14px" } }, `Returns: ${meta.returns}`) : null
+      meta.returns ? _.p({ class: "cms-muted", style: { marginTop: "14px" } }, `Returns: ${meta.returns}`) : null
     );
   };
 
@@ -3579,7 +3518,7 @@
         if (view404) {
           unmountCurrent = CMSwift.mount(outlet, () => view404(ctx), { clear: true });
         } else {
-          unmountCurrent = CMSwift.mount(outlet, _h.div("404"), { clear: true });
+          unmountCurrent = CMSwift.mount(outlet, _.div("404"), { clear: true });
         }
         return;
       }
@@ -3816,6 +3755,7 @@
     window.$router = CMSwift.router;
   }
 
-  syncPublicRoot();
-
+  // alias per compatibilità
+  CMSwift.signal = CMSwift.reactive.signal;
+  CMSwift.effect = CMSwift.reactive.effect;
 })();
