@@ -3958,9 +3958,6 @@
   // Esempio: CMSwift.ui.Separator()
 
   const buildChoiceControl = (type, args, options = {}) => {
-    /*
-    TODO: mettiamo la possibilita di abilitare il terzo stato caso contrario come default è un 2 stati check/uncheck
-    */
     const { props, children } = CMSwift.uiNormalizeArgs(args);
     const slots = props.slots || {};
     const isRadio = type === "radio";
@@ -4074,9 +4071,23 @@
       wrap.classList.toggle("is-checked", checked);
       wrap.classList.toggle("is-indeterminate", state == null);
       wrap.classList.toggle("is-disabled", !!input.disabled);
+      if (checked && (props.checkedIcon || props.icon)) {
+        wrap.classList.toggle("toggle-default", false);
+      } else if (checked && !props.checkedIcon) {
+        wrap.classList.toggle("toggle-default", true);
+      } else if (state == null && !props.standbyIcon) {
+        wrap.classList.toggle("toggle-default", true);
+      } else if (state == null && props.standbyIcon) {
+        wrap.classList.toggle("toggle-default", false);
+      } else if (input.disabled === false && !props.uncheckedIcon) {
+        wrap.classList.toggle("toggle-default", true);
+      } else {
+        wrap.classList.toggle("toggle-default", false);
+      }
+
       if (isToggle) {
         if (state == null) {
-          indicatorHost.style.transform = "translateX(calc((var(--cms-toggle-width) - var(--cms-toggle-thumb-size) - 4px) / 2))";
+          indicatorHost.style.transform = "translateX(calc((var(--cms-toggle-width) - var(--cms-toggle-thumb-size) - 1px) / 2))";
         } else {
           indicatorHost.style.removeProperty("transform");
         }
@@ -4098,7 +4109,7 @@
       if (iconNode == null) iconNode = CMSwift.ui.renderSlot(slots, "icon", ctx, null);
       if (iconNode == null) {
         const source = resolveIconSource(state);
-        if (typeof source === "string") iconNode = UI.Icon({ name: source, size: iconSize });
+        if (typeof source === "string") iconNode = UI.Icon({ name: source, size: iconSize, ...(isToggle ? { textColor: props.color, outline: true } : {}) });
         else if (source != null) {
           iconNode = CMSwift.ui.slot(source, {
             checked,
