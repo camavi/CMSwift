@@ -56,8 +56,10 @@ const listSample = {
         label: "Data arrivo",
         icon: "calendar_month",
         clearable: true,
+        monthsToShow: 2,
+        size: "xl",
         min: "2026-04-01",
-        max: "2026-12-31",
+        max: "2027-12-31",
         locale: "it-IT"
       })
     ],
@@ -91,7 +93,6 @@ const listSample = {
         maxRange: 30,
         confirm: true,
         clearable: true,
-        size: 'xs',
         locale: "it-IT",
         shortcuts: [
           { label: "Weekend lungo", value: { from: "2026-07-17", to: "2026-07-20" } },
@@ -168,7 +169,7 @@ const listSample = {
         monthsToShow: 2,
         clearable: true,
         locale: "it-IT",
-        pointIcon: "priority_high"
+        pointIcon: "check"
       })
     ],
     sample: [

@@ -5390,7 +5390,7 @@
     const getMonthsToShow = () => {
       const fallback = (mode === "range" || mode === "range-multiple") ? 2 : 1;
       const raw = Number(uiUnwrap(props.monthsToShow) ?? fallback);
-      return Math.max(1, Math.min(3, Number.isFinite(raw) ? raw : fallback));
+      return Math.max(1, Math.min(4, Number.isFinite(raw) ? raw : fallback));
     };
     const getDefaultViewValue = () => {
       const min = getMin();
@@ -6050,7 +6050,9 @@
       mouseSelectedDate = null;
       syncViewMonth(workingValue);
       entry = CMSwift.overlay.open(({ close }) => {
-        panelRoot = _.div({ class: uiClassStatic(["cms-date-panel", uiUnwrap(sizeValue)]) });
+        const fallback = (mode === "range" || mode === "range-multiple") ? 2 : 1;
+        const raw = Number(uiUnwrap(props.monthsToShow) ?? fallback);
+        panelRoot = _.div({ class: uiClassStatic(["cms-date-panel", uiUnwrap(sizeValue), uiWhen(raw > 1, "multi-month"), props.panelClass]) });
         renderPanel();
         return panelRoot;
       }, {

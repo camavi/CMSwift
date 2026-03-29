@@ -899,40 +899,7 @@
 }
 
 .cms-date-panel {
-  --cms-date-panel-min-width: min(720px, calc(100vw - 24px));
-  --cms-date-panel-max-width: min(860px, calc(100vw - 24px));
-  --cms-date-panel-padding: 12px;
-  --cms-date-panel-gap: 12px;
-  --cms-date-nav-size: 34px;
-  --cms-date-select-height: 34px;
-  --cms-date-action-height: 32px;
-  --cms-date-action-pad-x: 10px;
-  --cms-date-month-min: 280px;
-  --cms-date-month-padding: 10px;
-  --cms-date-month-title-font: 13px;
-  --cms-date-weekday-font: 11px;
-  --cms-date-day-height: 38px;
-  --cms-date-day-radius: 12px;
-  --cms-date-day-font: 14px;
-  --cms-date-day-point-right: 5px;
-  --cms-date-day-point-bottom: 4px;
-  min-width: var(--cms-date-panel-min-width);
-  max-width: var(--cms-date-panel-max-width);
-  padding: var(--cms-date-panel-padding);
-  display: flex;
-  flex-direction: column;
-  gap: var(--cms-date-panel-gap);
-  color: var(--cms-text);
-}
-
-.cms-date-panel-root {
-  display: flex;
-  flex-direction: column;
-  gap: var(--cms-date-panel-gap);
-}
-
-.cms-date-panel.cms-size-xs {
-  --cms-date-panel-min-width: min(540px, calc(100vw - 24px));
+  --cms-date-panel-min-width: min(280px, calc(100vw - 24px));
   --cms-date-panel-max-width: min(680px, calc(100vw - 24px));
   --cms-date-panel-padding: 8px;
   --cms-date-panel-gap: 8px;
@@ -949,30 +916,93 @@
   --cms-date-day-font: 11px;
   --cms-date-day-point-right: 3px;
   --cms-date-day-point-bottom: 2px;
+  min-width: var(--cms-date-panel-min-width);
+  max-width: var(--cms-date-panel-max-width);
+  padding: var(--cms-date-panel-padding);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cms-date-panel-gap);
+  color: var(--cms-text);
+}
+
+.cms-date-panel-root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cms-date-panel-gap);
+}
+
+.cms-date-panel.multi-month {
+  --cms-date-panel-min-width: min(540px, calc(100vw - 24px));
+}
+
+.cms-date-panel.cms-size-xs {
+  --cms-date-panel-min-width: min(180px, calc(100vw - 24px));
+  --cms-date-panel-max-width: min(680px, calc(100vw - 24px));
+  --cms-date-panel-padding: 5px;
+  --cms-date-panel-gap: 5px;
+  --cms-date-nav-size: 22px;
+  --cms-date-select-height: 18px;
+  --cms-date-action-height: 18px;
+  --cms-date-action-pad-x: 8px;
+  --cms-date-month-min: 180px;
+  --cms-date-month-padding: 8px;
+  --cms-date-month-title-font: 11px;
+  --cms-date-weekday-font: 9px;
+  --cms-date-day-height: 18px;
+  --cms-date-day-radius: 5px;
+  --cms-date-day-font: 9px;
+}
+
+.cms-date-panel.cms-size-xs.multi-month {
+  --cms-date-panel-min-width: min(400px, calc(100vw - 24px));
 }
 
 .cms-date-panel.cms-size-sm {
-  --cms-date-panel-min-width: min(620px, calc(100vw - 24px));
-  --cms-date-panel-max-width: min(760px, calc(100vw - 24px));
-  --cms-date-panel-padding: 10px;
-  --cms-date-panel-gap: 10px;
-  --cms-date-nav-size: 30px;
-  --cms-date-select-height: 30px;
-  --cms-date-action-height: 30px;
-  --cms-date-action-pad-x: 9px;
-  --cms-date-month-min: 248px;
-  --cms-date-month-padding: 9px;
-  --cms-date-month-title-font: 12px;
-  --cms-date-weekday-font: 10px;
-  --cms-date-day-height: 32px;
-  --cms-date-day-radius: 10px;
-  --cms-date-day-font: 12px;
-  --cms-date-day-point-right: 4px;
-  --cms-date-day-point-bottom: 3px;
+  --cms-date-panel-min-width: min(200px, calc(100vw - 24px));
+  --cms-date-panel-max-width: min(680px, calc(100vw - 24px));
+  --cms-date-panel-padding: 6px;
+  --cms-date-panel-gap: 6px;
+  --cms-date-nav-size: 26px;
+  --cms-date-select-height: 24px;
+  --cms-date-action-height: 24px;
+  --cms-date-action-pad-x: 8px;
+  --cms-date-month-min: 230px;
+  --cms-date-month-padding: 8px;
+  --cms-date-month-title-font: 11px;
+  --cms-date-weekday-font: 9px;
+  --cms-date-day-height: 24px;
+  --cms-date-day-radius: 8px;
+  --cms-date-day-font: 10px;
+}
+
+.cms-date-panel.cms-size-sm.multi-month {
+  --cms-date-panel-min-width: min(480px, calc(100vw - 24px));
 }
 
 .cms-date-panel.cms-size-lg {
-  --cms-date-panel-min-width: min(780px, calc(100vw - 24px));
+  --cms-date-panel-min-width: min(320px, calc(100vw - 24px));
+  --cms-date-panel-max-width: min(680px, calc(100vw - 24px));
+  --cms-date-panel-padding: 10px;
+  --cms-date-panel-gap: 9px;
+  --cms-date-nav-size: 28px;
+  --cms-date-select-height: 28px;
+  --cms-date-action-height: 28px;
+  --cms-date-action-pad-x: 10px;
+  --cms-date-month-min: 230px;
+  --cms-date-month-padding: 10px;
+  --cms-date-month-title-font: 13px;
+  --cms-date-weekday-font: 12px;
+  --cms-date-day-height: 34px;
+  --cms-date-day-radius: 8px;
+  --cms-date-day-font: 12px;
+}
+
+.cms-date-panel.cms-size-lg.multi-month {
+  --cms-date-panel-min-width: min(640px, calc(100vw - 24px));
+}
+
+.cms-date-panel.cms-size-xl {
+  --cms-date-panel-min-width: min(360px, calc(100vw - 24px));
   --cms-date-panel-max-width: min(940px, calc(100vw - 24px));
   --cms-date-panel-padding: 14px;
   --cms-date-panel-gap: 14px;
@@ -989,22 +1019,8 @@
   --cms-date-day-font: 15px;
 }
 
-.cms-date-panel.cms-size-xl {
-  --cms-date-panel-min-width: min(860px, calc(100vw - 24px));
-  --cms-date-panel-max-width: min(1040px, calc(100vw - 24px));
-  --cms-date-panel-padding: 16px;
-  --cms-date-panel-gap: 16px;
-  --cms-date-nav-size: 42px;
-  --cms-date-select-height: 42px;
-  --cms-date-action-height: 40px;
-  --cms-date-action-pad-x: 14px;
-  --cms-date-month-min: 320px;
-  --cms-date-month-padding: 14px;
-  --cms-date-month-title-font: 15px;
-  --cms-date-weekday-font: 12px;
-  --cms-date-day-height: 46px;
-  --cms-date-day-radius: 16px;
-  --cms-date-day-font: 16px;
+.cms-date-panel.cms-size-xl.multi-month {
+  --cms-date-panel-min-width: min(780px, calc(100vw - 24px));
 }
 
 .cms-date-header {
