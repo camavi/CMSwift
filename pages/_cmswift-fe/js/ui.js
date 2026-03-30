@@ -1191,79 +1191,235 @@
   }
 
   UI.Card = (...args) => {
-    // usa il tuo normalize se ce l’hai già
-    const { props, children } = CMSwift.uiNormalizeArgs(args);
-    const slots = props.slots || {};
-    const cls = uiClass([
-      "cms-panel",
-      "cms-card",
-      uiWhen(props.flat, "cms-card-flat"),
-      uiWhen(props.dense, "cms-card-dense"),
-      uiWhen(props.clickable, "cms-card-clickable"),
-      props.class
-    ]);
+    const { props: rawProps, children } = CMSwift.uiNormalizeArgs(args);
+    const slots = rawProps.slots || {};
+    const props = { ...rawProps };
+    applyCommonProps(props);
 
-    // props speciali da non passare come attributi DOM
-    const p = CMSwift.omit
-      ? CMSwift.omit(props, ["header", "footer", "actions", "flat", "dense", "clickable", "to", "slots"])
-      : (() => {
-        const x = { ...props };
-        ["header", "footer", "actions", "flat", "dense", "clickable", "to", "slots"].forEach(k => delete x[k]);
-        return x;
-      })();
+    const isSectionNode = (node, name) => {
+      return !!(node && node.nodeType === 1 && node.classList?.contains(`cms-card-${name}`));
+    };
+    const renderIconFallback = (value) => {
+      if (value == null) return null;
+      if (typeof value === "string") return UI.Icon({ name: value, size: rawProps.iconSize || rawProps.size || "lg" });
+      return CMSwift.ui.slot(value, { as: "icon" });
+    };
+    const iconFallback = renderIconFallback(rawProps.icon);
+    const coverFallback = rawProps.image
+      ? _.img({
+        src: rawProps.image,
+        alt: rawProps.imageAlt || "",
+        class: uiClass(["cms-card-cover-media", rawProps.imageClass]),
+        style: rawProps.imageStyle
+      })
+      : rawProps.cover;
 
-    // routing helper (opzionale)
-    const onClick = (e) => {
-      props.onClick?.(e);
-      if (e.defaultPrevented) return;
-
-      if (props.to && CMSwift.router?.navigate) {
-        e.preventDefault();
-        CMSwift.router.navigate(props.to);
-      }
+    const ctx = {
+      dense: !!uiUnwrap(rawProps.dense),
+      flat: !!uiUnwrap(rawProps.flat),
+      clickable: !!uiUnwrap(rawProps.clickable),
+      to: uiUnwrap(rawProps.to) || null
     };
 
-    // struttura standard: header/body/footer
-    const headerIdentifier = renderSlotToArray(slots, "header", {}, props.identifier);
-    const headerNodes = renderSlotToArray(slots, "header", {}, props.header);
-    const footerNodes = renderSlotToArray(slots, "footer", {}, props.footer);
-    const actionsNodes = renderSlotToArray(slots, "actions", {}, props.actions);
+    const defaultNodes = renderSlotToArray(slots, "default", ctx, children?.length ? children : []);
+    const sectionNodes = {
+      identifier: [],
+      cover: [],
+      media: [],
+      header: [],
+      body: [],
+      footer: [],
+      actions: []
+    };
+    const looseNodes = [];
 
-    const bodyChildren = renderSlotToArray(slots, "default", {}, children?.length ? children : []);
-    const body = _.div({ class: "cms-card-body" }, ...bodyChildren);
+    defaultNodes.forEach((node) => {
+      if (isSectionNode(node, "identifier")) sectionNodes.identifier.push(node);
+      else if (isSectionNode(node, "cover")) sectionNodes.cover.push(node);
+      else if (isSectionNode(node, "media")) sectionNodes.media.push(node);
+      else if (isSectionNode(node, "header")) sectionNodes.header.push(node);
+      else if (isSectionNode(node, "body")) sectionNodes.body.push(node);
+      else if (isSectionNode(node, "footer")) sectionNodes.footer.push(node);
+      else if (isSectionNode(node, "actions")) sectionNodes.actions.push(node);
+      else looseNodes.push(node);
+    });
+
+    const identifierNodes = renderSlotToArray(slots, "identifier", ctx, rawProps.identifier);
+    const coverNodes = renderSlotToArray(slots, "cover", ctx, coverFallback);
+    const mediaNodes = renderSlotToArray(slots, "media", ctx, rawProps.media);
+    const eyebrowNodes = renderSlotToArray(slots, "eyebrow", ctx, rawProps.eyebrow ?? rawProps.kicker);
+    const titleNodes = renderSlotToArray(slots, "title", ctx, rawProps.title);
+    const subtitleNodes = renderSlotToArray(slots, "subtitle", ctx, rawProps.subtitle);
+    const headerNodes = renderSlotToArray(slots, "header", ctx, rawProps.header);
+    const iconNodes = renderSlotToArray(slots, "icon", ctx, iconFallback);
+    const asideNodes = renderSlotToArray(slots, "aside", ctx, rawProps.aside ?? rawProps.headerAside);
+    const bodyNodes = renderSlotToArray(slots, "body", ctx, rawProps.body);
+    const footerNodes = renderSlotToArray(slots, "footer", ctx, rawProps.footer);
+    const actionsNodes = renderSlotToArray(slots, "actions", ctx, rawProps.actions);
+
+    const generatedIdentifier = identifierNodes.length
+      ? _.div({ class: uiClass(["cms-card-identifier", rawProps.identifierClass]) }, ...identifierNodes)
+      : null;
+    const generatedCover = coverNodes.length
+      ? _.div({ class: uiClass(["cms-card-cover", rawProps.coverClass]) }, ...coverNodes)
+      : null;
+    const generatedMedia = mediaNodes.length
+      ? _.div({ class: uiClass(["cms-card-media", rawProps.mediaClass]) }, ...mediaNodes)
+      : null;
+
+    const hasStructuredHeader = iconNodes.length || eyebrowNodes.length || titleNodes.length || subtitleNodes.length || headerNodes.length || asideNodes.length;
+    const generatedHeader = hasStructuredHeader
+      ? _.div(
+        { class: uiClass(["cms-card-header", rawProps.headerClass]) },
+        _.div(
+          { class: "cms-card-head" },
+          iconNodes.length ? _.div({ class: "cms-card-icon" }, ...iconNodes) : null,
+          _.div(
+            { class: "cms-card-head-main" },
+            eyebrowNodes.length ? _.div({ class: uiClass(["cms-card-eyebrow", rawProps.eyebrowClass]) }, ...eyebrowNodes) : null,
+            titleNodes.length ? _.div({ class: uiClass(["cms-card-title", rawProps.titleClass]) }, ...titleNodes) : null,
+            subtitleNodes.length ? _.div({ class: uiClass(["cms-card-subtitle", rawProps.subtitleClass]) }, ...subtitleNodes) : null,
+            headerNodes.length ? _.div({ class: uiClass(["cms-card-header-content", rawProps.headerContentClass]) }, ...headerNodes) : null
+          ),
+          asideNodes.length ? _.div({ class: uiClass(["cms-card-aside", rawProps.asideClass]) }, ...asideNodes) : null
+        )
+      )
+      : null;
+
+    const mergedBodyNodes = [...bodyNodes, ...looseNodes];
+    const generatedBody = mergedBodyNodes.length
+      ? _.div({ class: uiClass(["cms-card-body", rawProps.bodyClass]) }, ...mergedBodyNodes)
+      : null;
+
+    const mergedActionNodes = [...actionsNodes, ...sectionNodes.actions];
+    const generatedFooter = (footerNodes.length || mergedActionNodes.length)
+      ? _.div(
+        { class: uiClass(["cms-card-footer", rawProps.footerClass]) },
+        ...footerNodes,
+        mergedActionNodes.length ? _.div({ class: "cms-card-actions" }, ...mergedActionNodes) : null
+      )
+      : null;
+
+    const interactiveClass = uiComputed([rawProps.clickable, rawProps.to], () => {
+      return (uiUnwrap(rawProps.clickable) || uiUnwrap(rawProps.to)) ? "cms-card-clickable" : "";
+    });
+    const hasIdentifier = identifierNodes.length || sectionNodes.identifier.length;
+    const hasTopVisual = coverNodes.length || sectionNodes.cover.length || mediaNodes.length || sectionNodes.media.length;
+
+    const p = CMSwift.omit(props, [
+      "actions", "aside", "asideClass", "body", "bodyClass", "clickable", "cover", "coverClass",
+      "coverHeight", "dense", "eyebrow", "eyebrowClass", "flat", "footer", "footerClass", "header",
+      "headerAside", "headerClass", "headerContentClass", "icon", "iconSize", "identifier",
+      "identifierClass", "image", "imageAlt", "imageClass", "imageStyle", "kicker", "media",
+      "mediaClass", "slots", "subtitle", "subtitleClass", "title", "titleClass", "to"
+    ]);
+    p.class = uiClass([
+      "cms-panel",
+      "cms-card",
+      "cms-singularity",
+      uiWhen(rawProps.flat, "cms-card-flat"),
+      uiWhen(rawProps.dense, "cms-card-dense"),
+      uiWhen(hasIdentifier, "cms-card-has-identifier"),
+      uiWhen(hasTopVisual, "cms-card-has-top-visual"),
+      interactiveClass,
+      props.class
+    ]);
+    p.style = { ...(props.style || {}) };
+    if (rawProps.coverHeight != null) {
+      p.style["--cms-card-cover-height"] = toCssSize(uiUnwrap(rawProps.coverHeight));
+    }
+
+    const userOnClick = rawProps.onClick;
+    const userOnKeydown = rawProps.onKeydown;
+    const onClick = (e) => {
+      userOnClick?.(e);
+      if (e.defaultPrevented) return;
+      const to = uiUnwrap(rawProps.to);
+      if (to && CMSwift.router?.navigate) {
+        e.preventDefault();
+        CMSwift.router.navigate(to);
+      }
+    };
+    const onKeydown = (e) => {
+      userOnKeydown?.(e);
+      if (e.defaultPrevented) return;
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onClick(e);
+      }
+    };
+    if (uiUnwrap(rawProps.clickable) || uiUnwrap(rawProps.to)) {
+      p.onClick = onClick;
+      p.onKeydown = onKeydown;
+      if (p.tabIndex == null) p.tabIndex = 0;
+      if (p.role == null) p.role = "button";
+    }
 
     const el = _.div(
-      { ...p, class: cls, onClick: (props.clickable || props.to) ? onClick : props.onClick },
-      headerIdentifier.length ? _.div({ class: "cms-card-identifier" }, ...headerIdentifier) : null,
-      headerNodes.length ? _.div({ class: "cms-card-header" }, ...headerNodes) : null,
-      body,
-      (footerNodes.length || actionsNodes.length) ? _.div({ class: "cms-card-footer" }, ...footerNodes, ...actionsNodes) : null
+      p,
+      generatedIdentifier,
+      ...sectionNodes.identifier,
+      generatedCover,
+      ...sectionNodes.cover,
+      generatedMedia,
+      ...sectionNodes.media,
+      generatedHeader,
+      ...sectionNodes.header,
+      generatedBody,
+      ...sectionNodes.body,
+      generatedFooter,
+      ...sectionNodes.footer
     );
 
+    setPropertyProps(el, rawProps);
     return el;
   }
   if (CMSwift.isDev?.()) {
     UI.meta = UI.meta || {};
     UI.meta.Card = {
       signature: "UI.Card(...children) | UI.Card(props, ...children)",
-      description: "Card con header/body/footer opzionali.",
+      description: "Card a sezioni con header strutturato, cover/media, body e footer/actions.",
       props: {
+        title: "String|Node|Function|Array",
+        subtitle: "String|Node|Function|Array",
+        eyebrow: "String|Node|Function|Array",
         header: "String|Node|Function|Array",
+        body: "String|Node|Function|Array",
         footer: "String|Node|Function|Array",
         actions: "Node|Function|Array",
+        icon: "String|Node|Function|Array",
+        aside: "Node|Function|Array",
+        identifier: "String|Node|Function|Array",
+        media: "Node|Function|Array",
+        cover: "Node|Function|Array",
+        image: "string",
+        imageAlt: "string",
+        coverHeight: "string|number",
         clickable: "boolean",
         to: "string",
         dense: "boolean",
         flat: "boolean",
-        slots: "{ header?, footer?, actions?, default? }",
+        headerClass: "string",
+        bodyClass: "string",
+        footerClass: "string",
+        slots: "{ identifier?, cover?, media?, icon?, eyebrow?, title?, subtitle?, header?, aside?, body?, footer?, actions?, default? }",
         class: "string",
         style: "object"
       },
       slots: {
-        header: "Header slot",
-        footer: "Footer slot",
+        identifier: "Badge/top identifier content",
+        cover: "Top visual/cover content",
+        media: "Media section above header/body",
+        icon: "Header icon content",
+        eyebrow: "Eyebrow/kicker content",
+        title: "Card title content",
+        subtitle: "Card subtitle content",
+        header: "Header support content",
+        aside: "Right side header content",
+        body: "Body content",
+        footer: "Footer content",
         actions: "Footer actions slot",
-        default: "Card body content"
+        default: "Fallback body content or raw card sections"
       },
       returns: "HTMLDivElement"
     };

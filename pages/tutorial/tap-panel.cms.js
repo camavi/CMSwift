@@ -1,3 +1,13 @@
+/*
+TODO: 
+dobbiamo creare un una pagina demo molto completa e uso vero per _.TabPanel:
+  controlla come stato fatto: _.Chip, _.Checkbox, _.Radio per la struttura.
+  - dobbiamo usare tutti i componenti possibile come esempio: _.Chip, _.Checkbox, _.Radio, _.Btn, _.Icon, _.Toggle, _.Slider, _.Input, _.Select, _.List, _.Item, _.Card, _.Grid, _.GridCol, _.Row
+ 
+  alla fine se puoi fare un Card con un esempio molto completo dell'utilizzo di questo componente
+*/
+
+
 const tabPanelModel = _.signal("overview");
 const tabPanelSwipeModel = _.signal("one");
 const tabPanelSlotsModel = _.signal("billing");

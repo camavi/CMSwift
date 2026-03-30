@@ -1,4 +1,3 @@
-const loadingBar = _.LoadingBar();
 const loadingBarControls = _.Row(
   _.Btn({ onClick: () => loadingBar.start() }, "Start"),
   _.Btn({ onClick: () => loadingBar.stop() }, "Stop")
