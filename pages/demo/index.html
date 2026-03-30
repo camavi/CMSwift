@@ -210,12 +210,10 @@
   <script type="module">
     import { ColorTokensDemoPage } from "../tutorial/color.cms.js";
     import { btn } from "../tutorial/btn.cms.js";
-    import { list } from "../tutorial/list.cms.js";
-    import { table } from "../tutorial/table.cms.js";
+
     import { tabs } from "../tutorial/tabs.cms.js";
     import { drawer } from "../tutorial/drawer.cms.js";
 
-    import { item } from "../tutorial/item.cms.js";
     import { icon } from "../tutorial/icon.cms.js";
 
     // Layout & Structure
@@ -258,6 +256,17 @@
     import { rating } from "../tutorial/rating.cms.js";
     import { date } from "../tutorial/date.cms.js";
     import { time } from "../tutorial/time.cms.js";
+
+    // Data & Overlay
+    import { list } from "../tutorial/list.cms.js";
+    import { table } from "../tutorial/table.cms.js";
+    import { pagination } from "../tutorial/pagination.cms.js";
+    import { dialog } from "../tutorial/dialog.cms.js";
+    import { popover } from "../tutorial/popover.cms.js";
+    import { avatar } from "../tutorial/avatar.cms.js";
+    import { item } from "../tutorial/item.cms.js";
+    import { separator } from "../tutorial/separator.cms.js";
+    import { spacer } from "../tutorial/spacer.cms.js";
 
     const createComponentItem = (label, path, onNavigate = null) => ({
       label,
@@ -449,19 +458,7 @@
 
     _.router.add("/demo/component/color", () => ColorTokensDemoPage);
     _.router.add("/demo/component/btn", () => btn);
-
-    _.router.add("/demo/component/item", () => item);
     _.router.add("/demo/component/icon", () => icon);
-
-    _.router.add("/demo/component/list", () => list);
-    _.router.add("/demo/component/table", () => table);
-    _.router.add("/demo/component/pagination", () => pagination);
-    _.router.add("/demo/component/dialog", () => dialog);
-    _.router.add("/demo/component/popover", () => popover);
-    _.router.add("/demo/component/avatar", () => avatar);
-    _.router.add("/demo/component/separator", () => separator);
-    _.router.add("/demo/component/spacer", () => spacer);
-    _.router.add("/demo/component/parallax", () => parallax);
 
     // Layout & Structure
     _.router.add("/demo/component/tap-panel", () => tapPanel);
@@ -503,6 +500,17 @@
     _.router.add("/demo/component/rating", () => rating);
     _.router.add("/demo/component/date", () => date);
     _.router.add("/demo/component/time", () => time);
+
+    // Data & Overlay
+    _.router.add("/demo/component/list", () => list);
+    _.router.add("/demo/component/table", () => table);
+    _.router.add("/demo/component/pagination", () => pagination);
+    _.router.add("/demo/component/dialog", () => dialog);
+    _.router.add("/demo/component/popover", () => popover);
+    _.router.add("/demo/component/avatar", () => avatar);
+    _.router.add("/demo/component/item", () => item);
+    _.router.add("/demo/component/separator", () => separator);
+    _.router.add("/demo/component/spacer", () => spacer);
 
     _.router.start();
     /* */
