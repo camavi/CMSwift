@@ -7610,52 +7610,149 @@
   }
   // Esempio: CMSwift.ui.Pagination({ max: 10, model: [get,set] })
 
-  let spinnerStyleAdded = false;
-  function ensureSpinnerStyles() {
-    if (spinnerStyleAdded) return;
-    spinnerStyleAdded = true;
-    const style = document.createElement("style");
-    style.textContent = "@keyframes cmsSpin { to { transform: rotate(360deg); } }";
-    document.head.appendChild(style);
-  }
-
   UI.Spinner = (...args) => {
-    const { props } = CMSwift.uiNormalizeArgs(args);
-    ensureSpinnerStyles();
-    const size = uiUnwrap(props.size) || 18;
-    const thickness = uiUnwrap(props.thickness);
-    const color = uiUnwrap(props.color);
-    const style = {
-      width: toCssSize(size),
-      height: toCssSize(size),
-      borderRadius: "50%",
-      border: thickness ? `${toCssSize(thickness)} solid rgba(255,255,255,0.25)` : "2px solid rgba(255,255,255,0.25)",
-      borderTopColor: color || "var(--cms-primary)",
-      animation: "cmsSpin 0.9s linear infinite",
-      ...(props.style || {})
+    const { props, children } = CMSwift.uiNormalizeArgs(args);
+    const slots = props.slots || {};
+
+    const makeCssVarValue = (value, mapper, fallback) => {
+      if (uiIsReactive(value)) {
+        return () => {
+          const raw = uiUnwrap(value);
+          if (raw == null || raw === false || raw === "") return fallback;
+          const next = mapper ? mapper(raw) : raw;
+          return next == null || next === "" ? fallback : next;
+        };
+      }
+      if (value == null || value === false || value === "") return fallback;
+      const next = mapper ? mapper(value) : value;
+      return next == null || next === "" ? fallback : next;
     };
-    const p = CMSwift.omit(props, ["size", "color", "thickness", "slots"]);
-    p.class = uiClass(["cms-spinner", props.class]);
-    p.style = style;
-    return _.div(p);
+
+    const resolveSpinnerColor = (value) => {
+      if (value == null || value === false || value === "") return "";
+      const state = normalizeState(value);
+      if (state) return "";
+      const str = String(value).trim();
+      if (!str) return "";
+      if (
+        str.startsWith("#") ||
+        str.startsWith("rgb(") ||
+        str.startsWith("rgba(") ||
+        str.startsWith("hsl(") ||
+        str.startsWith("hsla(") ||
+        str.startsWith("var(")
+      ) return str;
+      if (isTokenCSS(str)) return `var(--cms-${str})`;
+      return str;
+    };
+
+    const stateClass = uiComputed(props.state, () => {
+      const state = normalizeState(uiUnwrap(props.state));
+      return state ? `cms-state-${state}` : "";
+    });
+
+    const cls = uiClass([
+      "cms-spinner",
+      stateClass,
+      uiWhen(props.vertical, "vertical"),
+      uiWhen(props.reverse, "reverse"),
+      uiWhen(props.center, "center"),
+      uiWhen(props.block, "block"),
+      uiWhen(props.pause || props.paused, "paused"),
+      props.class
+    ]);
+
+    const p = CMSwift.omit(props, [
+      "ariaLabel", "block", "center", "color", "indicatorClass", "indicatorStyle",
+      "label", "note", "pause", "paused", "reverse", "size", "slots", "speed",
+      "state", "thickness", "trackColor", "vertical"
+    ]);
+    p.class = cls;
+
+    const rootStyle = { ...(props.style || {}) };
+    if (props.color != null && Object.prototype.hasOwnProperty.call(rootStyle, "backgroundColor")) {
+      delete rootStyle.backgroundColor;
+    }
+    p.style = rootStyle;
+    if (p.role == null) p.role = "status";
+    if (p["aria-live"] == null) p["aria-live"] = "polite";
+    if (p["aria-busy"] == null) p["aria-busy"] = "true";
+
+    const ctx = { props };
+    const labelNodes = renderSlotToArray(slots, "label", ctx, props.label);
+    const copyNodes = renderSlotToArray(slots, "default", ctx, children);
+    const noteNodes = renderSlotToArray(slots, "note", ctx, props.note);
+    const hasText = labelNodes.length || copyNodes.length || noteNodes.length;
+
+    if (!hasText) {
+      const ariaLabel = uiUnwrap(props.ariaLabel ?? props["aria-label"]);
+      if (ariaLabel) p["aria-label"] = ariaLabel;
+      else if (p["aria-label"] == null) p["aria-label"] = "Loading";
+    }
+
+    const indicatorFallback = _.span({
+      class: uiClass(["cms-spinner-indicator", props.indicatorClass]),
+      style: {
+        "--cms-spinner-size": makeCssVarValue(props.size, toCssSize, "18px"),
+        "--cms-spinner-thickness": makeCssVarValue(props.thickness, toCssSize, "2px"),
+        "--cms-spinner-speed": makeCssVarValue(props.speed, (v) => typeof v === "number" ? `${v}ms` : String(v), "900ms"),
+        "--cms-spinner-color": makeCssVarValue(props.color, resolveSpinnerColor, "var(--set-border-color, var(--cms-primary))"),
+        "--cms-spinner-track": makeCssVarValue(props.trackColor, resolveSpinnerColor, "color-mix(in srgb, var(--cms-spinner-color) 18%, transparent)"),
+        ...(props.indicatorStyle || {})
+      },
+      "aria-hidden": "true"
+    });
+    const indicatorNodes = renderSlotToArray(slots, "indicator", ctx, indicatorFallback);
+    const content = [];
+
+    if (indicatorNodes.length) content.push(...indicatorNodes);
+    if (hasText) {
+      content.push(_.div(
+        { class: "cms-spinner-content" },
+        labelNodes.length ? _.div({ class: "cms-spinner-label" }, ...labelNodes) : null,
+        copyNodes.length ? _.div({ class: "cms-spinner-copy" }, ...copyNodes) : null,
+        noteNodes.length ? _.div({ class: "cms-spinner-note" }, ...noteNodes) : null
+      ));
+    }
+
+    const root = _.div(p, ...content);
+    setPropertyProps(root, props);
+    return root;
   };
   if (CMSwift.isDev?.()) {
     UI.meta = UI.meta || {};
     UI.meta.Spinner = {
-      signature: "UI.Spinner(props)",
+      signature: "UI.Spinner(...children) | UI.Spinner(props, ...children)",
       props: {
         size: "number|string",
         color: "string",
         thickness: "number|string",
-        slots: "{ default? }",
+        trackColor: "string",
+        speed: "number|string",
+        state: "primary|secondary|success|warning|danger|info|light|dark",
+        label: "String|Node|Function|Array",
+        note: "String|Node|Function|Array",
+        vertical: "boolean",
+        reverse: "boolean",
+        center: "boolean",
+        block: "boolean",
+        pause: "boolean",
+        paused: "boolean",
+        ariaLabel: "string",
+        indicatorClass: "string",
+        indicatorStyle: "object",
+        slots: "{ indicator?, label?, note?, default? }",
         class: "string",
         style: "object"
       },
       slots: {
-        default: "Unused (spinner has no content)"
+        indicator: "Custom spinner indicator",
+        label: "Primary label/content near the spinner",
+        note: "Secondary supporting text",
+        default: "Extra content rendered near the spinner"
       },
       returns: "HTMLDivElement",
-      description: "Spinner animato."
+      description: "Spinner animato con layout flessibile, contenuti opzionali e controllo di dimensioni, velocita e traccia."
     };
   }
   // Esempio: CMSwift.ui.Spinner({ size: 24 })
