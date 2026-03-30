@@ -894,13 +894,53 @@
   --cms-date-input-font-size: 16px;
 }
 
+.cms-time-display {
+  cursor: pointer;
+  min-height: var(--cms-time-input-height, 40px);
+  font-size: var(--cms-time-input-font-size, inherit);
+}
+
+.cms-time-display.is-manual {
+  cursor: text;
+}
+
+.cms-time-display.cms-size-xs {
+  --cms-time-input-height: 30px;
+  --cms-time-input-font-size: 12px;
+}
+
+.cms-time-display.cms-size-sm {
+  --cms-time-input-height: 34px;
+  --cms-time-input-font-size: 13px;
+}
+
+.cms-time-display.cms-size-md {
+  --cms-time-input-height: 40px;
+  --cms-time-input-font-size: 14px;
+}
+
+.cms-time-display.cms-size-lg {
+  --cms-time-input-height: 46px;
+  --cms-time-input-font-size: 15px;
+}
+
+.cms-time-display.cms-size-xl {
+  --cms-time-input-height: 52px;
+  --cms-time-input-font-size: 16px;
+}
+
 .cms-date-overlay {
   padding: 0;
+  --time-width: 0px;
+}
+
+.has-time {
+  --time-width: 110px;
 }
 
 .cms-date-panel {
-  --cms-date-panel-min-width: min(280px, calc(100vw - 24px));
-  --cms-date-panel-max-width: min(680px, calc(100vw - 24px));
+  --cms-date-panel-min-width: min(calc(var(--time-width) + 280px), calc(100vw - 24px));
+  --cms-date-panel-max-width: min(calc(var(--time-width) + 680px), calc(100vw - 24px));
   --cms-date-panel-padding: 8px;
   --cms-date-panel-gap: 8px;
   --cms-date-nav-size: 28px;
@@ -932,12 +972,12 @@
 }
 
 .cms-date-panel.multi-month {
-  --cms-date-panel-min-width: min(540px, calc(100vw - 24px));
+  --cms-date-panel-min-width: min(calc(var(--time-width) + 540px), calc(100vw - 24px));
 }
 
 .cms-date-panel.cms-size-xs {
-  --cms-date-panel-min-width: min(180px, calc(100vw - 24px));
-  --cms-date-panel-max-width: min(680px, calc(100vw - 24px));
+  --cms-date-panel-min-width: min(calc(var(--time-width) + 180px), calc(100vw - 24px));
+  --cms-date-panel-max-width: min(calc(var(--time-width) + 680px), calc(100vw - 24px));
   --cms-date-panel-padding: 5px;
   --cms-date-panel-gap: 5px;
   --cms-date-nav-size: 22px;
@@ -954,12 +994,12 @@
 }
 
 .cms-date-panel.cms-size-xs.multi-month {
-  --cms-date-panel-min-width: min(400px, calc(100vw - 24px));
+  --cms-date-panel-min-width: min(calc(var(--time-width) + 400px), calc(100vw - 24px));
 }
 
 .cms-date-panel.cms-size-sm {
-  --cms-date-panel-min-width: min(200px, calc(100vw - 24px));
-  --cms-date-panel-max-width: min(680px, calc(100vw - 24px));
+  --cms-date-panel-min-width: min(calc(var(--time-width) + 200px), calc(100vw - 24px));
+  --cms-date-panel-max-width: min(calc(var(--time-width) + 680px), calc(100vw - 24px));
   --cms-date-panel-padding: 6px;
   --cms-date-panel-gap: 6px;
   --cms-date-nav-size: 26px;
@@ -976,12 +1016,12 @@
 }
 
 .cms-date-panel.cms-size-sm.multi-month {
-  --cms-date-panel-min-width: min(480px, calc(100vw - 24px));
+  --cms-date-panel-min-width: min(calc(var(--time-width) + 480px), calc(100vw - 24px));
 }
 
 .cms-date-panel.cms-size-lg {
-  --cms-date-panel-min-width: min(320px, calc(100vw - 24px));
-  --cms-date-panel-max-width: min(680px, calc(100vw - 24px));
+  --cms-date-panel-min-width: min(calc(var(--time-width) + 320px), calc(100vw - 24px));
+  --cms-date-panel-max-width: min(calc(var(--time-width) + 680px), calc(100vw - 24px));
   --cms-date-panel-padding: 10px;
   --cms-date-panel-gap: 9px;
   --cms-date-nav-size: 28px;
@@ -998,12 +1038,12 @@
 }
 
 .cms-date-panel.cms-size-lg.multi-month {
-  --cms-date-panel-min-width: min(640px, calc(100vw - 24px));
+  --cms-date-panel-min-width: min(calc(var(--time-width) + 640px), calc(100vw - 24px));
 }
 
 .cms-date-panel.cms-size-xl {
-  --cms-date-panel-min-width: min(360px, calc(100vw - 24px));
-  --cms-date-panel-max-width: min(940px, calc(100vw - 24px));
+  --cms-date-panel-min-width: min(calc(var(--time-width) + 360px), calc(100vw - 24px));
+  --cms-date-panel-max-width: min(calc(var(--time-width) + 940px), calc(100vw - 24px));
   --cms-date-panel-padding: 14px;
   --cms-date-panel-gap: 14px;
   --cms-date-nav-size: 38px;
@@ -1020,7 +1060,7 @@
 }
 
 .cms-date-panel.cms-size-xl.multi-month {
-  --cms-date-panel-min-width: min(780px, calc(100vw - 24px));
+  --cms-date-panel-min-width: min(calc(var(--time-width) + 780px), calc(100vw - 24px));
 }
 
 .cms-date-header {
@@ -1093,6 +1133,29 @@
 .cms-date-action.is-primary {
   background: rgba(79, 124, 255, 0.18);
   border-color: rgba(79, 124, 255, 0.4);
+}
+
+.cms-date-panel-root .cms-data-time {
+  display: grid;
+  grid-template-columns: auto;
+  gap: var(--cms-date-panel-gap);
+}
+
+.has-time .cms-date-panel-root .cms-data-time {
+  grid-template-columns: auto var(--time-width, 100px);
+}
+
+.has-time .cms-time-columns .cms-time-options .cms-time-option {
+  font-size: var(--cms-date-day-font);
+  height: var(--cms-date-day-height);
+  border-radius: var(--cms-date-day-radius);
+}
+
+.has-time .cms-date-time {
+  border: 1px solid var(--cms-border-color);
+  border-radius: var(--cms-r-lg);
+  background: rgba(255, 255, 255, 0.025);
+  padding: var(--cms-date-month-padding);
 }
 
 .cms-date-months {
@@ -1194,7 +1257,7 @@
 
 .cms-date-footer {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: var(--cms-date-panel-gap);
   padding-top: var(--cms-date-panel-gap);
@@ -1208,10 +1271,229 @@
   min-height: 18px;
 }
 
+.cms-date-footer-info {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--cms-date-panel-gap) * 0.66);
+  flex: 1;
+  min-width: min(260px, 100%);
+}
+
+.cms-date-footer.has-time {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: end;
+}
+
+.cms-date-footer.has-time .cms-date-footer-info {
+  min-width: 0;
+}
+
+.cms-date-footer.has-time .cms-date-value {
+  align-self: start;
+}
+
+.cms-date-footer.has-time .cms-time-section.is-embedded {
+  justify-self: end;
+}
+
+.cms-date-footer.has-time .cms-date-actions {
+  justify-self: end;
+}
+
 .cms-date-actions {
   display: flex;
   gap: calc(var(--cms-date-panel-gap) * 0.66);
   flex-wrap: wrap;
+}
+
+.cms-time-overlay {
+  padding: 0;
+}
+
+.cms-time-panel {
+  --cms-time-panel-min-width: min(170px, calc(100vw - 24px));
+  --cms-time-panel-padding: 10px;
+  --cms-time-panel-gap: 10px;
+  min-width: var(--cms-time-panel-min-width);
+  padding: var(--cms-time-panel-padding);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cms-time-panel-gap);
+  color: var(--cms-text);
+}
+
+.cms-time-panel.cms-size-xs {
+  --cms-time-panel-min-width: min(240px, calc(100vw - 24px));
+  --cms-time-panel-padding: 6px;
+  --cms-time-panel-gap: 6px;
+}
+
+.cms-time-panel.cms-size-sm {
+  --cms-time-panel-min-width: min(280px, calc(100vw - 24px));
+  --cms-time-panel-padding: 8px;
+  --cms-time-panel-gap: 8px;
+}
+
+.cms-time-panel.cms-size-lg {
+  --cms-time-panel-min-width: min(360px, calc(100vw - 24px));
+  --cms-time-panel-padding: 12px;
+  --cms-time-panel-gap: 12px;
+}
+
+.cms-time-panel.cms-size-xl {
+  --cms-time-panel-min-width: min(420px, calc(100vw - 24px));
+  --cms-time-panel-padding: 14px;
+  --cms-time-panel-gap: 14px;
+}
+
+.cms-time-panel-root,
+.cms-time-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cms-time-panel-gap, 10px);
+}
+
+.cms-time-section.is-embedded {
+  --cms-time-panel-gap: 8px;
+}
+
+.cms-time-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cms-time-shortcut,
+.cms-time-action {
+  border: 1px solid var(--cms-border-color);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--cms-text);
+  border-radius: var(--cms-r-md);
+  min-height: 30px;
+  padding: 0 10px;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+}
+
+.cms-time-shortcut:hover,
+.cms-time-action:hover {
+  border-color: rgba(79, 124, 255, 0.45);
+  background: rgba(79, 124, 255, 0.1);
+}
+
+.cms-time-shortcut.is-selected,
+.cms-time-action.is-primary {
+  background: rgba(79, 124, 255, 0.18);
+  border-color: rgba(79, 124, 255, 0.4);
+}
+
+.cms-time-columns,
+.cms-time-columns-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cms-time-section.has-seconds .cms-time-columns,
+.cms-time-header .cms-time-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cms-time-header .cms-time-columns-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cms-time-column {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: auto;
+  max-height: 200px;
+  max-width: 40px;
+}
+
+.cms-time-column-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--cms-muted);
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.cms-time-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(32px, 1fr));
+  gap: 6px;
+}
+
+.cms-time-option {
+  min-height: 10px;
+  border: 1px solid var(--cms-border-color);
+  border-radius: var(--cms-r-md);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--cms-text);
+  position: relative;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease, opacity 140ms ease;
+}
+
+.cms-time-option:hover {
+  border-color: rgba(79, 124, 255, 0.4);
+  background: rgba(79, 124, 255, 0.08);
+}
+
+.cms-time-option.is-selected {
+  border-color: rgba(79, 124, 255, 0.5);
+  background: rgba(79, 124, 255, 0.18);
+}
+
+.cms-time-option.is-disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cms-time-option-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: inherit;
+  width: 100%;
+  font-weight: 600;
+}
+
+.cms-time-option-point {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.cms-time-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--cms-border-color);
+  flex-wrap: wrap;
+}
+
+.cms-time-value {
+  font-size: 12px;
+  color: var(--cms-muted);
+  min-height: 18px;
+}
+
+.cms-time-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 @media (max-width: 640px) {
@@ -1230,6 +1512,24 @@
   }
 
   .cms-date-months {
+    grid-template-columns: 1fr;
+  }
+
+  .cms-date-footer.has-time {
+    grid-template-columns: 1fr;
+  }
+
+  .cms-date-footer.has-time .cms-time-section.is-embedded,
+  .cms-date-footer.has-time .cms-date-actions {
+    justify-self: stretch;
+  }
+
+  .cms-time-panel {
+    min-width: min(100vw - 16px, 100%);
+  }
+
+  .cms-time-columns,
+  .cms-time-section.has-seconds .cms-time-columns {
     grid-template-columns: 1fr;
   }
 }

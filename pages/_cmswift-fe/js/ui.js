@@ -5182,6 +5182,289 @@
   }
   // Esempio: CMSwift.ui.Rating({ max: 5, model: [get,set] })
 
+  const uiCloneTimeParts = (value) => {
+    if (!value) return null;
+    return {
+      hour: Number(value.hour) || 0,
+      minute: Number(value.minute) || 0,
+      second: Number(value.second) || 0
+    };
+  };
+  const uiTimePad = (value) => String(Math.max(0, Number(value) || 0)).padStart(2, "0");
+  const uiNormalizeTimeParts = (raw, options = {}) => {
+    if (raw == null || raw === "") return null;
+    let hour = null;
+    let minute = null;
+    let second = 0;
+    let meridiem = null;
+
+    if (raw instanceof Date && !Number.isNaN(raw.getTime())) {
+      hour = raw.getHours();
+      minute = raw.getMinutes();
+      second = raw.getSeconds();
+    } else if (typeof raw === "number" && Number.isFinite(raw)) {
+      const total = Math.max(0, Math.floor(raw));
+      hour = Math.floor(total / 3600) % 24;
+      minute = Math.floor(total / 60) % 60;
+      second = total % 60;
+    } else if (typeof raw === "object") {
+      if (raw.time != null || raw.value != null) return uiNormalizeTimeParts(raw.time ?? raw.value, options);
+      hour = Number(raw.hour ?? raw.hours ?? raw.h ?? raw.hh);
+      minute = Number(raw.minute ?? raw.minutes ?? raw.min ?? raw.mm ?? 0);
+      second = Number(raw.second ?? raw.seconds ?? raw.sec ?? raw.ss ?? 0);
+      meridiem = raw.meridiem ?? raw.ampm ?? raw.period ?? null;
+    } else if (typeof raw === "string") {
+      const value = raw.trim();
+      if (!value) return null;
+      const compact = value.match(/^(\d{1,2})(\d{2})(\d{2})?$/);
+      const match = value.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?\s*([ap]m)?/i);
+      if (match) {
+        hour = Number(match[1]);
+        minute = Number(match[2]);
+        second = match[3] != null ? Number(match[3]) : 0;
+        meridiem = match[4] || null;
+      } else if (compact) {
+        hour = Number(compact[1]);
+        minute = Number(compact[2]);
+        second = compact[3] != null ? Number(compact[3]) : 0;
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+
+    if (!Number.isFinite(hour) || !Number.isFinite(minute) || !Number.isFinite(second)) return null;
+    if (meridiem) {
+      const lower = String(meridiem).toLowerCase();
+      if (lower === "pm" && hour < 12) hour += 12;
+      if (lower === "am" && hour === 12) hour = 0;
+    }
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) return null;
+
+    const normalized = {
+      hour: Math.floor(hour),
+      minute: Math.floor(minute),
+      second: Math.floor(second)
+    };
+    return uiConstrainTimeParts(normalized, options);
+  };
+  const uiExportTimeValue = (value, options = {}) => {
+    const parts = value && typeof value === "object" && value.hour != null
+      ? uiCloneTimeParts(value)
+      : uiNormalizeTimeParts(value, options);
+    if (!parts) return "";
+    const withSeconds = options.withSeconds === true || Number(parts.second || 0) > 0;
+    return `${uiTimePad(parts.hour)}:${uiTimePad(parts.minute)}${withSeconds ? `:${uiTimePad(parts.second)}` : ""}`;
+  };
+  const uiCompareTimeValue = (a, b) => {
+    const av = uiExportTimeValue(a, { withSeconds: true });
+    const bv = uiExportTimeValue(b, { withSeconds: true });
+    if (!av && !bv) return 0;
+    if (!av) return -1;
+    if (!bv) return 1;
+    return av < bv ? -1 : (av > bv ? 1 : 0);
+  };
+  function uiConstrainTimeParts(value, options = {}) {
+    if (!value) return null;
+    const out = uiCloneTimeParts(value);
+    const min = options.min != null ? uiNormalizeTimeParts(options.min, { withSeconds: true }) : null;
+    const max = options.max != null ? uiNormalizeTimeParts(options.max, { withSeconds: true }) : null;
+    if (min && uiCompareTimeValue(out, min) < 0) return uiCloneTimeParts(min);
+    if (max && uiCompareTimeValue(out, max) > 0) return uiCloneTimeParts(max);
+    return out;
+  }
+  const uiExtractTimeFromValue = (raw, options = {}) => {
+    if (raw == null || raw === "") return null;
+    if (raw instanceof Date) return uiNormalizeTimeParts(raw, options);
+    if (typeof raw === "object") return uiNormalizeTimeParts(raw.time != null ? raw.time : raw, options);
+    if (typeof raw === "string" || typeof raw === "number") return uiNormalizeTimeParts(raw, options);
+    return null;
+  };
+  const uiFormatTimeDisplay = (value, options = {}) => {
+    const parts = uiNormalizeTimeParts(value, options);
+    if (!parts) return "";
+    const withSeconds = options.withSeconds === true || Number(parts.second || 0) > 0;
+    const use12h = !!uiUnwrap(options.use12h ?? options.ampm);
+    if (!use12h) {
+      return `${uiTimePad(parts.hour)}:${uiTimePad(parts.minute)}${withSeconds ? `:${uiTimePad(parts.second)}` : ""}`;
+    }
+    const meridiem = parts.hour >= 12 ? "PM" : "AM";
+    const hour = parts.hour % 12 || 12;
+    return `${uiTimePad(hour)}:${uiTimePad(parts.minute)}${withSeconds ? `:${uiTimePad(parts.second)}` : ""} ${meridiem}`;
+  };
+  const uiMergeDateAndTime = (dateValue, timeValue, options = {}) => {
+    if (!dateValue) return "";
+    const time = uiExportTimeValue(timeValue, options);
+    return time ? `${dateValue}T${time}` : dateValue;
+  };
+  const uiBuildTimeSteps = (step, max) => {
+    const safeStep = Math.max(1, Math.min(max + 1, Math.round(Number(step) || 1)));
+    const out = [];
+    for (let value = 0; value <= max; value += safeStep) out.push(value);
+    return out;
+  };
+  const uiCreateTimePickerSection = (config = {}) => {
+    const {
+      props = {},
+      slots = {},
+      value = null,
+      withSeconds = false,
+      minuteStep = 5,
+      secondStep = 5,
+      disabled = false,
+      readonly = false,
+      embedded = false,
+      className = "",
+      slotPrefix = "",
+      shortcuts = null,
+      onSelect = null
+    } = config;
+    const selectedValue = uiNormalizeTimeParts(value, { withSeconds, min: props.min, max: props.max });
+    const baseParts = selectedValue
+      || uiNormalizeTimeParts(new Date(), { withSeconds, min: props.min, max: props.max })
+      || { hour: 0, minute: 0, second: 0 };
+    const selectedParts = selectedValue ? uiCloneTimeParts(selectedValue) : null;
+    const prefixed = (name) => slotPrefix ? `${slotPrefix}${name[0].toUpperCase()}${name.slice(1)}` : null;
+    const renderNamedSlot = (name, ctx, fallback) => {
+      const candidates = [prefixed(name), name].filter(Boolean);
+      for (const candidate of candidates) {
+        const slotValue = CMSwift.ui.getSlot(slots, candidate);
+        if (slotValue == null) continue;
+        const rendered = CMSwift.ui.renderSlot(slots, candidate, ctx, fallback);
+        if (rendered != null) return rendered;
+      }
+      return CMSwift.ui.slot(fallback, ctx);
+    };
+    const renderPointNodes = (ctx) => {
+      let pointNode = renderNamedSlot("point", ctx, null);
+      if (pointNode == null && config.pointIcon != null && ctx.selected) {
+        pointNode = typeof config.pointIcon === "string"
+          ? UI.Icon({ name: config.pointIcon, size: embedded ? 10 : 12 })
+          : CMSwift.ui.slot(config.pointIcon, ctx);
+      }
+      return renderSlotToArray(null, "default", ctx, pointNode);
+    };
+    const makeRequestedValue = (part, optionValue) => {
+      const next = {
+        hour: baseParts.hour,
+        minute: baseParts.minute,
+        second: withSeconds ? baseParts.second : 0
+      };
+      next[part] = optionValue;
+      return next;
+    };
+    const section = _.div({
+      class: uiClass([
+        "cms-time-section",
+        uiWhen(embedded, "is-embedded"),
+        uiWhen(withSeconds, "has-seconds"),
+        className
+      ])
+    });
+    const shortcutList = uiUnwrap(shortcuts) || [];
+    if (Array.isArray(shortcutList) && shortcutList.length) {
+      const shortcutWrap = _.div({ class: "cms-time-shortcuts" });
+      shortcutList.forEach((item, index) => {
+        if (!item) return;
+        const rawValue = typeof item.value === "function"
+          ? item.value({ now: uiExportTimeValue(new Date(), { withSeconds }) })
+          : item.value;
+        const normalizedValue = uiNormalizeTimeParts(rawValue, { withSeconds, min: props.min, max: props.max });
+        if (!normalizedValue) return;
+        const ctx = {
+          item,
+          index,
+          value: uiExportTimeValue(normalizedValue, { withSeconds }),
+          displayValue: uiFormatTimeDisplay(normalizedValue, { withSeconds, use12h: props.use12h ?? props.ampm })
+        };
+        const labelNode = renderNamedSlot("shortcut", ctx, item.label ?? item.text ?? ctx.displayValue);
+        shortcutWrap.appendChild(_.button({
+          type: "button",
+          class: uiClass(["cms-time-shortcut", uiWhen(!!selectedParts && uiCompareTimeValue(normalizedValue, selectedParts) === 0, "is-selected")]),
+          disabled: disabled || readonly,
+          onClick: () => onSelect?.(normalizedValue, { shortcut: item, index })
+        }, ...renderSlotToArray(null, "default", ctx, labelNode)));
+      });
+      if (shortcutWrap.childNodes.length) section.appendChild(shortcutWrap);
+    }
+    const columns = _.div({ class: "cms-time-columns" });
+    const createColumn = (title, part, values) => {
+      const column = _.div({ class: "cms-time-column", "data-time-part": part });
+      const optionsWrap = _.div({ class: "cms-time-options" });
+      values.forEach((optionValue) => {
+        const requested = makeRequestedValue(part, optionValue);
+        const normalized = uiConstrainTimeParts(requested, { withSeconds, min: props.min, max: props.max });
+        const optionDisabled = disabled || readonly || uiCompareTimeValue(normalized, requested) !== 0;
+        const selected = !!selectedParts && selectedParts[part] === optionValue;
+        const ctx = {
+          part,
+          selected,
+          disabled: optionDisabled,
+          value: optionValue,
+          label: uiTimePad(optionValue),
+          timeValue: uiExportTimeValue(normalized, { withSeconds }),
+          displayValue: uiFormatTimeDisplay(normalized, { withSeconds, use12h: props.use12h ?? props.ampm })
+        };
+        const optionNode = renderNamedSlot("option", ctx, ctx.label);
+        const pointNodes = selected ? renderPointNodes(ctx) : [];
+        optionsWrap.appendChild(_.button({
+          type: "button",
+          class: uiClass(["cms-time-option", uiWhen(selected, "is-selected"), uiWhen(optionDisabled, "is-disabled")]),
+          disabled: optionDisabled,
+          onClick: () => onSelect?.(normalized, { part, optionValue })
+        },
+          _.span({ class: "cms-time-option-label" }, ...renderSlotToArray(null, "default", ctx, optionNode)),
+          pointNodes.length ? _.span({ class: "cms-time-option-point" }, ...pointNodes) : null
+        ));
+      });
+      column.appendChild(optionsWrap);
+      return column;
+    };
+    columns.appendChild(createColumn(uiUnwrap(props.hoursLabel) || "Ore", "hour", uiBuildTimeSteps(1, 23)));
+    columns.appendChild(createColumn(uiUnwrap(props.minutesLabel) || "Min", "minute", uiBuildTimeSteps(minuteStep, 59)));
+    if (withSeconds) {
+      columns.appendChild(createColumn(uiUnwrap(props.secondsLabel) || "Sec", "second", uiBuildTimeSteps(secondStep, 59)));
+    }
+    section.appendChild(columns);
+    return section;
+  };
+
+  const uiCaptureTimeColumnScrollState = (root) => {
+    if (!root) return null;
+    const state = {};
+    root.querySelectorAll(".cms-time-column").forEach((column, index) => {
+      const key = column.getAttribute("data-time-part") || String(index);
+      state[key] = column.scrollTop;
+    });
+    return state;
+  };
+
+  const uiCenterTimeColumnsToSelection = (root, options = {}) => {
+    if (!root) return;
+    const scrollState = options.scrollState || null;
+    const behavior = options.behavior ?? "smooth";
+    root.querySelectorAll(".cms-time-column").forEach((column, index) => {
+      const key = column.getAttribute("data-time-part") || String(index);
+      const previousTop = scrollState && Number.isFinite(scrollState[key]) ? scrollState[key] : null;
+      if (previousTop != null) column.scrollTop = previousTop;
+      const selectedOption = column.querySelector(".cms-time-option.is-selected");
+      if (!selectedOption) return;
+      const maxTop = Math.max(0, column.scrollHeight - column.clientHeight);
+      const targetTop = selectedOption.offsetTop - ((column.clientHeight - selectedOption.offsetHeight) / 2);
+      const nextTop = Math.max(0, Math.min(maxTop, targetTop));
+      if (Math.abs(column.scrollTop - nextTop) < 1) {
+        column.scrollTop = nextTop;
+        return;
+      }
+      if (behavior && typeof column.scrollTo === "function") {
+        column.scrollTo({ top: nextTop, behavior });
+        return;
+      }
+      column.scrollTop = nextTop;
+    });
+  };
+
   UI.Date = (...args) => {
     const { props, children } = CMSwift.uiNormalizeArgs(args);
     const slots = props.slots || {};
@@ -5208,6 +5491,29 @@
     const rangeAsArray = uiUnwrap(props.rangeAs ?? props.rangeModel) === "array" || Array.isArray(initialRawValue);
     const rangeMultipleAsArray = uiUnwrap(props.rangeMultipleAs ?? props.multipleRangeAs) === "array"
       || (Array.isArray(initialRawValue) && Array.isArray(initialRawValue[0]));
+    const isTimeEnabled = () => mode === "single" && !!uiUnwrap(props.withTime ?? props.time ?? props.timePicker ?? props.enableTime);
+    const getTimeOptions = () => {
+      const detectedTime = uiExportTimeValue(
+        uiExtractTimeFromValue(uiUnwrap(props.timeValue) ?? (model ? model.get() : uiUnwrap(props.value)) ?? initialRawValue, { withSeconds: true }),
+        { withSeconds: true }
+      );
+      return {
+        withSeconds: !!uiUnwrap(props.timeWithSeconds ?? props.withSeconds ?? props.showSeconds)
+          || /:\d{2}:\d{2}$/.test(detectedTime)
+          || /:\d{2}:\d{2}$/.test(uiUnwrap(props.timeFormat) || ""),
+        min: uiUnwrap(props.timeMin ?? props.minTime),
+        max: uiUnwrap(props.timeMax ?? props.maxTime),
+        use12h: uiUnwrap(props.time12h ?? props.use12h ?? props.ampm)
+      };
+    };
+    const getTimeMinuteStep = () => {
+      const raw = Number(uiUnwrap(props.timeMinuteStep ?? props.minuteStep ?? 5));
+      return Math.max(1, Math.min(30, Number.isFinite(raw) ? raw : 5));
+    };
+    const getTimeSecondStep = () => {
+      const raw = Number(uiUnwrap(props.timeSecondStep ?? props.secondStep ?? 5));
+      return Math.max(1, Math.min(30, Number.isFinite(raw) ? raw : 5));
+    };
 
     const pad = (n) => String(n).padStart(2, "0");
     const createDate = (year, month, day) => {
@@ -5470,7 +5776,7 @@
         day: "2-digit"
       }).format(date);
     };
-    const formatDisplayValue = (value) => {
+    const formatDisplayValue = (value, timeValue = localTimeValue) => {
       if (mode === "range-multiple") {
         if (!Array.isArray(value) || !value.length) return "";
         if (value.length > 2 && uiUnwrap(props.compactMultiple) !== false) {
@@ -5495,7 +5801,10 @@
         if (from && to) return `${from} -> ${to}`;
         return from || to || "";
       }
-      return formatSingleDisplay(value);
+      const dateLabel = formatSingleDisplay(value);
+      if (!isTimeEnabled()) return dateLabel;
+      const timeLabel = formatTimeDisplayValue(timeValue);
+      return [dateLabel, timeLabel].filter(Boolean).join(" • ");
     };
     const extractTypedDates = (raw) => {
       const found = String(raw || "").match(/\d{4}-\d{1,2}-\d{1,2}|\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}/g) || [];
@@ -5521,9 +5830,26 @@
       return dates[0] || normalizeDateOnly(raw);
     };
     const emptyValue = () => ((mode === "multiple" || mode === "range-multiple") ? [] : (mode === "range" ? { from: null, to: null } : null));
+    const resolveDateTimeTimeValue = (raw, fallback = null) => {
+      if (!isTimeEnabled()) return null;
+      const options = getTimeOptions();
+      const explicit = uiUnwrap(props.timeValue);
+      const source = raw != null ? raw : explicit;
+      const resolved = uiExtractTimeFromValue(source, options);
+      return uiCloneTimeParts(resolved ?? fallback ?? null);
+    };
+    const getCurrentTimeValue = () => uiUnwrap(props.confirm) ? workingTimeValue : localTimeValue;
+    const exportCurrentValue = (dateValue = localValue, timeValue = localTimeValue) => {
+      if (mode === "single" && isTimeEnabled()) return uiMergeDateAndTime(dateValue || null, timeValue, getTimeOptions());
+      return exportValue(dateValue);
+    };
+    const serializeCurrentValue = (dateValue = localValue, timeValue = localTimeValue) => JSON.stringify(exportCurrentValue(dateValue, timeValue));
+    const formatTimeDisplayValue = (value) => uiFormatTimeDisplay(value, getTimeOptions());
 
     let localValue = normalizeValue(initialRawValue);
     let workingValue = cloneValue(localValue);
+    let localTimeValue = resolveDateTimeTimeValue(initialRawValue, uiExtractTimeFromValue(uiUnwrap(props.timeValue), getTimeOptions()));
+    let workingTimeValue = uiCloneTimeParts(localTimeValue);
     let hoverDate = null;
     let mouseSelectedDate = null;
     let viewMonth = monthStart(
@@ -5563,7 +5889,7 @@
       ),
       readOnly: !uiUnwrap(props.manualInput),
       disabled: !!uiUnwrap(props.disabled),
-      value: formatDisplayValue(localValue)
+      value: formatDisplayValue(localValue, localTimeValue)
     });
     const hiddenHost = _.div({ style: { display: "contents" } });
     const controlNode = _.div({ class: "cms-date-control", style: { display: "contents" } }, displayInput, hiddenHost);
@@ -5610,7 +5936,7 @@
       };
       const value = localValue;
       if (mode === "single") {
-        appendHidden(baseName, value || "");
+        appendHidden(baseName, exportCurrentValue(value, localTimeValue));
         return;
       }
       if (mode === "range") {
@@ -5636,32 +5962,74 @@
       displayInput.readOnly = !uiUnwrap(props.manualInput);
       displayInput.disabled = !!uiUnwrap(props.disabled);
       displayInput.setAttribute("aria-expanded", entry ? "true" : "false");
-      displayInput.value = formatDisplayValue(localValue);
+      displayInput.value = formatDisplayValue(localValue, localTimeValue);
       syncHiddenInputs();
       field._refresh?.();
     };
 
     const setDateValue = (nextValue, event, options = {}) => {
       const normalized = normalizeValue(nextValue);
-      const prev = serializeValue(localValue);
+      const nextTime = isTimeEnabled()
+        ? uiCloneTimeParts(
+          uiExtractTimeFromValue(
+            options.timeValue != null
+              ? options.timeValue
+              : (options.preserveTime ? getCurrentTimeValue() : nextValue),
+            getTimeOptions()
+          ) ?? (options.preserveTime ? getCurrentTimeValue() : null)
+        )
+        : null;
+      const prev = serializeCurrentValue(localValue, localTimeValue);
       localValue = cloneValue(normalized);
       workingValue = cloneValue(normalized);
+      if (isTimeEnabled()) {
+        localTimeValue = uiCloneTimeParts(nextTime);
+        workingTimeValue = uiCloneTimeParts(nextTime);
+      }
       hoverDate = null;
       syncViewMonth(normalized, options);
       syncDisplay();
       renderPanel();
-      if (model && options.fromModel !== true) model.set(exportValue(normalized));
-      const nextSerialized = serializeValue(normalized);
+      if (model && options.fromModel !== true) model.set(exportCurrentValue(normalized, nextTime));
+      const nextSerialized = serializeCurrentValue(normalized, nextTime);
       if (options.emit !== false && nextSerialized !== prev) {
-        const emitted = exportValue(normalized);
+        const emitted = exportCurrentValue(normalized, nextTime);
         props.onInput?.(emitted, event);
         props.onChange?.(emitted, event);
       }
       return normalized;
     };
+    const setTimeValue = (nextValue, event, options = {}) => {
+      if (!isTimeEnabled()) return null;
+      const normalizedTime = uiCloneTimeParts(uiExtractTimeFromValue(nextValue, getTimeOptions()));
+      if (uiUnwrap(props.confirm) && options.commit !== true) {
+        workingTimeValue = normalizedTime;
+        renderPanel();
+        return normalizedTime;
+      }
+      const prev = serializeCurrentValue(localValue, localTimeValue);
+      localTimeValue = uiCloneTimeParts(normalizedTime);
+      workingTimeValue = uiCloneTimeParts(normalizedTime);
+      syncDisplay();
+      renderPanel();
+      if (model && options.fromModel !== true) model.set(exportCurrentValue(localValue, normalizedTime));
+      const nextSerialized = serializeCurrentValue(localValue, normalizedTime);
+      if (options.emit !== false && nextSerialized !== prev) {
+        const emitted = exportCurrentValue(localValue, normalizedTime);
+        props.onInput?.(emitted, event);
+        props.onChange?.(emitted, event);
+      }
+      return normalizedTime;
+    };
     const setWorkingOrCommit = (nextValue, event, options = {}) => {
       if (uiUnwrap(props.confirm)) {
         workingValue = cloneValue(normalizeValue(nextValue));
+        if (isTimeEnabled() && (options.timeValue != null || options.preserveTime)) {
+          workingTimeValue = uiCloneTimeParts(uiExtractTimeFromValue(
+            options.timeValue != null ? options.timeValue : getCurrentTimeValue(),
+            getTimeOptions()
+          ));
+        }
         hoverDate = null;
         syncViewMonth(workingValue, options);
         renderPanel();
@@ -5736,6 +6104,8 @@
       const syncOptions = {
         focusIso: iso,
         anchorIso: iso,
+        preserveTime: isTimeEnabled(),
+        timeValue: getCurrentTimeValue(),
         preserveMonthOffset: !!entry && getMonthsToShow() > 1,
         visibleMonthOffset: Number.isInteger(selectionOptions.visibleMonthOffset) ? selectionOptions.visibleMonthOffset : null
       };
@@ -5780,7 +6150,7 @@
     };
     const clearValue = () => {
       mouseSelectedDate = null;
-      setDateValue(emptyValue(), null);
+      setDateValue(emptyValue(), null, { timeValue: null });
     };
     const jumpToToday = () => {
       const today = todayIso();
@@ -5807,11 +6177,21 @@
         setWorkingOrCommit([today], null);
         return;
       }
-      setWorkingOrCommit(today, null);
+      setWorkingOrCommit(today, null, { preserveTime: isTimeEnabled(), timeValue: getCurrentTimeValue() });
+    };
+    const scrollTimeColumnsToSelection = (options = {}) => {
+      uiCenterTimeColumnsToSelection(panelRoot, options);
+    };
+    const jumpToNow = () => {
+      if (!isTimeEnabled()) return;
+      const scrollState = uiCaptureTimeColumnScrollState(panelRoot);
+      setTimeValue(new Date(), null, { commit: !uiUnwrap(props.confirm) });
+      scrollTimeColumnsToSelection({ scrollState });
+      if (!uiUnwrap(props.confirm) && props.closeOnSelect === true) closePanel();
     };
     const applyWorkingValue = () => {
       if (!uiUnwrap(props.confirm)) return;
-      setDateValue(workingValue, null);
+      setDateValue(workingValue, null, { timeValue: workingTimeValue, preserveTime: true });
       if (props.closeOnSelect !== false) closePanel();
     };
 
@@ -5996,7 +6376,7 @@
         shortcuts.appendChild(_.button({
           type: "button",
           class: "cms-date-shortcut",
-          onClick: () => setWorkingOrCommit(rawValue, null)
+          onClick: () => setWorkingOrCommit(rawValue, null, { preserveTime: isTimeEnabled(), timeValue: getCurrentTimeValue() })
         }, label));
       });
 
@@ -6004,16 +6384,55 @@
       for (let index = 0; index < getMonthsToShow(); index += 1) {
         months.appendChild(renderMonth(shiftMonths(viewMonth, index), index));
       }
+      const footerDisplayValue = formatDisplayValue(pickerValue, getCurrentTimeValue());
+      const footerValue = _.div({ class: "cms-date-value" },
+        ...renderSlotToArray(
+          slots,
+          "value",
+          { value: pickerValue, displayValue: footerDisplayValue, mode, timeValue: getCurrentTimeValue() },
+          footerDisplayValue || renderSlotToArray(slots, "default", {}, children)
+        )
+      );
+      const headerTime = _.div({ class: "cms-time-header" });
+      const columnsTime = _.div({ class: "cms-time-columns-2" },
+        _.div({ class: "cms-time-column-title" }, uiUnwrap(props.hoursLabel) || "Ore"),
+        _.div({ class: "cms-time-column-title" }, uiUnwrap(props.minutesLabel) || "Min")
+      );
+      headerTime.appendChild(columnsTime);
+      const bodyTime = isTimeEnabled()
+        ? uiCreateTimePickerSection({
+          props: {
+            min: uiUnwrap(props.timeMin ?? props.minTime),
+            max: uiUnwrap(props.timeMax ?? props.maxTime),
+            use12h: uiUnwrap(props.time12h ?? props.use12h ?? props.ampm),
+            hoursLabel: uiUnwrap(props.timeHoursLabel) || "Ore",
+            minutesLabel: uiUnwrap(props.timeMinutesLabel) || "Min",
+            secondsLabel: uiUnwrap(props.timeSecondsLabel) || "Sec"
+          },
+          slots,
+          slotPrefix: "time",
+          value: getCurrentTimeValue(),
+          withSeconds: false,
+          minuteStep: 1,
+          secondStep: getTimeSecondStep(),
+          disabled: !!uiUnwrap(props.disabled),
+          readonly: !!uiUnwrap(props.readonly),
+          embedded: true,
+          pointIcon: uiUnwrap(props.timePointIcon),
+          shortcuts: uiUnwrap(props.timeShortcuts ?? props.timePresets),
+          onSelect: (nextTime) => {
+            const scrollState = uiCaptureTimeColumnScrollState(panelRoot);
+            setTimeValue(nextTime, null);
+            scrollTimeColumnsToSelection({ scrollState });
+          }
+        })
+        : null;
+      const footerInfo = _.div({ class: "cms-date-footer-info" },
+        footerValue
+      );
 
-      const footer = _.div({ class: "cms-date-footer" },
-        _.div({ class: "cms-date-value" },
-          ...renderSlotToArray(
-            slots,
-            "value",
-            { value: pickerValue, displayValue: formatDisplayValue(pickerValue), mode },
-            formatDisplayValue(pickerValue) || renderSlotToArray(slots, "default", {}, children)
-          )
-        ),
+      const footer = _.div({ class: uiClass(["cms-date-footer", uiWhen(isTimeEnabled(), "has-time")]) },
+        footerInfo,
         _.div({ class: "cms-date-actions" },
           _.button({ type: "button", class: "cms-date-action", onClick: jumpToToday }, uiUnwrap(props.todayLabel) || "Oggi"),
           uiUnwrap(props.clearable) !== false
@@ -6024,6 +6443,10 @@
             : null
         )
       );
+
+      const footerTimer = _.div(_.button({ type: "button", class: "cms-date-action cms-w-lg", onClick: jumpToNow }, uiUnwrap(props.nowLabel) || "Ora"));
+
+      const contentTimer = isTimeEnabled() ? _.div({ class: "cms-date-time" }, headerTime, bodyTime, footerTimer) : null;
 
       panelRoot.replaceChildren(
         _.div({
@@ -6037,7 +6460,7 @@
         },
           header,
           shortcutList.length ? shortcuts : null,
-          months,
+          _.div({ class: 'cms-data-time' }, months, contentTimer),
           footer
         )
       );
@@ -6046,6 +6469,7 @@
     function openPanel() {
       if (entry || uiUnwrap(props.disabled) || uiUnwrap(props.readonly)) return entry;
       workingValue = cloneValue(localValue);
+      workingTimeValue = uiCloneTimeParts(localTimeValue);
       hoverDate = null;
       mouseSelectedDate = null;
       syncViewMonth(workingValue);
@@ -6068,7 +6492,7 @@
         closeOnBackdrop: false,
         closeOnEsc: true,
         autoFocus: false,
-        className: uiClassStatic(["cms-date-overlay", props.panelClass]),
+        className: uiClassStatic(["cms-date-overlay", props.panelClass, uiWhen(isTimeEnabled(), "has-time")]),
         onClose: () => {
           entry = null;
           panelRoot = null;
@@ -6122,13 +6546,13 @@
       });
       displayInput.addEventListener("change", (event) => {
         const parsed = parseTypedValue(displayInput.value);
-        setDateValue(parsed, event);
+        setDateValue(parsed, event, { timeValue: uiExtractTimeFromValue(displayInput.value, getTimeOptions()), preserveTime: !uiExtractTimeFromValue(displayInput.value, getTimeOptions()) });
       });
       displayInput.addEventListener("blur", (event) => {
         props.onBlur?.(event);
         const parsed = parseTypedValue(displayInput.value);
         if (displayInput.value === "") clearValue();
-        else setDateValue(parsed, event);
+        else setDateValue(parsed, event, { timeValue: uiExtractTimeFromValue(displayInput.value, getTimeOptions()), preserveTime: !uiExtractTimeFromValue(displayInput.value, getTimeOptions()) });
       });
     } else {
       displayInput.addEventListener("blur", (event) => props.onBlur?.(event));
@@ -6137,9 +6561,12 @@
     if (model) {
       model.watch((next) => {
         const normalized = normalizeValue(next);
-        if (serializeValue(normalized) === serializeValue(localValue)) return;
+        const nextTime = resolveDateTimeTimeValue(next);
+        if (serializeCurrentValue(normalized, nextTime) === serializeCurrentValue(localValue, localTimeValue)) return;
         localValue = normalized;
         workingValue = cloneValue(localValue);
+        localTimeValue = uiCloneTimeParts(nextTime);
+        workingTimeValue = uiCloneTimeParts(nextTime);
         hoverDate = null;
         syncViewMonth(localValue);
         syncDisplay();
@@ -6151,6 +6578,11 @@
       if (!model && props.value != null) {
         localValue = normalizeValue(uiUnwrap(props.value));
         workingValue = cloneValue(localValue);
+        localTimeValue = resolveDateTimeTimeValue(uiUnwrap(props.value));
+        workingTimeValue = uiCloneTimeParts(localTimeValue);
+      } else if (isTimeEnabled() && props.timeValue != null) {
+        localTimeValue = resolveDateTimeTimeValue(uiUnwrap(props.timeValue));
+        workingTimeValue = uiCloneTimeParts(localTimeValue);
       }
       syncDisplay();
       renderPanel();
@@ -6161,8 +6593,9 @@
     field._date = displayInput;
     field._open = openPanel;
     field._close = closePanel;
-    field._getValue = () => exportValue(localValue);
-    field._setValue = (value) => setDateValue(value, null, { emit: false });
+    field._getValue = () => exportCurrentValue(localValue, localTimeValue);
+    field._setValue = (value) => setDateValue(value, null, { emit: false, timeValue: resolveDateTimeTimeValue(value) });
+    field._time = () => uiCloneTimeParts(localTimeValue);
     field._panel = () => entry?.panel || null;
 
     return field;
@@ -6197,6 +6630,15 @@
         icon: "String|Node|Function|Array",
         iconRight: "String|Node|Function|Array",
         pointIcon: "String|Node|Function|Array",
+        withTime: "boolean",
+        timeValue: "string|Date",
+        timeMin: "string",
+        timeMax: "string",
+        timeMinuteStep: "number",
+        timeSecondStep: "number",
+        timeWithSeconds: "boolean",
+        timeShortcuts: "Array<{ label, value }>",
+        timePointIcon: "String|Node|Function|Array",
         clearable: "boolean",
         confirm: "boolean",
         name: "string",
@@ -6211,6 +6653,9 @@
         point: "Punto/icona nel giorno",
         dayPoint: "Alias di point",
         value: "Footer value renderer ({ value, displayValue, mode })",
+        timeOption: "Renderer per opzione oraria nel footer integrato",
+        timePoint: "Punto/icona nella time option del footer",
+        timeShortcut: "Renderer scorciatoia oraria integrata",
         label: "Floating label",
         topLabel: "Top label",
         icon: "Left icon",
@@ -6225,33 +6670,356 @@
         onNavigate: "({ month, year })"
       },
       returns: "HTMLDivElement (field wrapper) con ._input, ._open(), ._close(), ._getValue(), ._setValue(value)",
-      description: "Date picker reattivo con overlay fixed, single/range/multiple/multi-range, model, min/max, presets, size xs-xl e supporto hotel/travel."
+      description: "Date picker reattivo con overlay fixed, single/range/multiple/multi-range, model, min/max, presets, size xs-xl e supporto opzionale al tempo in interfaccia unificata."
     };
   }
   // Esempio: CMSwift.ui.Date({ value: "2024-01-01" })
 
   UI.Time = (...args) => {
-    const { props } = CMSwift.uiNormalizeArgs(args);
-    const p = CMSwift.omit(props, ["class", "slots"]);
-    p.type = "time";
-    p.class = uiClass(["cms-input", props.class]);
-    return _.input(p);
+    const { props, children } = CMSwift.uiNormalizeArgs(args);
+    const slots = props.slots || {};
+    const sizeValue = uiComputed(props.size, () => {
+      const value = String(uiUnwrap(props.size) || "").toLowerCase();
+      return ["xs", "sm", "md", "lg", "xl"].includes(value) ? `cms-size-${value}` : "";
+    });
+    const getTimeOptions = () => {
+      const detectedTime = uiExportTimeValue(
+        uiExtractTimeFromValue(model ? model.get() : uiUnwrap(props.value) ?? initialRawValue, { withSeconds: true }),
+        { withSeconds: true }
+      );
+      return {
+        withSeconds: !!uiUnwrap(props.withSeconds ?? props.showSeconds) || /:\d{2}:\d{2}$/.test(detectedTime),
+        min: uiUnwrap(props.min ?? props.minTime),
+        max: uiUnwrap(props.max ?? props.maxTime),
+        use12h: uiUnwrap(props.use12h ?? props.ampm)
+      };
+    };
+    const getMinuteStep = () => {
+      const raw = Number(uiUnwrap(props.minuteStep ?? 1));
+      return Math.max(1, Math.min(30, Number.isFinite(raw) ? raw : 5));
+    };
+    const getSecondStep = () => {
+      const raw = Number(uiUnwrap(props.secondStep ?? 1));
+      return Math.max(1, Math.min(30, Number.isFinite(raw) ? raw : 5));
+    };
+    const valueBinding = props.model || ((uiIsSignal(props.value) || uiIsRod(props.value)) ? props.value : null);
+    const model = resolveModel(valueBinding, "UI.Time:model");
+    const initialRawValue = model ? model.get() : uiUnwrap(props.value);
+    const parseTypedValue = (raw) => uiExtractTimeFromValue(raw, getTimeOptions());
+    const formatDisplayValue = (value) => uiFormatTimeDisplay(value, getTimeOptions());
+    const exportValue = (value) => uiExportTimeValue(value, getTimeOptions());
+    const serializeValue = (value) => JSON.stringify(exportValue(value));
+
+    let localValue = uiCloneTimeParts(parseTypedValue(initialRawValue));
+    let workingValue = uiCloneTimeParts(localValue);
+    let entry = null;
+    let panelRoot = null;
+
+    const displayInput = _.input({
+      class: uiClass(["cms-input", "cms-time-display", sizeValue, uiWhen(props.manualInput, "is-manual"), props.inputClass]),
+      type: "text",
+      autocomplete: "off",
+      placeholder: props.placeholder || "Seleziona orario",
+      readOnly: !uiUnwrap(props.manualInput),
+      disabled: !!uiUnwrap(props.disabled),
+      value: formatDisplayValue(localValue)
+    });
+    displayInput.setAttribute("aria-haspopup", "dialog");
+    const hiddenHost = _.div({ style: { display: "contents" } });
+    const controlNode = _.div({ class: "cms-time-control", style: { display: "contents" } }, displayInput, hiddenHost);
+
+    const field = UI.FormField({
+      ...props,
+      iconRight: props.iconRight ?? "schedule",
+      control: controlNode,
+      getValue: () => displayInput.value,
+      onClear: () => {
+        if (uiUnwrap(props.disabled) || uiUnwrap(props.readonly)) return;
+        setTimeState(null, null, { commit: true });
+        if (entry) closePanel();
+      },
+      onFocus: () => displayInput.focus()
+    });
+
+    const getCurrentValue = () => uiUnwrap(props.confirm) ? workingValue : localValue;
+    const syncHiddenInputs = () => {
+      hiddenHost.replaceChildren();
+      const baseName = uiUnwrap(props.name);
+      if (!baseName) return;
+      hiddenHost.appendChild(_.input({ type: "hidden", name: baseName, value: exportValue(localValue) }));
+    };
+    const syncDisplay = () => {
+      displayInput.readOnly = !uiUnwrap(props.manualInput);
+      displayInput.disabled = !!uiUnwrap(props.disabled);
+      displayInput.setAttribute("aria-expanded", entry ? "true" : "false");
+      displayInput.value = formatDisplayValue(localValue);
+      syncHiddenInputs();
+      field._refresh?.();
+    };
+    const setTimeState = (nextValue, event, options = {}) => {
+      const normalized = uiCloneTimeParts(parseTypedValue(nextValue));
+      if (uiUnwrap(props.confirm) && options.commit !== true) {
+        workingValue = uiCloneTimeParts(normalized);
+        renderPanel();
+        return normalized;
+      }
+      const prev = serializeValue(localValue);
+      localValue = uiCloneTimeParts(normalized);
+      workingValue = uiCloneTimeParts(normalized);
+      syncDisplay();
+      renderPanel();
+      if (model && options.fromModel !== true) model.set(exportValue(normalized));
+      const nextSerialized = serializeValue(normalized);
+      if (options.emit !== false && nextSerialized !== prev) {
+        const emitted = exportValue(normalized);
+        props.onInput?.(emitted, event);
+        props.onChange?.(emitted, event);
+      }
+      return normalized;
+    };
+    const shouldCloseOnSelect = (meta) => {
+      if (uiUnwrap(props.confirm)) return false;
+      if (props.closeOnSelect !== true) return false;
+      if (getTimeOptions().withSeconds) return meta?.part === "second";
+      return meta?.part === "minute";
+    };
+    const scrollTimeColumnsToSelection = (options = {}) => {
+      uiCenterTimeColumnsToSelection(panelRoot, options);
+    };
+    const jumpToNow = () => {
+      const scrollState = uiCaptureTimeColumnScrollState(panelRoot);
+      setTimeState(new Date(), null, { commit: !uiUnwrap(props.confirm) });
+      scrollTimeColumnsToSelection({ scrollState });
+      if (!uiUnwrap(props.confirm) && props.closeOnSelect === true) closePanel();
+    };
+    const applyWorkingValue = () => {
+      if (!uiUnwrap(props.confirm)) return;
+      setTimeState(workingValue, null, { commit: true });
+      if (props.closeOnSelect !== false) closePanel();
+    };
+
+    const renderPanel = () => {
+      if (!panelRoot) return;
+      const currentValue = getCurrentValue();
+      const footerDisplayValue = formatDisplayValue(currentValue);
+      const header = _.div({ class: "cms-time-header" });
+      const columns = _.div({ class: "cms-time-columns" },
+        _.div({ class: "cms-time-column-title" }, uiUnwrap(props.hoursLabel) || "Ore"),
+        _.div({ class: "cms-time-column-title" }, uiUnwrap(props.minutesLabel) || "Min")
+      );
+      const withSeconds = getTimeOptions().withSeconds;
+      if (withSeconds) {
+        columns.appendChild(_.div({ class: "cms-time-column-title" }, uiUnwrap(props.secondsLabel) || "Sec"));
+      }
+      header.appendChild(columns);
+      const body = uiCreateTimePickerSection({
+        props: {
+          min: uiUnwrap(props.min ?? props.minTime),
+          max: uiUnwrap(props.max ?? props.maxTime),
+          use12h: uiUnwrap(props.use12h ?? props.ampm),
+          hoursLabel: uiUnwrap(props.hoursLabel) || "Ore",
+          minutesLabel: uiUnwrap(props.minutesLabel) || "Min",
+          secondsLabel: uiUnwrap(props.secondsLabel) || "Sec"
+        },
+        slots,
+        value: currentValue,
+        withSeconds: withSeconds,
+        minuteStep: getMinuteStep(),
+        secondStep: getSecondStep(),
+        disabled: !!uiUnwrap(props.disabled),
+        readonly: !!uiUnwrap(props.readonly),
+        pointIcon: uiUnwrap(props.pointIcon),
+        shortcuts: uiUnwrap(props.shortcuts ?? props.presets),
+        onSelect: (nextTime, meta) => {
+          const scrollState = uiCaptureTimeColumnScrollState(panelRoot);
+          setTimeState(nextTime, null);
+          scrollTimeColumnsToSelection({ scrollState });
+          if (shouldCloseOnSelect(meta)) closePanel();
+        }
+      });
+      const footer = _.div({ class: "cms-time-footer" },
+        _.div({ class: "cms-time-value" },
+          ...renderSlotToArray(
+            slots,
+            "value",
+            { value: currentValue, displayValue: footerDisplayValue },
+            footerDisplayValue || renderSlotToArray(slots, "default", {}, children)
+          )
+        ),
+        _.div({ class: "cms-time-actions" },
+          _.button({ type: "button", class: "cms-time-action", onClick: jumpToNow }, uiUnwrap(props.nowLabel) || "Ora"),
+          uiUnwrap(props.clearable) !== false
+            ? _.button({ type: "button", class: "cms-time-action", onClick: () => setTimeState(null, null, { commit: !uiUnwrap(props.confirm) }) }, uiUnwrap(props.clearLabel) || "Reset")
+            : null,
+          uiUnwrap(props.confirm)
+            ? _.button({ type: "button", class: "cms-time-action is-primary", onClick: applyWorkingValue }, uiUnwrap(props.applyLabel) || "Applica")
+            : null
+        )
+      );
+      panelRoot.replaceChildren(_.div({
+        class: "cms-time-panel-root",
+        onKeydown: (event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            closePanel();
+          }
+        }
+      }, header, body, footer));
+    };
+
+    function openPanel() {
+      if (entry || uiUnwrap(props.disabled) || uiUnwrap(props.readonly)) return entry;
+      workingValue = uiCloneTimeParts(localValue);
+      entry = CMSwift.overlay.open(() => {
+        panelRoot = _.div({ class: uiClassStatic(["cms-time-panel", uiUnwrap(sizeValue), props.panelClass]) });
+        renderPanel();
+        return panelRoot;
+      }, {
+        type: "time",
+        anchorEl: field._control || displayInput,
+        placement: props.placement || "bottom-start",
+        offsetX: props.offsetX ?? 0,
+        offsetY: props.offsetY ?? props.offset ?? 8,
+        backdrop: false,
+        lockScroll: false,
+        trapFocus: false,
+        closeOnOutside: props.closeOnOutside !== false,
+        closeOnBackdrop: false,
+        closeOnEsc: true,
+        autoFocus: false,
+        className: uiClassStatic(["cms-time-overlay", props.panelClass]),
+        onClose: () => {
+          entry = null;
+          panelRoot = null;
+          syncDisplay();
+          props.onClose?.();
+        }
+      });
+      if (props.panelStyle) Object.assign(entry.panel.style, props.panelStyle);
+      overlayEnter(entry);
+      scrollTimeColumnsToSelection();
+      syncDisplay();
+      props.onOpen?.();
+      return entry;
+    }
+
+    function closePanel() {
+      if (!entry) return;
+      const toClose = entry;
+      overlayLeave(toClose, () => CMSwift.overlay.close(toClose.id));
+    }
+
+    displayInput.addEventListener("focus", (event) => {
+      props.onFocus?.(event);
+      if (props.openOnFocus !== false) openPanel();
+    });
+    displayInput.addEventListener("click", (event) => {
+      props.onClick?.(event);
+      openPanel();
+    });
+    displayInput.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        if (entry) {
+          event.preventDefault();
+          closePanel();
+        }
+        return;
+      }
+      if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openPanel();
+      }
+      if ((event.key === "Backspace" || event.key === "Delete") && !uiUnwrap(props.manualInput) && uiUnwrap(props.clearable) !== false) {
+        event.preventDefault();
+        setTimeState(null, event, { commit: true });
+      }
+    });
+    if (uiUnwrap(props.manualInput)) {
+      displayInput.addEventListener("input", (event) => props.onTyping?.(displayInput.value, event));
+      displayInput.addEventListener("change", (event) => setTimeState(displayInput.value, event));
+      displayInput.addEventListener("blur", (event) => {
+        props.onBlur?.(event);
+        if (displayInput.value === "") setTimeState(null, event);
+        else setTimeState(displayInput.value, event);
+      });
+    } else {
+      displayInput.addEventListener("blur", (event) => props.onBlur?.(event));
+    }
+
+    if (model) {
+      model.watch((next) => {
+        const normalized = uiCloneTimeParts(parseTypedValue(next));
+        if (serializeValue(normalized) === serializeValue(localValue)) return;
+        localValue = uiCloneTimeParts(normalized);
+        workingValue = uiCloneTimeParts(normalized);
+        syncDisplay();
+        renderPanel();
+      }, "UI.Time:watch");
+    }
+
+    CMSwift.reactive.effect(() => {
+      if (!model && props.value != null) {
+        localValue = uiCloneTimeParts(parseTypedValue(uiUnwrap(props.value)));
+        workingValue = uiCloneTimeParts(localValue);
+      }
+      syncDisplay();
+      renderPanel();
+      if (entry && uiUnwrap(props.disabled)) closePanel();
+    }, "UI.Time:render");
+
+    field._input = displayInput;
+    field._time = displayInput;
+    field._open = openPanel;
+    field._close = closePanel;
+    field._getValue = () => exportValue(localValue);
+    field._setValue = (value) => setTimeState(value, null, { emit: false, commit: true });
+    field._panel = () => entry?.panel || null;
+
+    return field;
   };
   if (CMSwift.isDev?.()) {
     UI.meta = UI.meta || {};
     UI.meta.Time = {
       signature: "UI.Time(props)",
       props: {
-        value: "string",
-        slots: "{ default? }",
+        value: "string|Date",
+        model: "rod | [get,set] signal",
+        min: "string",
+        max: "string",
+        minuteStep: "number",
+        secondStep: "number",
+        withSeconds: "boolean",
+        manualInput: "boolean",
+        clearable: "boolean",
+        confirm: "boolean",
+        label: "String|Node|Function|Array",
+        icon: "String|Node|Function|Array",
+        iconRight: "String|Node|Function|Array",
+        pointIcon: "String|Node|Function|Array",
+        shortcuts: "Array<{ label, value }>",
+        name: "string",
         class: "string",
         style: "object"
       },
       slots: {
-        default: "Unused (time input has no content)"
+        option: "Renderer per opzione oraria ({ part, value, label, selected, timeValue })",
+        point: "Punto/icona nella time option selezionata",
+        shortcut: "Renderer scorciatoia",
+        value: "Footer value renderer ({ value, displayValue })",
+        label: "Floating label",
+        topLabel: "Top label",
+        icon: "Left icon",
+        iconRight: "Right icon",
+        default: "Fallback value content"
       },
-      returns: "HTMLInputElement",
-      description: "Input type time standardizzato."
+      events: {
+        onChange: "(value, event)",
+        onInput: "(value, event)",
+        onOpen: "void",
+        onClose: "void"
+      },
+      returns: "HTMLDivElement (field wrapper) con ._input, ._open(), ._close(), ._getValue(), ._setValue(value)",
+      description: "Time picker reattivo con overlay fixed, label/icon slots, point icon, shortcuts, confirm e model."
     };
   }
   // Esempio: CMSwift.ui.Time({ value: "09:30" })

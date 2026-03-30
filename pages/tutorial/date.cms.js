@@ -56,8 +56,8 @@ const listSample = {
         label: "Data arrivo",
         icon: "calendar_month",
         clearable: true,
-        monthsToShow: 2,
-        size: "xl",
+        withTime: true,
+        monthsToShow: 1,
         min: "2026-04-01",
         max: "2027-12-31",
         locale: "it-IT"
