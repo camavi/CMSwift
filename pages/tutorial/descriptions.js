@@ -133,7 +133,7 @@ const descriptions = {
   },
   "_.Pagination": {
     title: "Pagination",
-    description: "Paginazione con prev/next, label e max pagine. Supporta model e slot per prev/next/label."
+    description: "Paginazione standard con numeri, ellissi, controlli edge, summary e supporto `model`, `max` oppure `total/pageSize`."
   },
   "_.Spinner": {
     title: "Spinner",

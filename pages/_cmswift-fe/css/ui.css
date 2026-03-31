@@ -612,6 +612,88 @@
   text-align: right;
 }
 
+.cms-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cms-pagination-controls,
+.cms-pagination-start,
+.cms-pagination-pages,
+.cms-pagination-end,
+.cms-pagination-extra {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cms-pagination-controls {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cms-pagination-pages {
+  justify-content: center;
+}
+
+.cms-pagination-summary {
+  color: var(--cms-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.cms-pagination-btn {
+  min-width: 40px;
+  justify-content: center;
+}
+
+.cms-pagination-page-btn.active {
+  font-weight: 700;
+  box-shadow: var(--cms-shadow-sm);
+}
+
+.cms-pagination-page-btn[aria-current="page"] {
+  cursor: default;
+}
+
+.cms-pagination-page-btn[aria-current="page"]:hover {
+  transform: none;
+}
+
+.cms-pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  color: var(--cms-muted);
+  user-select: none;
+}
+
+.cms-pagination.dense {
+  gap: 8px;
+}
+
+.cms-pagination.dense .cms-pagination-controls,
+.cms-pagination.dense .cms-pagination-start,
+.cms-pagination.dense .cms-pagination-pages,
+.cms-pagination.dense .cms-pagination-end,
+.cms-pagination.dense .cms-pagination-extra {
+  gap: 6px;
+}
+
+.cms-pagination.dense .cms-pagination-btn {
+  min-width: 34px;
+}
+
+.cms-pagination.is-disabled {
+  opacity: 0.75;
+}
+
 .cms-container {
   max-width: 1100px;
   margin: 0 auto;
@@ -4101,7 +4183,7 @@
   --set-color-4: var(--cms-primary-900);
 }
 
-.cms-state-primary .cms-btn {
+.cms-state-primary>.cms-btn {
   color: var(--cms-primary-text);
 }
 
@@ -4117,7 +4199,7 @@
   --set-color-4: var(--cms-gray-900);
 }
 
-.cms-state-secondary .cms-btn {
+.cms-state-secondary>.cms-btn {
   color: var(--cms-secondary-text);
 }
 
@@ -4133,7 +4215,7 @@
   --set-color-4: var(--cms-success-900);
 }
 
-.cms-state-success .cms-btn {
+.cms-state-success>.cms-btn {
   color: var(--cms-success-text);
 }
 
@@ -4149,7 +4231,7 @@
   --set-color-4: var(--cms-warning-900);
 }
 
-.cms-state-warning .cms-btn {
+.cms-state-warning>.cms-btn {
   color: var(--cms-warning-text);
 }
 
@@ -4165,7 +4247,7 @@
   --set-color-4: var(--cms-danger-900);
 }
 
-.cms-state-danger .cms-btn {
+.cms-state-danger>.cms-btn {
   color: var(--cms-danger-text);
 }
 
@@ -4181,7 +4263,7 @@
   --set-color-4: var(--cms-info-900);
 }
 
-.cms-state-info .cms-btn {
+.cms-state-info>.cms-btn {
   color: var(--cms-info-text);
 }
 
@@ -4197,7 +4279,7 @@
   --set-color-4: var(--cms-gray-500);
 }
 
-.cms-state-light .cms-btn {
+.cms-state-light>.cms-btn {
   color: var(--cms-light-text);
 }
 
@@ -4213,7 +4295,7 @@
   --set-color-4: var(--cms-gray-900);
 }
 
-.cms-state-dark .cms-btn {
+.cms-state-dark>.cms-btn {
   color: var(--cms-dark-text);
 }
 
