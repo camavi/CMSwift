@@ -3748,34 +3748,198 @@
   }
   // Esempio: CMSwift.ui.Badge({ label: "New" })
 
+  const avatarGetInitials = (value) => {
+    if (value == null || value === false) return "";
+    const text = String(value)
+      .replace(/[._-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!text) return "";
+    const words = text.split(" ").filter(Boolean);
+    if (!words.length) return "";
+    if (words.length === 1) {
+      const token = words[0].replace(/[^a-z0-9]/gi, "");
+      return token.slice(0, 2).toUpperCase();
+    }
+    return words.slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join("");
+  };
+
+  const avatarStatusState = (value, fallback) => {
+    const raw = value == null || value === true ? fallback : value;
+    if (raw == null || raw === false) return normalizeState(fallback);
+    const token = String(raw).toLowerCase();
+    if (token === "online" || token === "available" || token === "active") return "success";
+    if (token === "away" || token === "pending") return "warning";
+    if (token === "busy" || token === "dnd" || token === "blocked") return "danger";
+    if (token === "offline" || token === "idle") return "secondary";
+    return normalizeState(token) || normalizeState(fallback);
+  };
+
+  const avatarPrimitiveBadge = (value, className = "cms-avatar-badge") => {
+    if (value == null || value === false) return null;
+    if (value instanceof Node || Array.isArray(value)) return value;
+    if (typeof value === "function") return value;
+    if (value === true) return _.span({ class: className });
+    return _.span({ class: className }, String(value));
+  };
+
+  const avatarPrimitiveStatus = (value, color) => {
+    if (value == null || value === false) {
+      if (!color) return null;
+      const fallbackState = avatarStatusState(null, color);
+      return _.span({ class: uiClass(["cms-avatar-status", fallbackState ? `cms-state-${fallbackState}` : ""]) });
+    }
+    if (value instanceof Node || Array.isArray(value)) return value;
+    if (typeof value === "function") return value;
+    const state = avatarStatusState(value, color);
+    if (value === true || state) {
+      return _.span({ class: uiClass(["cms-avatar-status", state ? `cms-state-${state}` : ""]) });
+    }
+    return avatarPrimitiveBadge(value, "cms-avatar-badge");
+  };
+
+  const avatarRenderAnchor = (className, nodes) => {
+    if (!nodes || !nodes.length) return null;
+    return _.span({ class: uiClass(["cms-avatar-anchor", className]) }, ...nodes);
+  };
+
   UI.Avatar = (...args) => {
     const { props, children } = CMSwift.uiNormalizeArgs(args);
     const slots = props.slots || {};
-    const cls = uiClass(["cms-avatar", uiWhen(props.elevated, "elevated"), props.class]);
-    const p = CMSwift.omit(props, ["src", "label", "size", "rounded", "square", "elevated", "slots"]);
+    const sizeClass = uiComputed(props.size, () => {
+      const v = uiUnwrap(props.size);
+      return (typeof v === "string" && CMSwift.uiSizes?.includes(v)) ? `cms-size-${v}` : "";
+    });
+    const stateClass = uiComputed([props.color, props.state], () => {
+      const v = uiUnwrap(props.color) || uiUnwrap(props.state) || "";
+      const state = normalizeState(v);
+      return state ? `cms-state-${state}` : "";
+    });
+    const cls = uiClass([
+      "cms-clear-set",
+      "cms-avatar",
+      "cms-singularity",
+      sizeClass,
+      stateClass,
+      uiWhen(props.square, "cms-avatar-square"),
+      uiWhen(props.elevated, "elevated"),
+      props.class
+    ]);
+
+    const p = CMSwift.omit(props, [
+      "src", "srcset", "srcSet", "sizes", "alt", "label", "name", "initials", "text",
+      "size", "fontSize", "textSize", "radius", "rounded", "square", "elevated",
+      "icon", "iconSize", "media", "fit", "badge", "notification", "status",
+      "statusColor", "presence", "topLeft", "topRight", "bottomLeft", "bottomRight",
+      "slots"
+    ]);
     p.class = cls;
 
-    const size = uiUnwrap(props.size) ?? 32;
-    const style = {
-      width: toCssSize(size),
-      height: toCssSize(size),
-      borderRadius: props.square ? "6px" : "999px",
-      aspectRatio: "1/1",
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "rgba(183, 226, 249, 0.28)",
-      ...(props.style || {})
-    };
+    const style = { ...(props.style || {}) };
+    const sizeStyle = uiStyleValue(props.size, (value) => {
+      if (typeof value === "string" && CMSwift.uiSizes?.includes(value)) return "";
+      return toCssSize(value);
+    }, "");
+    if (sizeStyle != null) {
+      style.width = sizeStyle;
+      style.height = sizeStyle;
+    }
+
+    const fontSizeValue = props.fontSize ?? props.textSize;
+    const fontSizeStyle = fontSizeValue != null
+      ? uiStyleValue(fontSizeValue, toCssSize)
+      : uiStyleValue(props.size, (value) => {
+        if (typeof value === "string" && CMSwift.uiSizes?.includes(value)) return "";
+        return `clamp(11px, calc(${toCssSize(value)} * 0.34), 28px)`;
+      }, "");
+    if (fontSizeStyle != null) style.fontSize = fontSizeStyle;
+
+    const radiusStyle = uiStyleValue(props.radius, (value) => {
+      const normalized = normalizeRadius(value);
+      if (normalized === "xxxl") return "999px";
+      if (normalized) return `var(--cms-r-${normalized})`;
+      if (typeof value === "number") return `${value}px`;
+      return String(value);
+    });
+    if (radiusStyle != null) style["--set-border-radius"] = radiusStyle;
     p.style = style;
 
-    const labelNodes = renderSlotToArray(slots, "label", {}, props.label);
-    const fallback = labelNodes.length ? labelNodes : renderSlotToArray(slots, "default", {}, children);
-    const img = props.src
-      ? _.img({ src: props.src, alt: props.label || "avatar", style: { width: "100%", height: "100%", objectFit: "cover" } })
+    const ctx = { props };
+    const altText = uiComputed([props.alt, props.label, props.name, props.text], () => {
+      const raw = uiUnwrap(props.alt) || uiUnwrap(props.label) || uiUnwrap(props.name) || uiUnwrap(props.text) || "avatar";
+      return String(raw);
+    });
+    const iconFallback = props.icon != null
+      ? (typeof props.icon === "string"
+        ? UI.Icon({ name: props.icon, size: props.iconSize || props.size || "sm" })
+        : CMSwift.ui.slot(props.icon, { as: "icon" }))
       : null;
+    const labelFallback = uiComputed([props.initials, props.text, props.label, props.name], () => {
+      const explicit = uiUnwrap(props.initials) ?? uiUnwrap(props.text);
+      if (explicit != null) return explicit;
+      const rawLabel = uiUnwrap(props.label) ?? uiUnwrap(props.name);
+      if (typeof rawLabel === "string") return avatarGetInitials(rawLabel);
+      return rawLabel;
+    });
+    const badgeFallback = avatarPrimitiveBadge(uiUnwrap(props.badge ?? props.notification));
+    const statusFallback = avatarPrimitiveStatus(
+      uiUnwrap(props.status ?? props.presence),
+      uiUnwrap(props.statusColor)
+    );
 
-    return _.div(p, img || (fallback.length ? fallback : ["?"]));
+    let mediaNodes = renderSlotToArray(slots, "media", ctx, props.media);
+    if (!mediaNodes.length && props.src) {
+      const imgProps = {
+        class: "cms-avatar-img",
+        src: props.src,
+        alt: altText,
+        sizes: props.sizes,
+        style: {}
+      };
+      if (props.srcset != null) imgProps.srcset = props.srcset;
+      if (props.srcSet != null) imgProps.srcset = props.srcSet;
+      const fitStyle = uiStyleValue(props.fit);
+      if (fitStyle != null) imgProps.style.objectFit = fitStyle;
+      mediaNodes = [_.img(imgProps)];
+    }
+
+    const defaultNodes = renderSlotToArray(slots, "default", ctx, children);
+    const fallbackNodes = renderSlotToArray(slots, "fallback", ctx, null);
+    const labelNodes = renderSlotToArray(slots, "label", ctx, labelFallback);
+    const iconNodes = renderSlotToArray(slots, "icon", ctx, iconFallback);
+    const mainNodes = mediaNodes.length
+      ? mediaNodes
+      : (defaultNodes.length
+        ? defaultNodes
+        : (fallbackNodes.length
+          ? fallbackNodes
+          : (labelNodes.length
+            ? labelNodes
+            : (iconNodes.length ? iconNodes : ["?"]))));
+
+    const bodyClass = mediaNodes.length ? "cms-avatar-media" : "cms-avatar-fallback";
+    const body = _.span({ class: "cms-avatar-body" },
+      _.span({ class: bodyClass }, ...mainNodes)
+    );
+
+    let topLeftNodes = renderSlotToArray(slots, "topLeft", ctx, props.topLeft);
+    let topRightNodes = renderSlotToArray(slots, "topRight", ctx, props.topRight);
+    let bottomLeftNodes = renderSlotToArray(slots, "bottomLeft", ctx, props.bottomLeft);
+    let bottomRightNodes = renderSlotToArray(slots, "bottomRight", ctx, props.bottomRight);
+    const badgeNodes = renderSlotToArray(slots, "badge", ctx, badgeFallback);
+    const statusNodes = renderSlotToArray(slots, "status", ctx, statusFallback);
+
+    if (!topRightNodes.length && badgeNodes.length) topRightNodes = badgeNodes;
+    if (!bottomRightNodes.length && statusNodes.length) bottomRightNodes = statusNodes;
+
+    return _.div(
+      p,
+      body,
+      avatarRenderAnchor("cms-avatar-anchor-top-left", topLeftNodes),
+      avatarRenderAnchor("cms-avatar-anchor-top-right", topRightNodes),
+      avatarRenderAnchor("cms-avatar-anchor-bottom-left", bottomLeftNodes),
+      avatarRenderAnchor("cms-avatar-anchor-bottom-right", bottomRightNodes)
+    );
   };
   if (CMSwift.isDev?.()) {
     UI.meta = UI.meta || {};
@@ -3783,20 +3947,51 @@
       signature: "UI.Avatar(...children) | UI.Avatar(props, ...children)",
       props: {
         src: "string",
+        srcset: "string",
+        sizes: "string",
+        alt: "string",
         label: "String|Node|Function|Array",
+        name: "string",
+        initials: "string|Node|Function|Array",
+        text: "string|Node|Function|Array",
         size: "number|string",
+        fontSize: "number|string",
+        radius: "number|string",
         square: "boolean",
         elevated: "boolean",
-        slots: "{ label?, default? }",
+        color: "string",
+        state: "string",
+        icon: "string|Node|Function|Array",
+        iconSize: "number|string",
+        media: "Node|Function|Array",
+        fit: "cover|contain|fill|scale-down|none",
+        badge: "string|number|Node|Function|Array",
+        notification: "string|number|Node|Function|Array",
+        status: "boolean|string|number|Node|Function|Array",
+        statusColor: "success|warning|danger|info|primary|secondary|dark|light|string",
+        topLeft: "Node|Function|Array",
+        topRight: "Node|Function|Array",
+        bottomLeft: "Node|Function|Array",
+        bottomRight: "Node|Function|Array",
+        slots: "{ media?, default?, fallback?, label?, icon?, badge?, status?, topLeft?, topRight?, bottomLeft?, bottomRight? }",
         class: "string",
         style: "object"
       },
       slots: {
-        label: "Avatar label content",
-        default: "Fallback content"
+        media: "Media principale custom",
+        default: "Contenuto principale custom al posto di immagine o fallback",
+        fallback: "Fallback custom quando non c'e immagine",
+        label: "Fallback testuale / initials",
+        icon: "Icona fallback",
+        badge: "Badge overlay, di default top-right",
+        status: "Presence dot o contenuto overlay, di default bottom-right",
+        topLeft: "Contenuto overlay top-left",
+        topRight: "Contenuto overlay top-right",
+        bottomLeft: "Contenuto overlay bottom-left",
+        bottomRight: "Contenuto overlay bottom-right"
       },
       returns: "HTMLDivElement",
-      description: "Avatar con immagine o fallback testuale."
+      description: "Avatar flessibile con immagine, fallback intelligenti, stati, badge e slot overlay."
     };
   }
   // Esempio: CMSwift.ui.Avatar({ label: "CM" })
