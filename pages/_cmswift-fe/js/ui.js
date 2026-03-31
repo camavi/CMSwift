@@ -10281,53 +10281,224 @@
   UI.Dialog = (...args) => {
     const { props, children } = CMSwift.uiNormalizeArgs(args);
     const slots = props.slots || {};
+    const stateList = ["primary", "secondary", "warning", "danger", "success", "info", "light", "dark"];
+    const sizeList = ["xs", "sm", "md", "lg", "xl", "full"];
+    let currentProps = { ...props };
     let entry = null;
     let lastActive = null;
-
-    const buildContent = (close) => {
-      const ctx = { close };
-      const titleFallback = props.title != null ? props.title : props.header;
-      const titleNodes = renderSlotToArray(slots, "title", ctx, titleFallback);
-      const contentFallback = props.content != null
-        ? (typeof props.content === "function" ? props.content(ctx) : props.content)
-        : (children && children.length ? children : null);
-      let contentNodes = renderSlotToArray(slots, "content", ctx, contentFallback);
-      if (!contentNodes.length) contentNodes = renderSlotToArray(slots, "default", ctx, contentFallback);
-      const actionsFallback = props.actions != null
-        ? (typeof props.actions === "function" ? props.actions(ctx) : props.actions)
-        : null;
-      const actionsNodes = renderSlotToArray(slots, "actions", ctx, actionsFallback);
-
-      const titleEl = titleNodes.length ? _.div({ class: "cms-dialog-title" }, ...titleNodes) : null;
-      const bodyEl = _.div({ class: "cms-dialog-body" }, ...contentNodes);
-      const actionsEl = actionsNodes.length ? _.div({ class: "cms-dialog-actions" }, ...actionsNodes) : null;
-      return [titleEl, bodyEl, actionsEl].filter(Boolean);
+    const resolveRender = (value, ctx) => typeof value === "function" ? value(ctx) : value;
+    const splitClasses = (value) => String(value || "").split(/\s+/).filter(Boolean);
+    const setTrackedClasses = (target, key, classes) => {
+      if (!target) return;
+      const prev = target[key] || [];
+      if (prev.length) target.classList.remove(...prev);
+      const next = (classes || []).filter(Boolean);
+      if (next.length) target.classList.add(...next);
+      target[key] = next;
     };
+    const setStyleValue = (target, name, value, formatter = (v) => v) => {
+      if (!target) return;
+      if (value == null || value === "") {
+        target.style.removeProperty(name);
+        return;
+      }
+      target.style.setProperty(name, formatter(value));
+    };
+    const getOptions = () => currentProps;
+    const getStateClass = (opts) => {
+      const value = uiUnwrap(opts.state ?? opts.color);
+      if (!value) return "";
+      return stateList.includes(value) ? value : String(value);
+    };
+    const getSizeClass = (opts) => {
+      const value = uiUnwrap(opts.size);
+      return (typeof value === "string" && sizeList.includes(value)) ? value : "";
+    };
+    const getAlignClass = (opts) => {
+      const raw = String(uiUnwrap(opts.actionsAlign ?? opts.footerAlign ?? opts.alignActions ?? "end")).toLowerCase();
+      if (["start", "left"].includes(raw)) return "start";
+      if (["center", "middle"].includes(raw)) return "center";
+      if (["between", "space-between"].includes(raw)) return "between";
+      if (["stretch", "full"].includes(raw)) return "stretch";
+      return "end";
+    };
+    const getVerticalAlignClass = (opts) => {
+      const raw = String(uiUnwrap(opts.align ?? opts.verticalAlign ?? opts.position ?? "center")).toLowerCase();
+      if (["top", "start", "flex-start"].includes(raw)) return "cms-dialog-align-top";
+      if (["bottom", "end", "flex-end"].includes(raw)) return "cms-dialog-align-bottom";
+      return "";
+    };
+    const isClosable = (opts) => {
+      const value = opts.closable ?? opts.dismissible ?? opts.closeButton;
+      return value !== false;
+    };
+    const buildContent = () => {
+      const opts = getOptions();
+      const ctx = {
+        close,
+        dismiss: close,
+        open,
+        toggle,
+        update,
+        isOpen,
+        entry: () => entry,
+        props: opts
+      };
+      const iconFallback = opts.icon != null
+        ? (typeof opts.icon === "string"
+          ? UI.Icon({ name: opts.icon, size: opts.iconSize || "md" })
+          : CMSwift.ui.slot(opts.icon, { as: "icon" }))
+        : null;
+      const eyebrowNodes = renderSlotToArray(slots, "eyebrow", ctx, resolveRender(opts.eyebrow, ctx));
+      const titleNodes = renderSlotToArray(slots, "title", ctx, resolveRender(opts.title ?? opts.heading ?? opts.header, ctx));
+      const subtitleNodes = renderSlotToArray(slots, "subtitle", ctx, resolveRender(opts.subtitle ?? opts.description, ctx));
+      const iconNodes = renderSlotToArray(slots, "icon", ctx, iconFallback);
+      const customHeaderNodes = renderSlotToArray(slots, "header", ctx, resolveRender(opts.headerContent ?? opts.head, ctx));
+      const closeSlotNodes = isClosable(opts)
+        ? renderSlotToArray(slots, "close", ctx, UI.Btn({
+          class: "cms-dialog-close",
+          size: "sm",
+          outline: true,
+          "aria-label": opts.closeLabel || "Chiudi dialog",
+          "data-dialog-close": true
+        }, UI.Icon({ name: opts.closeIcon || "close", size: "sm" })))
+        : [];
+      const bodyRaw = opts.content ?? opts.body ?? opts.message ?? (children && children.length ? children : null);
+      let contentNodes = renderSlotToArray(slots, "content", ctx, resolveRender(bodyRaw, ctx));
+      if (!contentNodes.length) contentNodes = renderSlotToArray(slots, "body", ctx, resolveRender(bodyRaw, ctx));
+      if (!contentNodes.length) contentNodes = renderSlotToArray(slots, "default", ctx, resolveRender(bodyRaw, ctx));
+      const footerRaw = resolveRender(opts.footer ?? opts.actions, ctx);
+      let footerNodes = renderSlotToArray(slots, "footer", ctx, footerRaw);
+      if (!footerNodes.length) footerNodes = renderSlotToArray(slots, "actions", ctx, footerRaw);
 
-    const open = () => {
-      if (entry) return entry;
+      let headerEl = null;
+      if (customHeaderNodes.length) {
+        headerEl = _.div({ class: "cms-dialog-head cms-dialog-head-custom" }, ...customHeaderNodes);
+      } else if (eyebrowNodes.length || titleNodes.length || subtitleNodes.length || iconNodes.length || closeSlotNodes.length) {
+        headerEl = _.div(
+          { class: "cms-dialog-head" },
+          iconNodes.length ? _.div({ class: "cms-dialog-icon" }, ...iconNodes) : null,
+          _.div(
+            { class: "cms-dialog-head-main" },
+            eyebrowNodes.length ? _.div({ class: "cms-dialog-eyebrow" }, ...eyebrowNodes) : null,
+            titleNodes.length ? _.div({ class: "cms-dialog-title" }, ...titleNodes) : null,
+            subtitleNodes.length ? _.div({ class: "cms-dialog-subtitle" }, ...subtitleNodes) : null
+          ),
+          closeSlotNodes.length ? _.div({ class: "cms-dialog-close-wrap" }, ...closeSlotNodes) : null
+        );
+      }
+
+      const bodyEl = _.div(
+        { class: uiClass(["cms-dialog-body", opts.bodyClass]) },
+        ...contentNodes
+      );
+      const footerEl = footerNodes.length
+        ? _.div({
+          class: uiClass([
+            "cms-dialog-actions",
+            `is-${getAlignClass(opts)}`,
+            uiWhen(opts.stackActions, "is-stacked"),
+            opts.actionsClass,
+            opts.footerClass
+          ])
+        }, ...footerNodes)
+        : null;
+
+      return _.div({
+        class: uiClass([
+          "cms-dialog-shell",
+          uiWhen(!!headerEl, "has-head"),
+          uiWhen(!!footerEl, "has-footer"),
+          uiWhen(opts.divider !== false, "with-divider")
+        ])
+      }, ...[headerEl, bodyEl, footerEl].filter(Boolean));
+    };
+    const applyEntryOptions = (currentEntry) => {
+      if (!currentEntry?.panel) return;
+      const opts = getOptions();
+      const stateClass = getStateClass(opts);
+      const sizeClass = getSizeClass(opts);
+      setTrackedClasses(currentEntry.panel, "_dialogClassTokens", [
+        "cms-dialog",
+        "cms-singularity",
+        "cms-clear-set",
+        sizeClass ? `cms-dialog-${sizeClass}` : "",
+        stateClass,
+        stateClass ? `cms-state-${stateClass}` : "",
+        uiUnwrap(opts.fullscreen) ? "fullscreen" : "",
+        uiUnwrap(opts.scrollable) ? "scrollable" : "",
+        uiUnwrap(opts.stickyHeader) ? "sticky-head" : "",
+        uiUnwrap(opts.stickyActions) ? "sticky-actions" : "",
+        uiUnwrap(opts.borderless) ? "borderless" : "",
+        ...splitClasses(opts.class),
+        ...splitClasses(opts.panelClass)
+      ]);
+      setTrackedClasses(currentEntry.overlay, "_dialogOverlayClassTokens", [
+        getVerticalAlignClass(opts),
+        uiUnwrap(opts.backdropBlur) ? "cms-dialog-overlay-blur" : "",
+        ...splitClasses(opts.overlayClass)
+      ]);
+      setStyleValue(currentEntry.panel, "--cms-dialog-width", uiUnwrap(opts.width), toCssSize);
+      setStyleValue(currentEntry.panel, "--cms-dialog-min-width", uiUnwrap(opts.minWidth), toCssSize);
+      setStyleValue(currentEntry.panel, "--cms-dialog-max-width", uiUnwrap(opts.maxWidth), toCssSize);
+      setStyleValue(currentEntry.panel, "--cms-dialog-max-height", uiUnwrap(opts.maxHeight), toCssSize);
+      setStyleValue(currentEntry.panel, "--cms-dialog-body-max-height", uiUnwrap(opts.bodyMaxHeight ?? opts.contentMaxHeight), toCssSize);
+      if (opts.style) Object.assign(currentEntry.panel.style, opts.style);
+      setPropertyProps(currentEntry.panel, opts);
+      currentEntry.panel.setAttribute("role", opts.role || "dialog");
+      currentEntry.panel.setAttribute("aria-modal", opts.modal === false ? "false" : "true");
+      if (opts.ariaLabel) currentEntry.panel.setAttribute("aria-label", opts.ariaLabel);
+      else currentEntry.panel.removeAttribute("aria-label");
+    };
+    const renderOpenContent = () => {
+      if (!entry?.panel) return;
+      entry.panel.replaceChildren(buildContent());
+    };
+    const update = (nextProps = {}) => {
+      if (nextProps && typeof nextProps === "object") currentProps = { ...currentProps, ...nextProps };
+      if (entry) {
+        applyEntryOptions(entry);
+        renderOpenContent();
+      }
+      return api;
+    };
+    const open = (nextProps = null) => {
+      if (nextProps && typeof nextProps === "object") currentProps = { ...currentProps, ...nextProps };
+      if (entry) {
+        applyEntryOptions(entry);
+        renderOpenContent();
+        return entry;
+      }
       lastActive = document.activeElement;
-      const persistent = props.persistent === true;
-      entry = CMSwift.overlay.open(({ close }) => buildContent(close), {
+      const opts = getOptions();
+      const persistent = opts.persistent === true;
+      entry = CMSwift.overlay.open(() => buildContent(), {
         type: "dialog",
-        backdrop: true,
-        lockScroll: true,
-        trapFocus: true,
-        closeOnOutside: !persistent,
-        closeOnBackdrop: !persistent,
-        closeOnEsc: !persistent,
-        className: uiClassStatic(["cms-dialog", props.class]),
+        backdrop: opts.backdrop !== false,
+        lockScroll: opts.lockScroll !== false,
+        trapFocus: opts.trapFocus !== false,
+        autoFocus: opts.autoFocus !== false,
+        closeOnOutside: opts.closeOnOutside ?? !persistent,
+        closeOnBackdrop: opts.closeOnBackdrop ?? !persistent,
+        closeOnEsc: opts.closeOnEsc ?? !persistent,
+        className: uiClassStatic(["cms-dialog"]),
         onClose: () => {
+          entry?.panel?.removeEventListener("click", onPanelClick);
           entry = null;
-          props.onClose?.();
+          getOptions().onClose?.();
           if (lastActive && typeof lastActive.focus === "function") {
             setTimeout(() => lastActive.focus(), 0);
           }
         }
       });
-      if (props.style) Object.assign(entry.panel.style, props.style);
+      const onPanelClick = (e) => {
+        const target = e.target;
+        if (target && target.closest && target.closest("[data-dialog-close]")) close();
+      };
+      entry.panel.addEventListener("click", onPanelClick);
+      applyEntryOptions(entry);
       overlayEnter(entry);
-      props.onOpen?.();
+      getOptions().onOpen?.(entry);
       return entry;
     };
 
@@ -10338,34 +10509,76 @@
     };
 
     const isOpen = () => !!entry;
+    const toggle = (nextProps = null) => isOpen() ? (close(), null) : open(nextProps);
+    const api = { open, close, toggle, update, isOpen, entry: () => entry, props: () => ({ ...currentProps }) };
 
-    return { open, close, isOpen };
+    return api;
   };
   if (CMSwift.isDev?.()) {
     UI.meta = UI.meta || {};
     UI.meta.Dialog = {
-      signature: "UI.Dialog(props) -> { open, close }",
+      signature: "UI.Dialog(props) | UI.Dialog(props, ...children) -> { open, close, toggle, update, isOpen }",
       props: {
-        title: "String|Node|Function|Array",
+        title: "String|Node|Function|Array|({ close })=>Node",
+        subtitle: "String|Node|Function|Array|({ close })=>Node",
+        eyebrow: "String|Node|Function|Array|({ close })=>Node",
+        icon: "String|Node|Function|Array",
         content: "Node|Function|Array|({ close })=>Node",
+        body: "Alias di content",
         actions: "Node|Function|Array|({ close })=>Node",
+        footer: "Alias di actions",
+        size: "xs|sm|md|lg|xl|full",
+        state: "primary|secondary|warning|danger|success|info|light|dark",
+        color: "Alias di state",
+        width: "string|number",
+        minWidth: "string|number",
+        maxWidth: "string|number",
+        maxHeight: "string|number",
+        bodyMaxHeight: "string|number",
         persistent: "boolean",
-        slots: "{ title?, content?, actions?, default? }",
+        closable: "boolean",
+        closeButton: "boolean",
+        closeIcon: "string",
+        align: "top|center|bottom",
+        actionsAlign: "start|center|end|between|stretch",
+        stickyHeader: "boolean",
+        stickyActions: "boolean",
+        scrollable: "boolean",
+        stackActions: "boolean",
+        fullscreen: "boolean",
+        backdrop: "boolean",
+        backdropBlur: "boolean",
+        lockScroll: "boolean",
+        trapFocus: "boolean",
+        autoFocus: "boolean",
+        closeOnOutside: "boolean",
+        closeOnBackdrop: "boolean",
+        closeOnEsc: "boolean",
+        slots: "{ icon?, eyebrow?, title?, subtitle?, header?, content?, body?, footer?, actions?, close?, default? }",
         class: "string",
+        panelClass: "string",
+        overlayClass: "string",
         style: "object"
       },
       events: {
-        onOpen: "void",
+        onOpen: "(entry)",
         onClose: "void"
       },
       slots: {
+        icon: "Dialog icon ({ close })",
+        eyebrow: "Eyebrow sopra il titolo ({ close })",
         title: "Dialog title ({ close })",
+        subtitle: "Dialog subtitle ({ close })",
+        header: "Header personalizzato ({ close })",
         content: "Dialog body ({ close })",
+        body: "Alias di content ({ close })",
+        footer: "Footer personalizzato ({ close })",
         actions: "Dialog actions ({ close })",
+        close: "Close action ({ close })",
         default: "Fallback body content ({ close })"
       },
-      description: "Dialog overlay con focus trap e scroll lock.",
-      returns: "Object { open(), close(), isOpen() }"
+      description: "Dialog overlay standardizzato con varianti, animazioni, slots strutturati e API imperativa.",
+      returns: "Object { open(overrides?), close(), toggle(overrides?), update(props), isOpen(), entry(), props() }"
     };
   }
 
@@ -11709,97 +11922,502 @@ transition: width 200ms ease;
     };
   }
 
-  UI.Popover = (props = {}) => {
+  UI.Popover = (...args) => {
+    const { props, children } = CMSwift.uiNormalizeArgs(args);
     const slots = props.slots || {};
+    const stateList = ["primary", "secondary", "warning", "danger", "success", "info", "light", "dark"];
+    const sizeList = ["xs", "sm", "md", "lg", "xl"];
+    let currentProps = { ...props };
     let entry = null;
+    let boundEl = null;
+    let lastActive = null;
+    let openTimer = null;
+    let closeTimer = null;
 
-    const buildContent = (close) => {
-      const ctx = { close };
-      const titleNodes = renderSlotToArray(slots, "title", ctx, props.title);
-      const raw = typeof props.content === "function" ? props.content(ctx) : props.content;
-      let contentNodes = renderSlotToArray(slots, "content", ctx, raw);
-      if (!contentNodes.length) contentNodes = renderSlotToArray(slots, "default", ctx, raw);
-      const actionsRaw = typeof props.actions === "function" ? props.actions(ctx) : props.actions;
-      const actionsNodes = renderSlotToArray(slots, "actions", ctx, actionsRaw);
-
-      const titleEl = titleNodes.length ? _.div({ class: "cms-dialog-title" }, ...titleNodes) : null;
-      const bodyEl = _.div({ class: "cms-dialog-body" }, ...contentNodes);
-      const actionsEl = actionsNodes.length ? _.div({ class: "cms-dialog-actions" }, ...actionsNodes) : null;
-      return [titleEl, bodyEl, actionsEl].filter(Boolean);
+    const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj || {}, key);
+    const resolveRender = (value, ctx) => typeof value === "function" ? value(ctx) : value;
+    const splitClasses = (value) => String(value || "").split(/\s+/).filter(Boolean);
+    const isPlainObject = (value) => value && typeof value === "object" && !value.nodeType && !Array.isArray(value) && !(value instanceof Function);
+    const isAnchorLike = (value) => !!value && typeof value === "object" && (value.nodeType === 1 || typeof value.getBoundingClientRect === "function");
+    const clearTimers = () => {
+      clearTimeout(openTimer);
+      clearTimeout(closeTimer);
+      openTimer = null;
+      closeTimer = null;
     };
-
-    const open = (anchorEl) => {
-      const a = anchorEl || props.anchorEl;
-      if (!a) return null;
-      if (entry) {
-        const prev = entry;
-        overlayLeave(prev, () => CMSwift.overlay.close(prev.id));
+    const setTrackedClasses = (target, key, classes) => {
+      if (!target) return;
+      const prev = target[key] || [];
+      if (prev.length) target.classList.remove(...prev);
+      const next = (classes || []).filter(Boolean);
+      if (next.length) target.classList.add(...next);
+      target[key] = next;
+    };
+    const setStyleValue = (target, name, value, formatter = (v) => v) => {
+      if (!target) return;
+      if (value == null || value === "") {
+        target.style.removeProperty(name);
+        return;
       }
-      entry = CMSwift.overlay.open(({ close }) => buildContent(close), {
-        type: "popover",
-        anchorEl: a,
-        placement: props.placement || "bottom-start",
-        offsetY: props.offsetY ?? 8,
-        offsetX: props.offsetX ?? 0,
-        backdrop: props.backdrop === true,
-        lockScroll: props.lockScroll === true,
-        trapFocus: props.trapFocus === true,
-        closeOnOutside: props.closeOnOutside !== false,
-        closeOnEsc: props.closeOnEsc !== false,
-        className: uiClassStatic(["cms-dialog", props.class]),
-        onClose: () => {
-          entry = null;
-          props.onClose?.();
-        }
-      });
-      if (props.style) Object.assign(entry.panel.style, props.style);
-      overlayEnter(entry);
-      props.onOpen?.();
-      return entry;
+      target.style.setProperty(name, formatter(value));
     };
+    const getOptions = () => currentProps;
+    const getStateClass = (opts) => {
+      const value = uiUnwrap(opts.state ?? opts.color);
+      if (!value) return "";
+      return stateList.includes(value) ? value : String(value);
+    };
+    const getSizeClass = (opts) => {
+      const value = uiUnwrap(opts.size);
+      return (typeof value === "string" && sizeList.includes(value)) ? value : "";
+    };
+    const getAlignClass = (opts) => {
+      const raw = String(uiUnwrap(opts.actionsAlign ?? opts.footerAlign ?? opts.alignActions ?? "end")).toLowerCase();
+      if (["start", "left"].includes(raw)) return "start";
+      if (["center", "middle"].includes(raw)) return "center";
+      if (["between", "space-between"].includes(raw)) return "between";
+      if (["stretch", "full"].includes(raw)) return "stretch";
+      return "end";
+    };
+    const getPlacement = (opts) => String(uiUnwrap(opts.placement ?? opts.position ?? "bottom-start"));
+    const getNumber = (value, fallback) => {
+      const raw = uiUnwrap(value);
+      if (raw == null || raw === "") return fallback;
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : fallback;
+    };
+    const getDelay = () => getNumber(getOptions().delay, 0);
+    const getHideDelay = () => getNumber(getOptions().hideDelay, 120);
+    const isClosable = (opts) => {
+      const value = opts.closable ?? opts.dismissible ?? opts.closeButton;
+      return value === true;
+    };
+    const getAnchor = (anchorOverride = null) => {
+      if (anchorOverride) return anchorOverride;
+      const opts = getOptions();
+      return boundEl || uiUnwrap(opts.anchorEl ?? opts.triggerEl ?? opts.target ?? opts.anchor) || null;
+    };
+    const parseTriggers = (value) => {
+      if (value == null || value === true) return new Set(["click"]);
+      if (value === false) return new Set(["manual"]);
+      const raw = Array.isArray(value) ? value : String(value).split(/[\s,|/]+/);
+      const out = new Set();
+      raw.forEach((item) => {
+        const key = String(item || "").trim().toLowerCase();
+        if (!key) return;
+        if (key === "mouseenter" || key === "mouseover") out.add("hover");
+        else if (key === "blur" || key === "focusin") out.add("focus");
+        else if (key === "tap") out.add("click");
+        else out.add(key);
+      });
+      return out.size ? out : new Set(["manual"]);
+    };
+    const parseOpenArgs = (arg1, arg2) => {
+      let anchorEl = null;
+      let nextProps = null;
+      if (isAnchorLike(arg1)) {
+        anchorEl = arg1;
+        if (isPlainObject(arg2)) nextProps = arg2;
+      } else if (isPlainObject(arg1)) {
+        nextProps = arg1;
+        const maybeAnchor = arg1.anchorEl ?? arg1.triggerEl ?? arg1.target ?? arg1.anchor;
+        if (isAnchorLike(maybeAnchor)) anchorEl = maybeAnchor;
+      } else if (arg1 != null) {
+        anchorEl = arg1;
+      }
+      return { anchorEl, nextProps };
+    };
+    const buildContent = () => {
+      const opts = getOptions();
+      const ctx = {
+        close,
+        dismiss: close,
+        open,
+        toggle,
+        update,
+        isOpen,
+        entry: () => entry,
+        anchorEl: getAnchor(),
+        props: opts
+      };
+      const iconFallback = opts.icon != null
+        ? (typeof opts.icon === "string"
+          ? UI.Icon({ name: opts.icon, size: opts.iconSize || "md" })
+          : CMSwift.ui.slot(opts.icon, { as: "icon" }))
+        : null;
+      const eyebrowNodes = renderSlotToArray(slots, "eyebrow", ctx, resolveRender(opts.eyebrow, ctx));
+      const titleNodes = renderSlotToArray(slots, "title", ctx, resolveRender(opts.title ?? opts.heading ?? opts.label, ctx));
+      const subtitleNodes = renderSlotToArray(slots, "subtitle", ctx, resolveRender(opts.subtitle ?? opts.description, ctx));
+      const iconNodes = renderSlotToArray(slots, "icon", ctx, iconFallback);
+      const headerNodes = renderSlotToArray(slots, "header", ctx, resolveRender(opts.headerContent ?? opts.head ?? opts.header, ctx));
+      const closeSlotNodes = isClosable(opts)
+        ? renderSlotToArray(slots, "close", ctx, UI.Btn({
+          class: "cms-dialog-close",
+          size: "sm",
+          outline: true,
+          "aria-label": opts.closeLabel || "Chiudi popover",
+          "data-popover-close": true
+        }, UI.Icon({ name: opts.closeIcon || "close", size: "sm" })))
+        : [];
 
+      let bodyRaw = opts.content ?? opts.body ?? opts.message ?? opts.text;
+      if (bodyRaw == null && children && children.length) bodyRaw = children;
+      let contentNodes = renderSlotToArray(slots, "content", ctx, resolveRender(bodyRaw, ctx));
+      if (!contentNodes.length) contentNodes = renderSlotToArray(slots, "body", ctx, resolveRender(bodyRaw, ctx));
+      if (!contentNodes.length) contentNodes = renderSlotToArray(slots, "default", ctx, resolveRender(bodyRaw, ctx));
+
+      const footerRaw = resolveRender(opts.footer ?? opts.actions, ctx);
+      let footerNodes = renderSlotToArray(slots, "footer", ctx, footerRaw);
+      if (!footerNodes.length) footerNodes = renderSlotToArray(slots, "actions", ctx, footerRaw);
+
+      let headerEl = null;
+      if (headerNodes.length) {
+        headerEl = _.div({ class: "cms-dialog-head cms-dialog-head-custom" }, ...headerNodes);
+      } else if (eyebrowNodes.length || titleNodes.length || subtitleNodes.length || iconNodes.length || closeSlotNodes.length) {
+        headerEl = _.div(
+          { class: "cms-dialog-head" },
+          iconNodes.length ? _.div({ class: "cms-dialog-icon" }, ...iconNodes) : null,
+          _.div(
+            { class: "cms-dialog-head-main" },
+            eyebrowNodes.length ? _.div({ class: "cms-dialog-eyebrow" }, ...eyebrowNodes) : null,
+            titleNodes.length ? _.div({ class: "cms-dialog-title" }, ...titleNodes) : null,
+            subtitleNodes.length ? _.div({ class: "cms-dialog-subtitle" }, ...subtitleNodes) : null
+          ),
+          closeSlotNodes.length ? _.div({ class: "cms-dialog-close-wrap" }, ...closeSlotNodes) : null
+        );
+      }
+
+      const sections = [];
+      if (headerEl) sections.push(headerEl);
+      if (contentNodes.length) {
+        sections.push(_.div({ class: uiClass(["cms-dialog-body", opts.bodyClass]) }, ...contentNodes));
+      }
+      if (footerNodes.length) {
+        sections.push(_.div({
+          class: uiClass([
+            "cms-dialog-actions",
+            `is-${getAlignClass(opts)}`,
+            uiWhen(opts.stackActions, "is-stacked"),
+            opts.actionsClass,
+            opts.footerClass
+          ])
+        }, ...footerNodes));
+      }
+      if (!sections.length) {
+        sections.push(_.div({ class: uiClass(["cms-dialog-body", opts.bodyClass]) }));
+      }
+
+      return _.div({
+        class: uiClass([
+          "cms-dialog-shell",
+          "cms-popover-shell",
+          uiWhen(!!headerEl, "has-head"),
+          uiWhen(footerNodes.length > 0, "has-footer"),
+          uiWhen(opts.divider !== false, "with-divider")
+        ])
+      }, ...sections);
+    };
+    const applyEntryOptions = (currentEntry) => {
+      if (!currentEntry?.panel) return;
+      const opts = getOptions();
+      const stateClass = getStateClass(opts);
+      const sizeClass = getSizeClass(opts);
+      setTrackedClasses(currentEntry.panel, "_popoverClassTokens", [
+        "cms-dialog",
+        "cms-popover",
+        "cms-singularity",
+        "cms-clear-set",
+        sizeClass ? `cms-dialog-${sizeClass}` : "",
+        stateClass,
+        stateClass ? `cms-state-${stateClass}` : "",
+        uiUnwrap(opts.scrollable) ? "scrollable" : "",
+        uiUnwrap(opts.stickyHeader) ? "sticky-head" : "",
+        uiUnwrap(opts.stickyActions) ? "sticky-actions" : "",
+        uiUnwrap(opts.borderless) ? "borderless" : "",
+        ...splitClasses(opts.class),
+        ...splitClasses(opts.panelClass)
+      ]);
+      setTrackedClasses(currentEntry.overlay, "_popoverOverlayClassTokens", [
+        ...splitClasses(opts.overlayClass)
+      ]);
+      currentEntry.panel.dataset.placement = getPlacement(opts);
+      setStyleValue(currentEntry.panel, "--cms-dialog-width", uiUnwrap(opts.width), toCssSize);
+      setStyleValue(currentEntry.panel, "--cms-dialog-min-width", uiUnwrap(opts.minWidth), toCssSize);
+      setStyleValue(currentEntry.panel, "--cms-dialog-max-width", uiUnwrap(opts.maxWidth), toCssSize);
+      setStyleValue(currentEntry.panel, "--cms-dialog-max-height", uiUnwrap(opts.maxHeight), toCssSize);
+      setStyleValue(currentEntry.panel, "--cms-dialog-body-max-height", uiUnwrap(opts.bodyMaxHeight ?? opts.contentMaxHeight), toCssSize);
+      if (opts.style) Object.assign(currentEntry.panel.style, opts.style);
+      setPropertyProps(currentEntry.panel, opts);
+      currentEntry.panel.setAttribute("role", opts.role || "dialog");
+      currentEntry.panel.setAttribute("aria-modal", opts.modal === true ? "true" : "false");
+      if (opts.ariaLabel) currentEntry.panel.setAttribute("aria-label", opts.ariaLabel);
+      else currentEntry.panel.removeAttribute("aria-label");
+    };
+    const renderOpenContent = () => {
+      if (!entry?.panel) return;
+      entry.panel.replaceChildren(buildContent());
+    };
     const close = () => {
+      clearTimers();
       if (!entry) return;
       const toClose = entry;
+      entry = null;
       overlayLeave(toClose, () => CMSwift.overlay.close(toClose.id));
     };
+    const update = (nextProps = {}) => {
+      if (nextProps && typeof nextProps === "object") currentProps = { ...currentProps, ...nextProps };
+      if (entry) {
+        applyEntryOptions(entry);
+        renderOpenContent();
+      }
+      return api;
+    };
+    const open = (arg1 = null, arg2 = null) => {
+      clearTimers();
+      const { anchorEl, nextProps } = parseOpenArgs(arg1, arg2);
+      if (nextProps) currentProps = { ...currentProps, ...nextProps };
+      const opts = getOptions();
+      const anchor = getAnchor(anchorEl);
+      if (!anchor || uiUnwrap(opts.disabled)) return null;
+      if (entry && entry._anchorEl === anchor) {
+        applyEntryOptions(entry);
+        renderOpenContent();
+        return entry;
+      }
+      if (entry) close();
+      lastActive = document.activeElement;
+      const activeTriggers = parseTriggers(opts.trigger ?? opts.triggers ?? (hasOwn(opts, "open") ? "manual" : null));
+      const allowHover = activeTriggers.has("hover");
+      const allowFocus = activeTriggers.has("focus");
+      let currentRef = null;
+      entry = CMSwift.overlay.open(() => buildContent(), {
+        type: "popover",
+        anchorEl: anchor,
+        placement: getPlacement(opts),
+        offsetX: opts.offsetX ?? 0,
+        offsetY: opts.offsetY ?? opts.offset ?? 10,
+        backdrop: opts.backdrop === true,
+        lockScroll: opts.lockScroll === true,
+        trapFocus: opts.trapFocus === true,
+        autoFocus: opts.autoFocus === true,
+        closeOnOutside: opts.closeOnOutside !== false,
+        closeOnBackdrop: opts.closeOnBackdrop ?? opts.backdrop === true,
+        closeOnEsc: opts.closeOnEsc !== false,
+        className: uiClassStatic(["cms-dialog", "cms-popover"]),
+        onClose: () => {
+          currentRef?._popoverCleanup?.();
+          getOptions().onClose?.(currentRef);
+          if (getOptions().returnFocus !== false && lastActive && typeof lastActive.focus === "function") {
+            setTimeout(() => lastActive.focus(), 0);
+          }
+        }
+      });
+      if (!entry?.panel) return entry;
+      const current = entry;
+      currentRef = current;
+      current._anchorEl = anchor;
+      const cancelHide = () => {
+        clearTimeout(closeTimer);
+        closeTimer = null;
+      };
+      const scheduleHide = () => {
+        if (!allowHover && !allowFocus) return;
+        hide();
+      };
+      const onPanelClick = (e) => {
+        const target = e.target;
+        if (!target || !target.closest) return;
+        if (target.closest("[data-popover-close]") || target.closest("[data-dialog-close]")) {
+          close();
+          return;
+        }
+        if (getOptions().closeOnSelect === true && target.closest("[data-popover-select]")) {
+          close();
+        }
+      };
+      current.panel.addEventListener("click", onPanelClick);
+      if (allowHover || allowFocus) {
+        current.panel.addEventListener("mouseenter", cancelHide);
+        current.panel.addEventListener("mouseleave", scheduleHide);
+        current.panel.addEventListener("focusin", cancelHide);
+        current.panel.addEventListener("focusout", scheduleHide);
+      }
+      current._popoverCleanup = () => {
+        current.panel?.removeEventListener("click", onPanelClick);
+        current.panel?.removeEventListener("mouseenter", cancelHide);
+        current.panel?.removeEventListener("mouseleave", scheduleHide);
+        current.panel?.removeEventListener("focusin", cancelHide);
+        current.panel?.removeEventListener("focusout", scheduleHide);
+      };
+      applyEntryOptions(current);
+      overlayEnter(current);
+      getOptions().onOpen?.(current);
+      return current;
+    };
+    const show = (anchorEl, nextProps = null) => {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+      clearTimeout(openTimer);
+      openTimer = setTimeout(() => open(anchorEl, nextProps), getDelay());
+    };
+    const hide = (immediate = false) => {
+      clearTimeout(openTimer);
+      openTimer = null;
+      if (!entry) return;
+      clearTimeout(closeTimer);
+      if (immediate) {
+        close();
+        return;
+      }
+      closeTimer = setTimeout(() => close(), getHideDelay());
+    };
+    const toggle = (arg1 = null, arg2 = null) => isOpen() ? (close(), null) : open(arg1, arg2);
+    const isOpen = () => !!entry;
+    const bind = (el) => {
+      if (!el) return () => { };
+      boundEl = el;
+      const opts = getOptions();
+      const triggers = parseTriggers(opts.trigger ?? opts.triggers ?? (hasOwn(opts, "open") ? "manual" : null));
+      const allowHover = triggers.has("hover");
+      const allowFocus = triggers.has("focus");
+      const allowClick = triggers.has("click");
+      const isManual = triggers.has("manual") || (!allowHover && !allowFocus && !allowClick);
+      const cleanups = [];
+      const cleanup = () => {
+        clearTimers();
+        cleanups.forEach((fn) => fn());
+        if (boundEl === el) boundEl = null;
+      };
+      if (hasOwn(opts, "open")) {
+        if (uiIsReactive(opts.open)) {
+          CMSwift.reactive.effect(() => {
+            if (!boundEl) return;
+            if (uiUnwrap(getOptions().open)) open(boundEl);
+            else hide(true);
+          }, "UI.Popover:open");
+        } else if (opts.open === true) {
+          open(el);
+        } else if (opts.open === false) {
+          hide(true);
+        }
+        return cleanup;
+      }
+      if (isManual || uiUnwrap(opts.disabled)) return cleanup;
+      if (allowHover) {
+        const onEnter = () => show(el);
+        const onLeave = () => hide();
+        el.addEventListener("mouseenter", onEnter);
+        el.addEventListener("mouseleave", onLeave);
+        cleanups.push(() => {
+          el.removeEventListener("mouseenter", onEnter);
+          el.removeEventListener("mouseleave", onLeave);
+        });
+      }
+      if (allowFocus) {
+        const onFocus = () => show(el);
+        const onBlur = () => hide();
+        el.addEventListener("focus", onFocus);
+        el.addEventListener("blur", onBlur);
+        cleanups.push(() => {
+          el.removeEventListener("focus", onFocus);
+          el.removeEventListener("blur", onBlur);
+        });
+      }
+      if (allowClick) {
+        const onClick = (e) => {
+          getOptions().onTriggerClick?.(e);
+          if (e.defaultPrevented) return;
+          toggle(el);
+        };
+        el.addEventListener("click", onClick);
+        cleanups.push(() => el.removeEventListener("click", onClick));
+      }
+      return cleanup;
+    };
+    const api = {
+      open,
+      close,
+      show,
+      hide,
+      toggle,
+      update,
+      bind,
+      isOpen,
+      entry: () => entry,
+      props: () => ({ ...currentProps })
+    };
 
-    return { open, close };
+    return api;
   };
   if (CMSwift.isDev?.()) {
     UI.meta = UI.meta || {};
     UI.meta.Popover = {
-      signature: "UI.Popover(props) -> { open, close }",
+      signature: "UI.Popover(props) | UI.Popover(props, ...children) -> { open, close, show, hide, toggle, update, bind, isOpen }",
       props: {
-        title: "String|Node|Function|Array",
+        title: "String|Node|Function|Array|({ close })=>Node",
+        subtitle: "String|Node|Function|Array|({ close })=>Node",
+        eyebrow: "String|Node|Function|Array|({ close })=>Node",
+        icon: "String|Node|Function|Array",
         content: "Node|Function|Array|({ close })=>Node",
+        body: "Alias di content",
         actions: "Node|Function|Array|({ close })=>Node",
+        footer: "Alias di actions",
+        size: "xs|sm|md|lg|xl",
+        state: "primary|secondary|warning|danger|success|info|light|dark",
+        color: "Alias di state",
+        trigger: "click|hover|focus|manual|Array",
         placement: "string",
         offsetX: "number",
         offsetY: "number",
+        offset: "Alias di offsetY",
+        width: "string|number",
+        minWidth: "string|number",
+        maxWidth: "string|number",
+        maxHeight: "string|number",
+        bodyMaxHeight: "string|number",
+        contentMaxHeight: "Alias di bodyMaxHeight",
         backdrop: "boolean",
         lockScroll: "boolean",
         trapFocus: "boolean",
+        autoFocus: "boolean",
+        closeButton: "boolean",
+        closable: "boolean",
+        closeOnSelect: "boolean",
         closeOnOutside: "boolean",
+        closeOnBackdrop: "boolean",
         closeOnEsc: "boolean",
-        slots: "{ title?, content?, actions?, default? }",
+        open: "boolean|rod|signal",
+        anchorEl: "HTMLElement|VirtualAnchor",
+        triggerEl: "Alias di anchorEl",
+        target: "Alias di anchorEl",
+        slots: "{ icon?, eyebrow?, title?, subtitle?, header?, content?, body?, footer?, actions?, close?, default? }",
         class: "string",
+        panelClass: "string",
+        overlayClass: "string",
         style: "object",
         onOpen: "function",
-        onClose: "function"
+        onClose: "function",
+        onTriggerClick: "function"
       },
       slots: {
+        icon: "Popover icon",
+        eyebrow: "Popover eyebrow ({ close })",
         title: "Popover title ({ close })",
+        subtitle: "Popover subtitle ({ close })",
+        header: "Header custom ({ close })",
         content: "Popover body ({ close })",
-        actions: "Popover actions ({ close })",
+        body: "Alias di content ({ close })",
+        footer: "Popover footer ({ close })",
+        actions: "Alias di footer ({ close })",
+        close: "Close button slot ({ close })",
         default: "Fallback body ({ close })"
       },
       events: {
         onOpen: "void",
         onClose: "void"
       },
-      returns: "Object { open(), close() }",
-      description: "Popover overlay ancorato, piu ricco del menu."
+      returns: "Object { open(), close(), show(), hide(), toggle(), update(), bind(), isOpen() }",
+      description: "Popover ancorato standardizzato con layout ricco, slot completi, trigger bindabili e API imperativa."
     };
   }
 

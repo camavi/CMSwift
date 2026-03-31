@@ -2394,34 +2394,334 @@
 }
 
 .cms-dialog {
+  --cms-dialog-accent: var(--cms-primary);
+  --cms-dialog-border: color-mix(in srgb, var(--cms-dialog-accent) 22%, var(--cms-border-color));
+  --cms-dialog-soft: color-mix(in srgb, var(--cms-dialog-accent) 14%, transparent);
+  --cms-dialog-width: min(560px, 100%);
+  --cms-dialog-min-width: 320px;
+  --cms-dialog-max-width: calc(100vw - 32px);
+  --cms-dialog-max-height: calc(100vh - 32px);
   min-width: 320px;
-  max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 32px);
+  width: var(--cms-dialog-width);
+  min-width: var(--cms-dialog-min-width);
+  max-width: var(--cms-dialog-max-width);
+  max-height: var(--cms-dialog-max-height);
   display: flex;
   flex-direction: column;
   gap: var(--cms-s-md);
   padding: var(--cms-s-lg);
-  width: min(520px, 100%);
-  border-radius: var(--cms-r-lg);
-  border: 1px solid var(--cms-border-color);
-  background: rgba(18, 26, 43, 0.98);
-  box-shadow: var(--cms-shadow-sm);
+  border-radius: calc(var(--set-border-radius, var(--cms-r-lg)) + 2px);
+  border: 1px solid var(--cms-dialog-border);
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--cms-dialog-soft) 80%, transparent), transparent 44%),
+    linear-gradient(180deg, color-mix(in srgb, var(--cms-panel) 96%, var(--cms-dialog-soft)) 0%, var(--cms-panel) 100%);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+  color: var(--cms-text);
+}
+
+.cms-dialog-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: calc(var(--cms-s-lg) * -1);
+}
+
+.cms-dialog-head,
+.cms-dialog-body,
+.cms-dialog-actions {
+  padding-left: var(--cms-s-lg);
+  padding-right: var(--cms-s-lg);
+}
+
+.cms-dialog-shell.has-head .cms-dialog-head {
+  padding-top: var(--cms-s-lg);
+}
+
+.cms-dialog-shell.has-head.with-divider .cms-dialog-head {
+  border-bottom: 1px solid color-mix(in srgb, var(--cms-dialog-border) 82%, transparent);
+}
+
+.cms-dialog-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.cms-dialog-head-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cms-dialog-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--cms-dialog-accent) 14%, transparent);
+  color: var(--cms-dialog-accent);
+  border: 1px solid color-mix(in srgb, var(--cms-dialog-accent) 22%, transparent);
+  flex: 0 0 auto;
+}
+
+.cms-dialog-eyebrow {
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cms-dialog-accent);
 }
 
 .cms-dialog-title {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 18px;
+  line-height: 1.25;
+}
+
+.cms-dialog-subtitle {
+  color: var(--cms-muted);
+  line-height: 1.5;
+}
+
+.cms-dialog-close-wrap {
+  flex: 0 0 auto;
+}
+
+.cms-dialog-close {
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 12px;
 }
 
 .cms-dialog-body {
+  padding-top: var(--cms-s-lg);
+  padding-bottom: var(--cms-s-lg);
   overflow: auto;
+  min-height: 0;
+  line-height: 1.55;
 }
 
 .cms-dialog-actions {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: var(--cms-s-sm);
   justify-content: flex-end;
-  margin-top: 14px;
+  margin-top: 0;
+  padding-top: var(--cms-s-md);
+  padding-bottom: var(--cms-s-lg);
+}
+
+.cms-dialog-shell.has-footer.with-divider .cms-dialog-actions {
+  border-top: 1px solid color-mix(in srgb, var(--cms-dialog-border) 82%, transparent);
+}
+
+.cms-dialog-actions.is-start {
+  justify-content: flex-start;
+}
+
+.cms-dialog-actions.is-center {
+  justify-content: center;
+}
+
+.cms-dialog-actions.is-between {
+  justify-content: space-between;
+}
+
+.cms-dialog-actions.is-stretch>* {
+  flex: 1 1 0;
+}
+
+.cms-dialog-actions.is-stacked {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.cms-dialog.scrollable .cms-dialog-body,
+.cms-dialog.sticky-head .cms-dialog-body,
+.cms-dialog.sticky-actions .cms-dialog-body {
+  flex: 1 1 auto;
+  max-height: var(--cms-dialog-body-max-height, min(60vh, 680px));
+}
+
+.cms-dialog.sticky-head .cms-dialog-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: color-mix(in srgb, var(--cms-panel) 92%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.cms-dialog.sticky-actions .cms-dialog-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: color-mix(in srgb, var(--cms-panel) 92%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.cms-dialog.cms-dialog-xs {
+  --cms-dialog-width: min(360px, 100%);
+}
+
+.cms-dialog.cms-dialog-sm {
+  --cms-dialog-width: min(440px, 100%);
+}
+
+.cms-dialog.cms-dialog-md {
+  --cms-dialog-width: min(560px, 100%);
+}
+
+.cms-dialog.cms-dialog-lg {
+  --cms-dialog-width: min(720px, 100%);
+}
+
+.cms-dialog.cms-dialog-xl {
+  --cms-dialog-width: min(920px, 100%);
+}
+
+.cms-dialog.cms-dialog-full,
+.cms-dialog.fullscreen {
+  --cms-dialog-width: min(100vw - 20px, 1280px);
+  --cms-dialog-max-width: calc(100vw - 20px);
+  --cms-dialog-max-height: calc(100vh - 20px);
+}
+
+.cms-overlay.cms-dialog-align-top {
+  align-items: flex-start;
+  padding-top: 24px;
+}
+
+.cms-overlay.cms-dialog-align-bottom {
+  align-items: flex-end;
+  padding-bottom: 24px;
+}
+
+.cms-overlay.cms-dialog-overlay-blur .cms-overlay-backdrop {
+  backdrop-filter: blur(10px);
+}
+
+.cms-dialog.success,
+.cms-dialog.cms-state-success {
+  --cms-dialog-accent: var(--cms-success);
+}
+
+.cms-dialog.warning,
+.cms-dialog.cms-state-warning {
+  --cms-dialog-accent: var(--cms-warning);
+}
+
+.cms-dialog.error,
+.cms-dialog.danger,
+.cms-dialog.cms-state-danger {
+  --cms-dialog-accent: var(--cms-danger);
+}
+
+.cms-dialog.info,
+.cms-dialog.cms-state-info {
+  --cms-dialog-accent: var(--cms-info);
+}
+
+.cms-dialog.primary,
+.cms-dialog.cms-state-primary {
+  --cms-dialog-accent: var(--cms-primary);
+}
+
+.cms-dialog.secondary,
+.cms-dialog.cms-state-secondary {
+  --cms-dialog-accent: var(--cms-secondary);
+}
+
+.cms-dialog.light,
+.cms-dialog.cms-state-light {
+  --cms-dialog-accent: var(--cms-light);
+}
+
+.cms-dialog.dark,
+.cms-dialog.cms-state-dark {
+  --cms-dialog-accent: var(--cms-dark);
+}
+
+.cms-popover {
+  --cms-dialog-width: min(420px, calc(100vw - 18px));
+  --cms-dialog-min-width: 220px;
+  --cms-dialog-max-width: min(560px, calc(100vw - 18px));
+  --cms-dialog-max-height: min(80vh, calc(100vh - 18px));
+  --cms-dialog-body-max-height: min(52vh, 420px);
+  padding: var(--cms-s-md);
+  border-radius: calc(var(--set-border-radius, var(--cms-r-md)) + 2px);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+}
+
+.cms-popover .cms-dialog-shell {
+  margin: calc(var(--cms-s-md) * -1);
+}
+
+.cms-popover .cms-dialog-head,
+.cms-popover .cms-dialog-body,
+.cms-popover .cms-dialog-actions {
+  padding-left: var(--cms-s-md);
+  padding-right: var(--cms-s-md);
+}
+
+.cms-popover .cms-dialog-shell.has-head .cms-dialog-head {
+  padding-top: var(--cms-s-md);
+}
+
+.cms-popover .cms-dialog-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+
+.cms-popover .cms-dialog-title {
+  font-size: 16px;
+}
+
+.cms-popover .cms-dialog-subtitle {
+  font-size: 13px;
+}
+
+.cms-popover .cms-dialog-body {
+  padding-top: var(--cms-s-md);
+  padding-bottom: var(--cms-s-md);
+}
+
+.cms-popover .cms-dialog-actions {
+  padding-top: var(--cms-s-sm);
+  padding-bottom: var(--cms-s-md);
+}
+
+.cms-popover.cms-dialog-xs {
+  --cms-dialog-width: min(280px, calc(100vw - 18px));
+}
+
+.cms-popover.cms-dialog-sm {
+  --cms-dialog-width: min(360px, calc(100vw - 18px));
+}
+
+.cms-popover.cms-dialog-md {
+  --cms-dialog-width: min(420px, calc(100vw - 18px));
+}
+
+.cms-popover.cms-dialog-lg {
+  --cms-dialog-width: min(520px, calc(100vw - 18px));
+}
+
+.cms-popover.cms-dialog-xl {
+  --cms-dialog-width: min(640px, calc(100vw - 18px));
+}
+
+.cms-dialog.borderless {
+  border-color: transparent;
 }
 
 .cms-modal-backdrop {
@@ -2495,6 +2795,43 @@
 .cms-dialog-input {
   width: 100%;
   margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .cms-dialog {
+    --cms-dialog-max-width: calc(100vw - 18px);
+    --cms-dialog-max-height: calc(100vh - 18px);
+    --cms-dialog-min-width: 0px;
+    padding: var(--cms-s-md);
+  }
+
+  .cms-dialog-shell {
+    margin: calc(var(--cms-s-md) * -1);
+  }
+
+  .cms-dialog-head,
+  .cms-dialog-body,
+  .cms-dialog-actions {
+    padding-left: var(--cms-s-md);
+    padding-right: var(--cms-s-md);
+  }
+
+  .cms-dialog-shell.has-head .cms-dialog-head {
+    padding-top: var(--cms-s-md);
+  }
+
+  .cms-dialog-body {
+    padding-top: var(--cms-s-md);
+    padding-bottom: var(--cms-s-md);
+  }
+
+  .cms-dialog-actions {
+    padding-bottom: var(--cms-s-md);
+  }
+
+  .cms-dialog-actions>* {
+    flex: 1 1 100%;
+  }
 }
 
 .cms-grid {
