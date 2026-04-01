@@ -10780,18 +10780,34 @@
   UI.TabPanel = (...args) => {
     const { props, children } = CMSwift.uiNormalizeArgs(args);
     const slots = props.slots || {};
-    const rawTabs = Array.isArray(props.tabs) ? props.tabs : [];
+    const rawTabs = Array.isArray(props.tabs)
+      ? props.tabs
+      : (Array.isArray(props.items) ? props.items : []);
     const model = resolveModel(props.model, "UI.TabPanel:model");
+    const componentId = props.id || (`cms-tabpanel-` + Math.random().toString(36).slice(2, 9));
+    const normalizeOrientation = (value) => String(uiUnwrap(value) || "vertical").toLowerCase() === "horizontal" ? "horizontal" : "vertical";
+    const normalizePosition = (value) => String(uiUnwrap(value) || "before").toLowerCase() === "after" ? "after" : "before";
+    const normalizeVariant = (value) => {
+      const raw = String(uiUnwrap(value) || "").toLowerCase();
+      if (raw === "pills" || raw === "pill") return "pills";
+      if (raw === "soft" || raw === "card") return "soft";
+      return "line";
+    };
+    const resolveAccent = (value) => {
+      const raw = uiUnwrap(value);
+      if (raw == null || raw === "") return null;
+      return CMSwift.uiColors.includes(raw) ? `var(--cms-${raw})` : String(raw);
+    };
 
-    const orientationRaw = (props.orientation || props.orient || props.direction || "vertical");
-    const orientation = String(orientationRaw).toLowerCase() === "horizontal" ? "horizontal" : "vertical";
-    const navPositionRaw = props.navPosition || props.barPosition || props.position || "before";
-    const navPosition = String(navPositionRaw).toLowerCase() === "after" ? "after" : "before";
-
+    const orientation = normalizeOrientation(props.orientation || props.orient || props.direction);
+    const navPosition = normalizePosition(props.navPosition || props.barPosition || props.position);
+    const variant = normalizeVariant(props.variant || (props.pills ? "pills" : (props.soft ? "soft" : "line")));
     const wrapTabs = !!props.wrap;
     const swipeable = !!props.swipeable;
     const infinite = !!props.infinite;
     const animated = !!props.animated;
+    const navFill = !!(props.navFill ?? props.fill ?? props.stretch);
+    const disabledAll = !!props.disabled;
 
     const transitionDurationRaw = uiUnwrap(props.transitionDuration ?? props["transition-duration"]);
     const transitionDuration = (() => {
@@ -10803,6 +10819,7 @@
     const transitionEasing = uiUnwrap(props.transitionEasing ?? props["transition-easing"]) || "ease";
     const transitionPrev = props.transitionPrev ?? props["transition-prev"] ?? null;
     const transitionNext = props.transitionNext ?? props["transition-next"] ?? null;
+    const accentColor = resolveAccent(props.color ?? props.state);
 
     const tabs = rawTabs.map((tab, index) => {
       if (tab == null) return null;
@@ -10811,6 +10828,10 @@
           name: tab,
           labelFallback: tab,
           panelFallback: null,
+          noteFallback: null,
+          iconFallback: null,
+          badgeFallback: null,
+          hidden: false,
           raw: tab,
           index
         };
@@ -10821,35 +10842,52 @@
         ? (tab.label ?? tab.title)
         : (tab.children != null && tab.content == null && tab.panel == null ? tab.children : (tab.name ?? tab.value ?? `Tab ${index + 1}`));
       const panelFallback = tab.content ?? tab.panel ?? tab.body ?? (hasLabel ? tab.children : null);
+      const noteFallback = tab.note ?? tab.subtitle ?? tab.description ?? null;
+      const iconFallback = tab.icon ?? null;
+      const badgeFallback = Object.prototype.hasOwnProperty.call(tab, "badge")
+        ? tab.badge
+        : (Object.prototype.hasOwnProperty.call(tab, "counter") ? tab.counter : null);
       return {
         ...tab,
         name,
         labelFallback,
         panelFallback,
+        noteFallback,
+        iconFallback,
+        badgeFallback,
         index
       };
-    }).filter(Boolean);
+    }).filter(Boolean).filter((tab) => tab.hidden !== true && tab.visible !== false);
 
     const cls = uiClass([
       "cms-clear-set",
       "cms-tabpanel",
       "cms-singularity",
       orientation,
+      `variant-${variant}`,
       uiWhen(wrapTabs, "wrap"),
       uiWhen(animated, "animated"),
+      uiWhen(navFill, "nav-fill"),
+      uiWhen(disabledAll, "disabled"),
       uiWhen(navPosition === "after", "nav-after"),
       props.class
     ]);
     const wrapProps = CMSwift.omit(props, [
-      "tabs", "value", "default", "model",
+      "tabs", "items", "value", "default", "defaultValue", "model",
       "orientation", "orient", "direction",
       "navPosition", "barPosition", "position",
+      "variant", "pills", "soft",
+      "navFill", "fill", "stretch",
       "wrap", "swipeable", "infinite", "animated",
       "transitionDuration", "transition-duration",
       "transitionEasing", "transition-easing",
       "transitionPrev", "transition-prev",
       "transitionNext", "transition-next",
-      "slots", "class", "style"
+      "slots", "empty",
+      "tabClass", "tabStyle",
+      "panelClass", "panelStyle",
+      "navClass", "panelsClass",
+      "class", "style"
     ]);
     wrapProps.class = cls;
     wrapProps.style = props.style;
@@ -10859,95 +10897,237 @@
       wrap.style.setProperty("--cms-tabpanel-duration", `${transitionDuration}ms`);
       wrap.style.setProperty("--cms-tabpanel-easing", transitionEasing);
     }
+    if (accentColor) {
+      wrap.style.setProperty("--cms-tabpanel-accent", accentColor);
+    }
 
-    const nav = _.div({ class: "cms-tabpanel-nav", role: "tablist" });
-    const panelsWrap = _.div({ class: "cms-tabpanel-panels" });
+    const nav = _.div({
+      class: uiClass(["cms-tabpanel-nav", props.navClass]),
+      role: "tablist",
+      "aria-orientation": orientation
+    });
+    const panelsWrap = _.div({ class: uiClass(["cms-tabpanel-panels", props.panelsClass]) });
 
     const tabButtons = [];
     const panelNodes = [];
     let activeIndex = -1;
 
-    const hasTabSlot = CMSwift.ui.getSlot(slots, "tab") != null;
+    const isHorizontal = () => orientation === "horizontal";
+    const createCtx = (tab, index, active) => ({
+      tab,
+      name: tab.name,
+      index,
+      active,
+      value: tab.name,
+      select: () => setActiveByIndex(index),
+      next: () => goNext(),
+      prev: () => goPrev()
+    });
 
-    const effectPosBefore = _.div({ class: "cms-tabpanel-effectPosBefore" });
-    const effectPosAfter = _.div({ class: "cms-tabpanel-effectPosAfter" });
-    if (!hasTabSlot) {
-      nav.appendChild(effectPosBefore);
-      nav.appendChild(effectPosAfter);
-    }
+    const findEnabledIndex = (start, step, allowWrap = false) => {
+      if (!tabs.length) return -1;
+      let idx = start;
+      for (let i = 0; i < tabs.length; i += 1) {
+        idx += step;
+        if (idx >= tabs.length) {
+          if (!allowWrap) return -1;
+          idx = 0;
+        } else if (idx < 0) {
+          if (!allowWrap) return -1;
+          idx = tabs.length - 1;
+        }
+        if (!tabs[idx]?.disabled) return idx;
+      }
+      return -1;
+    };
+
+    const focusIndex = (index) => {
+      const btn = tabButtons[index]?.btn;
+      if (!btn || typeof btn.focus !== "function") return;
+      requestAnimationFrame(() => btn.focus());
+    };
 
     const makeLabelNodes = (tab, index, isActive) => {
-      const ctx = { tab, name: tab.name, index, active: isActive, select: () => setActiveByIndex(index) };
+      const ctx = createCtx(tab, index, isActive);
       const labelNode = CMSwift.ui.renderSlot(slots, "label", ctx, tab.labelFallback);
       return renderSlotToArray(null, "default", {}, labelNode);
     };
 
     const makeTabNode = (tab, index) => {
       const isActive = index === activeIndex;
+      const tabId = `${componentId}-tab-${index}`;
+      const panelId = `${componentId}-panel-${index}`;
+      const ctx = createCtx(tab, index, isActive);
       const labelNodes = makeLabelNodes(tab, index, isActive);
+      const iconFallback = tab.iconFallback != null
+        ? (typeof tab.iconFallback === "string"
+          ? UI.Icon({ name: tab.iconFallback, size: tab.iconSize ?? tab.size ?? props.size ?? null })
+          : tab.iconFallback)
+        : null;
+      const iconNodes = renderSlotToArray(slots, "icon", ctx, iconFallback);
+      const noteNodes = renderSlotToArray(slots, "note", ctx, tab.noteFallback);
+      const badgeNodes = renderSlotToArray(slots, "badge", ctx, tab.badgeFallback);
+      const fallbackTabContent = _.span({ class: "cms-tabpanel-tab-inner" },
+        iconNodes.length ? _.span({ class: "cms-tabpanel-tab-icon" }, ...iconNodes) : null,
+        _.span({ class: "cms-tabpanel-tab-copy" },
+          _.span({ class: "cms-tabpanel-tab-label" }, ...(labelNodes.length ? labelNodes : [""])),
+          noteNodes.length ? _.span({ class: "cms-tabpanel-tab-note" }, ...noteNodes) : null
+        ),
+        badgeNodes.length ? _.span({ class: "cms-tabpanel-tab-badge" }, ...badgeNodes) : null
+      );
+      const contentNodes = renderSlotToArray(slots, "tab", {
+        ...ctx,
+        label: labelNodes,
+        icon: iconNodes,
+        note: noteNodes,
+        badge: badgeNodes,
+        tabId,
+        panelId
+      }, fallbackTabContent);
+      const onKeydown = (e) => {
+        if (disabledAll || tab.disabled) return;
+        const key = e.key;
+        if (key === "Enter" || key === " ") {
+          e.preventDefault();
+          setActiveByIndex(index);
+          return;
+        }
+        if (key === "Home") {
+          e.preventDefault();
+          const first = tabs.findIndex((item) => !item.disabled);
+          if (first >= 0) {
+            setActiveByIndex(first);
+            focusIndex(first);
+          }
+          return;
+        }
+        if (key === "End") {
+          e.preventDefault();
+          const last = (() => {
+            for (let i = tabs.length - 1; i >= 0; i -= 1) {
+              if (!tabs[i]?.disabled) return i;
+            }
+            return -1;
+          })();
+          if (last >= 0) {
+            setActiveByIndex(last);
+            focusIndex(last);
+          }
+          return;
+        }
+        const prevKeys = isHorizontal() ? ["ArrowLeft"] : ["ArrowUp"];
+        const nextKeys = isHorizontal() ? ["ArrowRight"] : ["ArrowDown"];
+        if (prevKeys.includes(key)) {
+          e.preventDefault();
+          const prev = findEnabledIndex(index, -1, infinite);
+          if (prev >= 0) {
+            setActiveByIndex(prev, { dir: "prev" });
+            focusIndex(prev);
+          }
+          return;
+        }
+        if (nextKeys.includes(key)) {
+          e.preventDefault();
+          const next = findEnabledIndex(index, 1, infinite);
+          if (next >= 0) {
+            setActiveByIndex(next, { dir: "next" });
+            focusIndex(next);
+          }
+        }
+      };
       const defaultBtn = UI.Btn({
         class: uiClass([
           "cms-tabpanel-tab",
           uiWhen(isActive, "active"),
-          uiWhen(tab.disabled, "disabled"),
+          uiWhen(tab.disabled || disabledAll, "disabled"),
+          props.tabClass,
           tab.tabClass || tab.class
         ]),
         type: "button",
-        disabled: !!tab.disabled,
+        id: tabId,
+        role: "tab",
+        disabled: !!(tab.disabled || disabledAll),
         "aria-selected": isActive ? "true" : "false",
+        "aria-controls": panelId,
+        tabindex: isActive ? "0" : "-1",
+        outline: variant === "pills" && !isActive,
+        color: variant === "pills" && isActive ? (tab.color || props.color || props.state || "primary") : null,
+        size: tab.size ?? props.size ?? null,
+        style: {
+          ...(props.tabStyle || {}),
+          ...(tab.tabStyle || {})
+        },
         onClick: () => {
-          if (tab.disabled) return;
+          if (tab.disabled || disabledAll) return;
           setActiveByIndex(index);
-        }
-      }, ...labelNodes);
-      if (!hasTabSlot) tabButtons.push({ btn: defaultBtn, index });
-      const ctx = {
-        tab,
-        name: tab.name,
-        index,
-        active: isActive,
-        label: labelNodes,
-        select: () => setActiveByIndex(index)
-      };
-      const tabNode = CMSwift.ui.renderSlot(
-        slots, "tab", ctx,
-        _.div({ class: "cms-tabpanel-nav-btn" }, defaultBtn, _.div({ class: "tab-indicator" }))
-      );
-      return renderSlotToArray(null, "default", {}, tabNode);
+        },
+        onKeydown
+      }, ...contentNodes);
+      const navBtn = _.div({
+        class: uiClass([
+          "cms-tabpanel-nav-btn",
+          uiWhen(isActive, "active"),
+          tab.navClass
+        ]),
+        "data-name": tab.name
+      }, defaultBtn, _.span({ class: "tab-indicator" }));
+      tabButtons[index] = { btn: defaultBtn, wrap: navBtn, index };
+      return navBtn;
     };
 
     const makePanelNode = (tab, index) => {
       const isActive = index === activeIndex;
-      const ctx = { tab, name: tab.name, index, active: isActive };
+      const tabId = `${componentId}-tab-${index}`;
+      const panelId = `${componentId}-panel-${index}`;
+      const ctx = createCtx(tab, index, isActive);
       const panelNode = CMSwift.ui.renderSlot(slots, "panel", ctx, tab.panelFallback);
       const panel = _.div({
-        class: uiClass(["cms-tabpanel-panel", uiWhen(isActive, "active"), tab.panelClass]),
-        style: tab.panelStyle,
+        class: uiClass([
+          "cms-tabpanel-panel",
+          uiWhen(isActive, "active"),
+          props.panelClass,
+          tab.panelClass
+        ]),
+        style: {
+          ...(props.panelStyle || {}),
+          ...(tab.panelStyle || {})
+        },
         "data-name": tab.name,
         role: "tabpanel",
+        id: panelId,
+        tabindex: 0,
+        "aria-labelledby": tabId,
         "aria-hidden": isActive ? "false" : "true"
       }, ...renderSlotToArray(null, "default", {}, panelNode));
       panelNodes[index] = panel;
       return panel;
     };
 
-    const defaultNavNodes = [];
-    tabs.forEach((tab, index) => {
-      defaultNavNodes.push(...makeTabNode(tab, index));
-    });
+    const defaultNavNodes = tabs.map((tab, index) => makeTabNode(tab, index));
     const navContent = CMSwift.ui.renderSlot(slots, "nav", {
       tabs,
       active: () => (activeIndex >= 0 ? tabs[activeIndex]?.name : null),
+      activeIndex: () => activeIndex,
+      activeTab: () => (activeIndex >= 0 ? tabs[activeIndex] : null),
       select: (nameOrIndex) => {
         if (typeof nameOrIndex === "number") setActiveByIndex(nameOrIndex);
         else setActiveByValue(nameOrIndex);
       },
+      next: () => goNext(),
+      prev: () => goPrev(),
+      nodes: defaultNavNodes,
       orientation,
-      position: navPosition
+      position: navPosition,
+      variant
     }, defaultNavNodes);
 
     renderSlotToArray(null, "default", {}, navContent).forEach(n => nav.appendChild(n));
-    tabs.forEach((tab, index) => panelsWrap.appendChild(makePanelNode(tab, index)));
+    if (tabs.length) {
+      tabs.forEach((tab, index) => panelsWrap.appendChild(makePanelNode(tab, index)));
+    } else {
+      const emptyNodes = renderSlotToArray(slots, "empty", { tabs }, props.empty ?? _.div({ class: "cms-tabpanel-empty" }, "Nessun contenuto disponibile."));
+      emptyNodes.forEach((node) => panelsWrap.appendChild(node));
+    }
 
     const setDirectionVars = (dir) => {
       if (!animated) return;
@@ -10975,19 +11155,21 @@
     };
 
     const updateNavButtons = (nextIndex) => {
-      if (hasTabSlot) return;
-      //cerco chi è attivo per la class active e prendo il parent
       const active = tabButtons.find(({ btn }) => btn.classList.contains("active"));
       const rectPrev = active?.btn.parentNode?.getBoundingClientRect();
       tabButtons.forEach(({ btn, index }) => {
         const isActive = index === nextIndex;
         const parent = btn.parentNode;
+        if (!parent) return;
         const rect = parent.getBoundingClientRect();
-        parent.style.setProperty("--nav-pos-x", (rectPrev?.left - rect?.left) + "px");
-        parent.style.setProperty("--nav-pos-y", (rectPrev?.top - rect?.top) + "px");
+        if (parent.isConnected && rectPrev) {
+          parent.style.setProperty("--nav-pos-x", (rectPrev.left - rect.left) + "px");
+          parent.style.setProperty("--nav-pos-y", (rectPrev.top - rect.top) + "px");
+        }
         parent.classList.toggle("active", isActive);
         btn.classList.toggle("active", isActive);
         btn.setAttribute("aria-selected", isActive ? "true" : "false");
+        btn.setAttribute("tabindex", isActive ? "0" : "-1");
       });
     };
 
@@ -11023,6 +11205,7 @@
 
     const setActiveByIndex = (nextIndex, opts = {}) => {
       if (nextIndex == null || nextIndex < 0 || nextIndex >= tabs.length) return;
+      if (tabs[nextIndex]?.disabled) return;
       const prevIndex = activeIndex;
       if (prevIndex === nextIndex) return;
       activeIndex = nextIndex;
@@ -11032,7 +11215,8 @@
       updateNavButtons(nextIndex);
       updatePanels(prevIndex, nextIndex, dir);
       applyCustomTransition(dir);
-      props.onChange?.(nextTab.name);
+      wrap.dataset.active = String(nextTab.name);
+      props.onChange?.(nextTab.name, nextTab, nextIndex);
     };
 
     const setActiveByValue = (value, opts = {}) => {
@@ -11044,21 +11228,24 @@
 
     const goNext = () => {
       if (!tabs.length) return;
-      let nextIndex = activeIndex + 1;
-      if (nextIndex >= tabs.length) {
-        if (!infinite) return;
-        nextIndex = 0;
-      }
+      const nextIndex = activeIndex < 0
+        ? tabs.findIndex((tab) => !tab.disabled)
+        : findEnabledIndex(activeIndex, 1, infinite);
+      if (nextIndex < 0) return;
       setActiveByIndex(nextIndex, { dir: "next" });
     };
 
     const goPrev = () => {
       if (!tabs.length) return;
-      let nextIndex = activeIndex - 1;
-      if (nextIndex < 0) {
-        if (!infinite) return;
-        nextIndex = tabs.length - 1;
-      }
+      const nextIndex = activeIndex < 0
+        ? (() => {
+          for (let i = tabs.length - 1; i >= 0; i -= 1) {
+            if (!tabs[i]?.disabled) return i;
+          }
+          return -1;
+        })()
+        : findEnabledIndex(activeIndex, -1, infinite);
+      if (nextIndex < 0) return;
       setActiveByIndex(nextIndex, { dir: "prev" });
     };
 
@@ -11086,14 +11273,17 @@
       panelsWrap.addEventListener("pointerleave", () => { tracking = false; });
     }
 
-    const initialValue = model ? model.get() : (props.value ?? props.default ?? null);
+    const initialValue = model ? model.get() : (props.value ?? props.defaultValue ?? props.default ?? null);
     if (tabs.length) {
       const initialIndex = tabs.findIndex(t => t.name == initialValue);
       if (initialIndex >= 0) {
         setActiveByIndex(initialIndex, { fromModel: true });
       } else {
-        setActiveByIndex(0, { fromModel: true });
-        if (model) model.set(tabs[0].name);
+        const firstEnabled = tabs.findIndex((tab) => !tab.disabled);
+        if (firstEnabled >= 0) {
+          setActiveByIndex(firstEnabled, { fromModel: true });
+          if (model) model.set(tabs[firstEnabled].name);
+        }
       }
     }
 
@@ -11112,6 +11302,16 @@
     const extra = renderSlotToArray(slots, "default", {}, children);
     extra.forEach((n) => wrap.appendChild(n));
     setPropertyProps(wrap, props);
+    wrap._tabs = () => tabs.slice();
+    wrap._active = () => (activeIndex >= 0 ? tabs[activeIndex] : null);
+    wrap._getValue = () => (activeIndex >= 0 ? tabs[activeIndex]?.name : null);
+    wrap._setValue = (value) => setActiveByValue(value);
+    wrap._select = (value) => {
+      if (typeof value === "number") setActiveByIndex(value);
+      else setActiveByValue(value);
+    };
+    wrap._next = goNext;
+    wrap._prev = goPrev;
     return wrap;
   };
   if (CMSwift.isDev?.()) {
@@ -11119,35 +11319,194 @@
     UI.meta.TabPanel = {
       signature: "UI.TabPanel(props) | UI.TabPanel(props, ...children)",
       props: {
-        tabs: "Array<{name,label,content,children,disabled}>",
-        value: "any",
-        model: "[get,set] signal",
-        orientation: "vertical|horizontal",
-        navPosition: "before|after",
-        wrap: "boolean",
-        swipeable: "boolean",
-        infinite: "boolean",
-        animated: "boolean",
-        transitionDuration: "number",
-        transitionEasing: "string",
-        transitionPrev: "string",
-        transitionNext: "string",
-        slots: "{ nav?, tab?, label?, panel?, default? }",
-        class: "string",
-        style: "object"
+        tabs: {
+          type: "Array<{ name?, value?, label?, title?, note?, subtitle?, icon?, badge?, content?, panel?, body?, children?, disabled?, hidden?, tabClass?, panelClass? }>",
+          description: "Definizione dei tab. Supporta alias multipli per label e contenuto.",
+          category: "data"
+        },
+        items: {
+          type: "Array",
+          description: "Alias di `tabs`.",
+          category: "data"
+        },
+        value: {
+          type: "any",
+          description: "Valore iniziale o controllato del tab attivo.",
+          category: "data"
+        },
+        defaultValue: {
+          type: "any",
+          description: "Alias esplicito per il tab iniziale quando non usi `model`.",
+          category: "data"
+        },
+        model: {
+          type: "[get,set] signal",
+          description: "Binding reattivo del tab attivo.",
+          category: "data"
+        },
+        orientation: {
+          type: "vertical|horizontal",
+          description: "Orientamento della navigazione.",
+          values: ["vertical", "horizontal"],
+          default: "vertical",
+          category: "layout"
+        },
+        navPosition: {
+          type: "before|after",
+          description: "Posizione della barra tab rispetto ai pannelli.",
+          values: ["before", "after"],
+          default: "before",
+          category: "layout"
+        },
+        variant: {
+          type: "line|pills|soft",
+          description: "Stile visivo della navigazione tab.",
+          values: ["line", "pills", "soft"],
+          default: "line",
+          category: "style"
+        },
+        wrap: {
+          type: "boolean",
+          description: "Permette al nav di andare a capo quando lo spazio non basta.",
+          default: false,
+          category: "layout"
+        },
+        navFill: {
+          type: "boolean",
+          description: "Distribuisce i tab sulla larghezza disponibile.",
+          default: false,
+          category: "layout"
+        },
+        swipeable: {
+          type: "boolean",
+          description: "Abilita swipe sui pannelli.",
+          default: false,
+          category: "behavior"
+        },
+        infinite: {
+          type: "boolean",
+          description: "Quando attivo, next/prev cicla dal primo all'ultimo tab.",
+          default: false,
+          category: "behavior"
+        },
+        animated: {
+          type: "boolean",
+          description: "Abilita la transizione fra pannelli.",
+          default: false,
+          category: "behavior"
+        },
+        transitionDuration: {
+          type: "number",
+          description: "Durata animazione in millisecondi.",
+          default: 220,
+          category: "behavior"
+        },
+        transitionEasing: {
+          type: "string",
+          description: "Timing function CSS dell'animazione.",
+          default: "ease",
+          category: "behavior"
+        },
+        transitionPrev: {
+          type: "string",
+          description: "Classi custom applicate durante la transizione verso il tab precedente.",
+          category: "behavior"
+        },
+        transitionNext: {
+          type: "string",
+          description: "Classi custom applicate durante la transizione verso il tab successivo.",
+          category: "behavior"
+        },
+        tabClass: {
+          type: "string",
+          description: "Classi aggiuntive per tutti i bottoni tab.",
+          category: "style"
+        },
+        tabStyle: {
+          type: "object",
+          description: "Style inline applicato a tutti i bottoni tab.",
+          category: "style"
+        },
+        navClass: {
+          type: "string",
+          description: "Classi aggiuntive per il wrapper della nav.",
+          category: "style"
+        },
+        panelsClass: {
+          type: "string",
+          description: "Classi aggiuntive per il wrapper dei pannelli.",
+          category: "style"
+        },
+        panelClass: {
+          type: "string",
+          description: "Classi aggiuntive comuni per ogni pannello.",
+          category: "style"
+        },
+        panelStyle: {
+          type: "object",
+          description: "Style inline comune per ogni pannello.",
+          category: "style"
+        },
+        empty: {
+          type: "Node|Function|Array",
+          description: "Fallback visuale quando `tabs` e `items` sono vuoti.",
+          category: "state"
+        },
+        disabled: {
+          type: "boolean",
+          description: "Disabilita l'intero componente.",
+          default: false,
+          category: "state"
+        },
+        slots: {
+          type: "{ nav?, tab?, label?, icon?, note?, badge?, panel?, empty?, default? }",
+          description: "Slot strutturati per personalizzare nav, label, badge e contenuto.",
+          category: "general"
+        }
       },
       slots: {
-        nav: "Navigation renderer (ctx: { tabs, active, select, orientation, position })",
-        tab: "Tab renderer (ctx: { tab, name, index, active, label, select })",
-        label: "Tab label renderer (ctx: { tab, name, index, active, select })",
-        panel: "Panel renderer (ctx: { tab, name, index, active })",
-        default: "Extra content appended to the component"
+        nav: {
+          type: "Function|Node|Array",
+          description: "Renderer completo della navigazione. Riceve `tabs`, `active()`, `activeTab()`, `select()`, `next()`, `prev()`, `nodes`, `orientation`, `position`, `variant`."
+        },
+        tab: {
+          type: "Function|Node|Array",
+          description: "Contenuto interno del bottone tab. Riceve `tab`, `name`, `index`, `active`, `label`, `icon`, `note`, `badge`, `select()`."
+        },
+        label: {
+          type: "Function|Node|Array",
+          description: "Label del tab."
+        },
+        icon: {
+          type: "Function|Node|Array",
+          description: "Icona del tab."
+        },
+        note: {
+          type: "Function|Node|Array",
+          description: "Nota, subtitle o descrizione breve sotto la label."
+        },
+        badge: {
+          type: "Function|Node|Array",
+          description: "Badge o counter allineato a destra del tab."
+        },
+        panel: {
+          type: "Function|Node|Array",
+          description: "Renderer del pannello attivo/inattivo. Riceve `tab`, `name`, `index`, `active`, `select()`, `next()`, `prev()`."
+        },
+        empty: {
+          type: "Function|Node|Array",
+          description: "Fallback quando non ci sono tab."
+        },
+        default: {
+          type: "Node|Array|Function",
+          description: "Contenuto extra appendato dopo il componente."
+        }
       },
       events: {
-        onChange: "(name)"
+        onChange: "(name, tab, index)"
       },
-      returns: "HTMLDivElement",
-      description: "Tab panel con navigazione, contenuto e supporto model/animazioni."
+      returns: "HTMLDivElement con API `_getValue()`, `_setValue(value)`, `_select(value)`, `_next()`, `_prev()`, `_active()`, `_tabs()`",
+      description: "Tab panel standardizzato con nav accessibile, slot strutturati, model reattivo, swipe e animazioni."
     };
   }
 

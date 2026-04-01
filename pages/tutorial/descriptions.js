@@ -123,6 +123,10 @@ const descriptions = {
     title: "Tabs",
     description: "Tabs basate su `tabs[]` con _.Btn e supporto model. Slot `tab` per label e `default` per extra content."
   },
+  "_.TabPanel": {
+    title: "TabPanel",
+    description: "Navigazione a pannelli con model reattivo, slot strutturati, swipe, varianti visive e contenuti complessi per dashboard o workflow."
+  },
   "_.RouteTab": {
     title: "RouteTab",
     description: "Tab link con `to` o `href`, supporto router e stato `active`. Usa slot `label` o children."

@@ -155,7 +155,7 @@
       return options;
     };
 
-    const boxCode = (title, content) => {
+    const boxCode = (title, content, numCol = 12) => {
       const openCode = _.rod(false);
       return _.Card(
         {
@@ -185,7 +185,7 @@
           ],
         },
         _.Row(
-          _.Col({ class: "cms-gutter-sm", col: 12 }, content.code),
+          _.Col({ class: "cms-gutter-sm", col: numCol }, content.code),
           _.Col(
             {
               col: 24,
