@@ -165,7 +165,7 @@ const descriptions = {
   },
   "_.Page": {
     title: "Page",
-    description: "Contenitore pagina (`cms-page`) per contenuti principali. Variante dense e slot `default`."
+    description: "Contenitore pagina strutturato con hero, header, body e footer. Supporta titolo, aside, azioni, larghezza controllata e composizione via slot."
   },
   "_.AppShell": {
     title: "AppShell",

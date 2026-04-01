@@ -9889,28 +9889,193 @@
   }
 
   UI.Page = (...args) => {
-    const { props, children } = CMSwift.uiNormalizeArgs(args);
-    const slots = props.slots || {};
-    const cls = uiClass(["cms-panel", "cms-page", uiWhen(props.dense, "dense"), props.class]);
-    const p = CMSwift.omit(props, ["dense", "slots"]);
-    p.class = cls;
-    return _.div(p, ...renderSlotToArray(slots, "default", {}, children));
+    const { props: rawProps, children } = CMSwift.uiNormalizeArgs(args);
+    const slots = rawProps.slots || {};
+    const props = { ...rawProps };
+
+    const isSectionNode = (node, name) => {
+      return !!(node && node.nodeType === 1 && node.classList?.contains(`cms-page-${name}`));
+    };
+    const renderIconFallback = (value) => {
+      if (value == null) return null;
+      if (typeof value === "string") return UI.Icon({ name: value, size: rawProps.iconSize || rawProps.size || "xl" });
+      return CMSwift.ui.slot(value, { as: "icon" });
+    };
+
+    const ctx = {
+      dense: !!uiUnwrap(rawProps.dense),
+      flat: !!uiUnwrap(rawProps.flat),
+      centered: !!uiUnwrap(rawProps.centered),
+      narrow: !!uiUnwrap(rawProps.narrow)
+    };
+
+    const defaultNodes = renderSlotToArray(slots, "default", ctx, children?.length ? children : []);
+    const sectionNodes = {
+      hero: [],
+      header: [],
+      body: [],
+      footer: [],
+      actions: []
+    };
+    const looseNodes = [];
+
+    defaultNodes.forEach((node) => {
+      if (isSectionNode(node, "hero")) sectionNodes.hero.push(node);
+      else if (isSectionNode(node, "header")) sectionNodes.header.push(node);
+      else if (isSectionNode(node, "body")) sectionNodes.body.push(node);
+      else if (isSectionNode(node, "footer")) sectionNodes.footer.push(node);
+      else if (isSectionNode(node, "actions")) sectionNodes.actions.push(node);
+      else looseNodes.push(node);
+    });
+
+    const iconNodes = renderSlotToArray(slots, "icon", ctx, renderIconFallback(rawProps.icon));
+    const heroNodes = renderSlotToArray(slots, "hero", ctx, rawProps.hero ?? rawProps.banner);
+    const eyebrowNodes = renderSlotToArray(slots, "eyebrow", ctx, rawProps.eyebrow ?? rawProps.kicker);
+    const titleNodes = renderSlotToArray(slots, "title", ctx, rawProps.title);
+    const subtitleNodes = renderSlotToArray(slots, "subtitle", ctx, rawProps.subtitle ?? rawProps.description);
+    const headerNodes = renderSlotToArray(slots, "header", ctx, rawProps.header);
+    const asideNodes = renderSlotToArray(slots, "aside", ctx, rawProps.aside);
+    const bodyNodes = renderSlotToArray(slots, "body", ctx, rawProps.body ?? rawProps.content);
+    const footerNodes = renderSlotToArray(slots, "footer", ctx, rawProps.footer);
+    const actionsNodes = renderSlotToArray(slots, "actions", ctx, rawProps.actions);
+
+    const generatedHero = heroNodes.length
+      ? _.div({ class: uiClass(["cms-page-hero", rawProps.heroClass]) }, ...heroNodes)
+      : null;
+
+    const hasStructuredHeader = iconNodes.length || eyebrowNodes.length || titleNodes.length || subtitleNodes.length || headerNodes.length || asideNodes.length;
+    const generatedHeader = hasStructuredHeader
+      ? _.div(
+        { class: uiClass(["cms-page-header", rawProps.headerClass]) },
+        _.div(
+          { class: "cms-page-head" },
+          iconNodes.length ? _.div({ class: uiClass(["cms-page-icon", rawProps.iconClass]) }, ...iconNodes) : null,
+          _.div(
+            { class: "cms-page-head-main" },
+            eyebrowNodes.length ? _.div({ class: uiClass(["cms-page-eyebrow", rawProps.eyebrowClass]) }, ...eyebrowNodes) : null,
+            titleNodes.length ? _.div({ class: uiClass(["cms-page-title", rawProps.titleClass]) }, ...titleNodes) : null,
+            subtitleNodes.length ? _.div({ class: uiClass(["cms-page-subtitle", rawProps.subtitleClass]) }, ...subtitleNodes) : null,
+            headerNodes.length ? _.div({ class: uiClass(["cms-page-header-content", rawProps.headerContentClass]) }, ...headerNodes) : null
+          ),
+          asideNodes.length ? _.div({ class: uiClass(["cms-page-aside", rawProps.asideClass]) }, ...asideNodes) : null
+        )
+      )
+      : null;
+
+    const mergedBodyNodes = [...bodyNodes, ...looseNodes];
+    const generatedBody = mergedBodyNodes.length
+      ? _.div({ class: uiClass(["cms-page-body", rawProps.bodyClass]) }, ...mergedBodyNodes)
+      : null;
+
+    const mergedActionNodes = [...actionsNodes, ...sectionNodes.actions];
+    const generatedFooter = (footerNodes.length || mergedActionNodes.length)
+      ? _.div(
+        { class: uiClass(["cms-page-footer", rawProps.footerClass]) },
+        ...footerNodes,
+        mergedActionNodes.length ? _.div({ class: "cms-page-actions" }, ...mergedActionNodes) : null
+      )
+      : null;
+
+    const hasHero = !!(heroNodes.length || sectionNodes.hero.length);
+    const hasHeader = !!(hasStructuredHeader || sectionNodes.header.length);
+    const p = CMSwift.omit(props, [
+      "actions", "aside", "asideClass", "banner", "body", "bodyClass", "centered", "content",
+      "dense", "description", "eyebrow", "eyebrowClass", "flat", "footer", "footerClass",
+      "gap", "header", "headerClass", "headerContentClass", "headerGap", "hero", "heroClass",
+      "heroPadding", "icon", "iconClass", "iconSize", "kicker", "maxWidth", "minHeight",
+      "narrow", "padding", "size", "slots", "subtitle", "subtitleClass", "title", "titleClass"
+    ]);
+    p.class = uiClass([
+      "cms-panel",
+      "cms-page",
+      uiWhen(rawProps.dense, "dense"),
+      uiWhen(rawProps.flat, "cms-page-flat"),
+      uiWhen(rawProps.centered, "cms-page-centered"),
+      uiWhen(rawProps.narrow, "cms-page-narrow"),
+      uiWhen(hasHero, "cms-page-has-hero"),
+      uiWhen(hasHeader, "cms-page-has-header"),
+      props.class
+    ]);
+    p.style = { ...(props.style || {}) };
+
+    if (rawProps.gap != null || uiIsReactive(rawProps.gap)) {
+      p.style["--cms-page-gap"] = uiStyleValue(rawProps.gap, toCssSize);
+    }
+    if (rawProps.padding != null || uiIsReactive(rawProps.padding)) {
+      p.style["--cms-page-padding"] = uiStyleValue(rawProps.padding, toCssSize);
+    }
+    if (rawProps.maxWidth != null || uiIsReactive(rawProps.maxWidth)) {
+      p.style["--cms-page-max-width"] = uiStyleValue(rawProps.maxWidth, toCssSize);
+    }
+    if (rawProps.minHeight != null || uiIsReactive(rawProps.minHeight)) {
+      p.style["--cms-page-min-height"] = uiStyleValue(rawProps.minHeight, toCssSize);
+    }
+    if (rawProps.headerGap != null || uiIsReactive(rawProps.headerGap)) {
+      p.style["--cms-page-header-gap"] = uiStyleValue(rawProps.headerGap, toCssSize);
+    }
+    if (rawProps.heroPadding != null || uiIsReactive(rawProps.heroPadding)) {
+      p.style["--cms-page-hero-padding"] = uiStyleValue(rawProps.heroPadding, toCssSize);
+    }
+
+    const el = _.div(
+      p,
+      generatedHero,
+      ...sectionNodes.hero,
+      generatedHeader,
+      ...sectionNodes.header,
+      generatedBody,
+      ...sectionNodes.body,
+      generatedFooter,
+      ...sectionNodes.footer
+    );
+
+    setPropertyProps(el, rawProps);
+    return el;
   };
   if (CMSwift.isDev?.()) {
     UI.meta = UI.meta || {};
     UI.meta.Page = {
       signature: "UI.Page(...children) | UI.Page(props, ...children)",
       props: {
+        hero: "Node|Function|Array",
+        icon: "String|Node|Function|Array",
+        eyebrow: "String|Node|Function|Array",
+        title: "String|Node|Function|Array",
+        subtitle: "String|Node|Function|Array",
+        header: "String|Node|Function|Array",
+        aside: "Node|Function|Array",
+        body: "Node|Function|Array",
+        footer: "Node|Function|Array",
+        actions: "Node|Function|Array",
         dense: "boolean",
-        slots: "{ default? }",
+        flat: "boolean",
+        centered: "boolean",
+        narrow: "boolean",
+        gap: "string|number",
+        padding: "string|number",
+        maxWidth: "string|number",
+        minHeight: "string|number",
+        heroPadding: "string|number",
+        headerGap: "string|number",
+        slots: "{ hero?, icon?, eyebrow?, title?, subtitle?, header?, aside?, body?, footer?, actions?, default? }",
         class: "string",
         style: "object"
       },
       slots: {
-        default: "Page content"
+        hero: "Top hero/banner area",
+        icon: "Page icon/visual",
+        eyebrow: "Eyebrow/kicker content",
+        title: "Page title content",
+        subtitle: "Page subtitle/description content",
+        header: "Header support content under title",
+        aside: "Top-right header content",
+        body: "Structured body content",
+        footer: "Footer meta/content",
+        actions: "Footer actions content",
+        default: "Fallback body content"
       },
       returns: "HTMLDivElement",
-      description: "Contenitore pagina base."
+      description: "Contenitore pagina strutturato con hero, header, body, footer e layout configurabile."
     };
   }
 
