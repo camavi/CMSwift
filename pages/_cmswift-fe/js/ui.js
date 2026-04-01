@@ -9908,6 +9908,37 @@
       centered: !!uiUnwrap(rawProps.centered),
       narrow: !!uiUnwrap(rawProps.narrow)
     };
+    const appendResolvedValue = (host, value) => {
+      if (value == null || value === false) return;
+      if (Array.isArray(value)) {
+        value.forEach((item) => appendResolvedValue(host, item));
+        return;
+      }
+      if (value?.nodeType) {
+        host.appendChild(value);
+        return;
+      }
+      host.appendChild(document.createTextNode(String(value)));
+    };
+    const renderPropNodes = (name, fallback, map = (value) => value) => {
+      const slot = CMSwift.ui.getSlot(slots, name);
+      if (slot !== null && slot !== undefined) {
+        return renderSlotToArray(slots, name, ctx, null);
+      }
+      if (typeof fallback === "function") {
+        const inlineNames = new Set(["eyebrow", "title", "subtitle"]);
+        const host = _[inlineNames.has(name) ? "span" : "div"]({ class: `cms-page-slot-${name}` });
+        CMSwift.reactive.effect(() => {
+          const nextValue = map(fallback(ctx));
+          const normalized = flattenSlotValue(CMSwift.ui.slot(nextValue));
+          host.replaceChildren();
+          if (Array.isArray(normalized)) normalized.forEach((item) => appendResolvedValue(host, item));
+          else appendResolvedValue(host, normalized);
+        }, `UI.Page:${name}`);
+        return [host];
+      }
+      return renderSlotToArray(slots, name, ctx, map(fallback));
+    };
 
     const defaultNodes = renderSlotToArray(slots, "default", ctx, children?.length ? children : []);
     const sectionNodes = {
@@ -9928,16 +9959,16 @@
       else looseNodes.push(node);
     });
 
-    const iconNodes = renderSlotToArray(slots, "icon", ctx, renderIconFallback(rawProps.icon));
-    const heroNodes = renderSlotToArray(slots, "hero", ctx, rawProps.hero ?? rawProps.banner);
-    const eyebrowNodes = renderSlotToArray(slots, "eyebrow", ctx, rawProps.eyebrow ?? rawProps.kicker);
-    const titleNodes = renderSlotToArray(slots, "title", ctx, rawProps.title);
-    const subtitleNodes = renderSlotToArray(slots, "subtitle", ctx, rawProps.subtitle ?? rawProps.description);
-    const headerNodes = renderSlotToArray(slots, "header", ctx, rawProps.header);
-    const asideNodes = renderSlotToArray(slots, "aside", ctx, rawProps.aside);
-    const bodyNodes = renderSlotToArray(slots, "body", ctx, rawProps.body ?? rawProps.content);
-    const footerNodes = renderSlotToArray(slots, "footer", ctx, rawProps.footer);
-    const actionsNodes = renderSlotToArray(slots, "actions", ctx, rawProps.actions);
+    const iconNodes = renderPropNodes("icon", rawProps.icon, renderIconFallback);
+    const heroNodes = renderPropNodes("hero", rawProps.hero ?? rawProps.banner);
+    const eyebrowNodes = renderPropNodes("eyebrow", rawProps.eyebrow ?? rawProps.kicker);
+    const titleNodes = renderPropNodes("title", rawProps.title);
+    const subtitleNodes = renderPropNodes("subtitle", rawProps.subtitle ?? rawProps.description);
+    const headerNodes = renderPropNodes("header", rawProps.header);
+    const asideNodes = renderPropNodes("aside", rawProps.aside);
+    const bodyNodes = renderPropNodes("body", rawProps.body ?? rawProps.content);
+    const footerNodes = renderPropNodes("footer", rawProps.footer);
+    const actionsNodes = renderPropNodes("actions", rawProps.actions);
 
     const generatedHero = heroNodes.length
       ? _.div({ class: uiClass(["cms-page-hero", rawProps.heroClass]) }, ...heroNodes)
