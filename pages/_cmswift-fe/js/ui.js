@@ -3365,7 +3365,7 @@
 
     const style = { ...(props.style || {}) };
     const gap = uiStyleValue(props.gap, toCssSize);
-    if (gap != null) style.gap = gap;
+    if (gap != null) style["--cms-grid-gap"] = gap;
     const cols = uiStyleValue(props.cols, (v) => typeof v === "number"
       ? `repeat(${v}, minmax(0, 1fr))`
       : String(v)
@@ -3405,21 +3405,36 @@
   UI.GridCol = (...args) => {
     const { props, children } = CMSwift.uiNormalizeArgs(args);
     const slots = props.slots || {};
-    const spanClass = uiComputed([props.auto, props.span], () => {
-      const auto = uiUnwrap(props.auto);
-      const span = auto ? "auto" : (uiUnwrap(props.span) || 24);
-      return span === "auto" ? "cms-col-auto" : `cms-col-${span}`;
-    });
     const cls = uiClass([
-      spanClass,
-      uiClassValue(props.sm, "cms-sm-col-"),
-      uiClassValue(props.md, "cms-md-col-"),
-      uiClassValue(props.lg, "cms-lg-col-"),
+      "cms-grid-col",
+      uiWhen(props.auto, "is-auto"),
       props.class
     ]);
 
-    const p = CMSwift.omit(props, ["span", "sm", "md", "lg", "auto", "slots"]);
+    const p = CMSwift.omit(props, ["span", "sm", "md", "lg", "auto", "slots", "style"]);
     p.class = cls;
+
+    const style = { ...(props.style || {}) };
+    const toGridSpan = (value) => {
+      if (value == null || value === "") return null;
+      if (value === "auto") return "auto";
+      const n = Number(value);
+      if (Number.isFinite(n) && n > 0) return `span ${n} / span ${n}`;
+      return String(value);
+    };
+
+    const span = uiStyleValue(props.span, toGridSpan);
+    const sm = uiStyleValue(props.sm, toGridSpan);
+    const md = uiStyleValue(props.md, toGridSpan);
+    const lg = uiStyleValue(props.lg, toGridSpan);
+
+    if (uiUnwrap(props.auto) === true) style["--cms-grid-col-base"] = "auto";
+    else if (span != null) style["--cms-grid-col-base"] = span;
+    if (sm != null) style["--cms-grid-col-sm"] = sm;
+    if (md != null) style["--cms-grid-col-md"] = md;
+    if (lg != null) style["--cms-grid-col-lg"] = lg;
+    if (Object.keys(style).length) p.style = style;
+
     return _.div(p, ...renderSlotToArray(slots, "default", {}, children));
   };
   if (CMSwift.isDev?.()) {
@@ -3440,7 +3455,7 @@
         default: "Column content"
       },
       returns: "HTMLDivElement",
-      description: "Colonna per la griglia con breakpoints."
+      description: "Item per CSS Grid con span responsive e breakpoint sm/md/lg."
     };
   }
   // Esempio: CMSwift.ui.GridCol({ span: 6, sm: 12 }, "Colonna")
@@ -9872,42 +9887,196 @@
   }
 
   UI.AppShell = (...args) => {
-    const { props } = CMSwift.uiNormalizeArgs(args);
+    const { props, children } = CMSwift.uiNormalizeArgs(args);
     const slots = props.slots || {};
-    const header = renderSlotToArray(slots, "header", {}, props.header);
-    const drawer = renderSlotToArray(slots, "drawer", {}, props.drawer);
-    const page = renderSlotToArray(slots, "page", {}, props.page);
-    const noDrawer = props.noDrawer === true;
-    const drawerNodes = noDrawer ? [] : drawer;
-    const shellCls = uiClass(["cms-shell", noDrawer ? "no-drawer" : ""]);
-    return _.div({ class: uiClass(["cms-app", props.class]), style: props.style },
-      ...header,
-      _.div({ class: shellCls },
-        ...drawerNodes,
-        ...page
-      )
+    const hasOwn = (obj, key) => !!obj && Object.prototype.hasOwnProperty.call(obj, key);
+
+    const noDrawer = uiUnwrap(props.noDrawer) === true || props.drawer === false;
+    const reverse = uiUnwrap(props.reverse) === true;
+    const stack = uiUnwrap(props.stack) === true;
+    const currentStateKey = props.drawerStateKey ?? props.stateKey ?? drawerStateKey;
+
+    if (currentStateKey) {
+      drawerStateKey = currentStateKey;
+      drawerOpen = readDrawerOpen(currentStateKey);
+    }
+
+    const shellCtx = {
+      props,
+      noDrawer,
+      stateKey: currentStateKey,
+      isDrawerOpen: () => readDrawerOpen(currentStateKey),
+      openDrawer: () => setDrawerOpen(true, currentStateKey),
+      closeDrawer: () => setDrawerOpen(false, currentStateKey),
+      toggleDrawer: () => setDrawerOpen(!readDrawerOpen(currentStateKey), currentStateKey)
+    };
+
+    const headerProps = (props.headerProps && typeof props.headerProps === "object") ? { ...props.headerProps } : {};
+    let headerFallback = props.header;
+    if (!hasOwn(props, "header") && (
+      Object.keys(headerProps).length ||
+      hasOwn(props, "title") ||
+      hasOwn(props, "subtitle") ||
+      hasOwn(props, "left") ||
+      hasOwn(props, "right")
+    )) {
+      if (!hasOwn(headerProps, "title") && hasOwn(props, "title")) headerProps.title = props.title;
+      if (!hasOwn(headerProps, "subtitle") && hasOwn(props, "subtitle")) headerProps.subtitle = props.subtitle;
+      if (!hasOwn(headerProps, "left") && hasOwn(props, "left")) headerProps.left = props.left;
+      if (!hasOwn(headerProps, "right") && hasOwn(props, "right")) headerProps.right = props.right;
+      if (!hasOwn(headerProps, "drawerStateKey")) headerProps.drawerStateKey = currentStateKey;
+      if (noDrawer && !hasOwn(headerProps, "left")) headerProps.left = false;
+      headerFallback = UI.Header(headerProps);
+    }
+
+    const drawerProps = (props.drawerProps && typeof props.drawerProps === "object") ? { ...props.drawerProps } : {};
+    const drawerItems = hasOwn(props, "drawerItems") ? props.drawerItems : props.items;
+    const drawerHeader = hasOwn(props, "drawerHeader") ? props.drawerHeader : undefined;
+    let drawerFallback = props.drawer;
+    if (!hasOwn(props, "drawer") && !noDrawer && (
+      Object.keys(drawerProps).length ||
+      drawerItems != null ||
+      drawerHeader != null
+    )) {
+      if (!hasOwn(drawerProps, "items") && drawerItems != null) drawerProps.items = drawerItems;
+      if (!hasOwn(drawerProps, "header") && drawerHeader != null) drawerProps.header = drawerHeader;
+      if (!hasOwn(drawerProps, "stateKey")) drawerProps.stateKey = currentStateKey;
+      drawerFallback = UI.Drawer(drawerProps);
+    }
+
+    const pageProps = (props.pageProps && typeof props.pageProps === "object") ? { ...props.pageProps } : {};
+    const pageContentFallback = hasOwn(props, "content") ? props.content : children;
+    const defaultPageContent = renderSlotToArray(slots, "default", shellCtx, pageContentFallback);
+    let pageFallback = props.page;
+    if (!hasOwn(props, "page") && (Object.keys(pageProps).length || defaultPageContent.length)) {
+      pageFallback = UI.Page(pageProps, ...defaultPageContent);
+    }
+
+    const footerProps = (props.footerProps && typeof props.footerProps === "object") ? { ...props.footerProps } : {};
+    const footerContent = hasOwn(props, "footerContent") ? props.footerContent : undefined;
+    let footerFallback = props.footer;
+    if (!hasOwn(props, "footer") && (Object.keys(footerProps).length || footerContent != null)) {
+      footerFallback = UI.Footer(footerProps, ...renderSlotToArray(null, "default", shellCtx, footerContent));
+    }
+
+    const headerNodes = renderSlotToArray(slots, "header", shellCtx, headerFallback);
+    const drawerNodes = noDrawer ? [] : renderSlotToArray(slots, "drawer", shellCtx, drawerFallback);
+    const pageNodes = renderSlotToArray(slots, "page", shellCtx, pageFallback);
+    const footerNodes = renderSlotToArray(slots, "footer", shellCtx, footerFallback);
+
+    const cls = uiClass([
+      "cms-app",
+      "cms-app-shell",
+      uiWhen(noDrawer, "no-drawer"),
+      uiWhen(reverse, "is-reverse"),
+      uiWhen(stack, "is-stack"),
+      uiWhen(props.flush, "is-flush"),
+      uiWhen(props.divider, "is-divider"),
+      props.class
+    ]);
+
+    const p = CMSwift.omit(props, [
+      "header", "drawer", "page", "footer", "content",
+      "title", "subtitle", "left", "right",
+      "items", "drawerItems", "drawerHeader",
+      "headerProps", "drawerProps", "pageProps", "footerProps",
+      "footerContent",
+      "noDrawer", "reverse", "stack", "flush", "divider",
+      "drawerStateKey", "stateKey",
+      "drawerWidth", "gap", "padding",
+      "slots"
+    ]);
+    p.class = cls;
+    p.style = { ...(props.style || {}) };
+
+    const drawerWidth = uiStyleValue(props.drawerWidth, toCssSize);
+    if (drawerWidth != null) p.style["--cms-app-shell-drawer-width"] = drawerWidth;
+    const gap = uiStyleValue(props.gap, toCssSize);
+    if (gap != null) p.style["--cms-app-shell-gap"] = gap;
+    const padding = uiStyleValue(props.padding, toCssSize);
+    if (padding != null) p.style["--cms-app-shell-padding"] = padding;
+
+    const headerWrap = headerNodes.length
+      ? _.div({ class: "cms-app-shell-header-slot" }, ...headerNodes)
+      : null;
+    const drawerWrap = drawerNodes.length
+      ? _.div({ class: "cms-app-shell-drawer-slot" }, ...drawerNodes)
+      : null;
+    const pageWrap = pageNodes.length
+      ? _.div({ class: "cms-app-shell-page-slot" }, ...pageNodes)
+      : null;
+    const footerWrap = footerNodes.length
+      ? _.div({ class: "cms-app-shell-footer-slot" }, ...footerNodes)
+      : null;
+
+    const bodyNodes = reverse
+      ? [pageWrap, drawerWrap]
+      : [drawerWrap, pageWrap];
+
+    const root = _.div(
+      p,
+      ...(headerWrap ? [headerWrap] : []),
+      _.div({ class: "cms-app-shell-body" }, ...bodyNodes.filter(Boolean)),
+      ...(footerWrap ? [footerWrap] : [])
     );
+
+    root.openDrawer = shellCtx.openDrawer;
+    root.closeDrawer = shellCtx.closeDrawer;
+    root.toggleDrawer = shellCtx.toggleDrawer;
+    root.isDrawerOpen = shellCtx.isDrawerOpen;
+    root.header = headerWrap;
+    root.drawer = drawerWrap;
+    root.page = pageWrap;
+    root.footer = footerWrap;
+
+    setPropertyProps(root, props);
+    return root;
   };
   if (CMSwift.isDev?.()) {
     UI.meta = UI.meta || {};
     UI.meta.AppShell = {
-      signature: "UI.AppShell(props)",
+      signature: "UI.AppShell(...children) | UI.AppShell(props, ...children)",
       props: {
-        header: "Node|Function|Array",
-        drawer: "Node|Function|Array",
-        page: "Node|Function|Array",
+        header: "Node|Function|Array|false",
+        drawer: "Node|Function|Array|false",
+        page: "Node|Function|Array|false",
+        footer: "Node|Function|Array|false",
+        title: "string|Node|Function|Array",
+        subtitle: "string|Node|Function|Array",
+        left: "Node|Function|Array|false",
+        right: "Node|Function|Array",
+        items: "Array",
+        drawerItems: "Array",
+        drawerHeader: "Node|Function|Array",
+        content: "Node|Function|Array",
+        headerProps: "object",
+        drawerProps: "object",
+        pageProps: "object",
+        footerProps: "object",
+        footerContent: "Node|Function|Array",
         noDrawer: "boolean",
-        slots: "{ header?, drawer?, page? }",
+        reverse: "boolean",
+        stack: "boolean",
+        flush: "boolean",
+        divider: "boolean",
+        drawerStateKey: "string",
+        stateKey: "string",
+        drawerWidth: "number|string",
+        gap: "number|string",
+        padding: "number|string",
+        slots: "{ header?, drawer?, page?, footer?, default? }",
         class: "string",
         style: "object"
       },
       slots: {
         header: "Header content",
         drawer: "Drawer content",
-        page: "Page content"
+        page: "Page content",
+        footer: "Footer content",
+        default: "Fallback page content"
       },
-      returns: "HTMLDivElement",
-      description: "Shell applicazione con header/drawer/page."
+      returns: "HTMLDivElement con methods openDrawer/closeDrawer/toggleDrawer/isDrawerOpen",
+      description: "Shell applicazione composabile con shortcut per Header/Drawer/Page/Footer e gestione drawer."
     };
   }
 

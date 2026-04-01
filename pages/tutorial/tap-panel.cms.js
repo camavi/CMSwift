@@ -97,10 +97,10 @@ const buildWorkspaceTabs = () => [
         _.Icon("rocket_launch"),
         _.span("Panoramica rapida del rollout con KPI e task correnti.")
       ),
-      _.Grid({ cols: 12, gap: 12 },
-        _.GridCol({ span: 4 }, metricCard("Revenue", "€ 128k", "success", "Ultime 24h")),
-        _.GridCol({ span: 4 }, metricCard("Orders", "342", "info", "16 in review")),
-        _.GridCol({ span: 4 }, metricCard("Refund risk", "2.1%", "warning", "Soglia sotto controllo"))
+      _.Grid({ cols: 3, gap: 12 },
+        _.GridCol(metricCard("Revenue", "€ 128k", "success", "Ultime 24h")),
+        _.GridCol(metricCard("Orders", "342", "info", "16 in review")),
+        _.GridCol(metricCard("Refund risk", "2.1%", "warning", "Soglia sotto controllo"))
       ),
       _.Card({
         title: "Release checklist",
@@ -148,8 +148,8 @@ const buildWorkspaceTabs = () => [
     note: "Regole e canali in esecuzione",
     icon: "bolt",
     badge: _.Badge({ color: "warning" }, "3"),
-    content: _.Grid({ cols: 12, gap: 12 },
-      _.GridCol({ span: 6 }, _.Card({
+    content: _.Grid({ cols: 2, gap: 12 },
+      _.GridCol(_.Card({
         title: "Trigger attivi",
         subtitle: "Azioni automatiche attualmente schedulate"
       },
@@ -157,7 +157,7 @@ const buildWorkspaceTabs = () => [
         _.Checkbox({ model: _.rod(true), color: "info" }, "Sync prezzo con marketplace"),
         _.Checkbox({ model: _.rod(false), color: "warning" }, "Push coupon VIP")
       )),
-      _.GridCol({ span: 6 }, _.Card({
+      _.GridCol(_.Card({
         title: "Canale prioritario",
         subtitle: "Scelta rapida della prossima azione"
       },
@@ -452,14 +452,14 @@ const listSample = {
         title: "Playground controls",
         subtitle: "Configura orientamento, variant e comportamento"
       },
-        _.Grid({ cols: 12, gap: 12 },
-          _.GridCol({ span: 6 }, _.Card({ title: "Orientation / position" },
+        _.Grid({ cols: 2, gap: 12 },
+          _.GridCol(_.Card({ title: "Orientation / position" },
             _.Radio({ model: liveOrientation, value: "horizontal", color: "primary" }, "Horizontal"),
             _.Radio({ model: liveOrientation, value: "vertical", color: "secondary" }, "Vertical"),
             _.Radio({ model: liveNavPosition, value: "before", color: "info" }, "Nav before"),
             _.Radio({ model: liveNavPosition, value: "after", color: "warning" }, "Nav after")
           )),
-          _.GridCol({ span: 6 }, _.Card({ title: "Style / behavior" },
+          _.GridCol(_.Card({ title: "Style / behavior" },
             _.Select({ label: "Variant", model: liveVariant, options: ["line", "pills", "soft"] }),
             _.Checkbox({ model: liveWrap }, "Wrap"),
             _.Checkbox({ model: liveAnimated }, "Animated"),

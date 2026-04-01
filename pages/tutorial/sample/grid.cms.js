@@ -1,8 +1,11 @@
 const gridSample = _.div({ class: "cms-panel cms-page" },
   _.h2("Grid sample"),
-  _.p("Griglia CSS configurabile con `gap`, `cols`, `align` e `justify`. Utile per layout a colonne con classi `cms-grid`."),
+  _.p("Griglia CSS reale con 24 colonne di default o `cols` personalizzato."),
   _.Card({ header: "Esempio" },
-    _.Grid({ gap: "var(--cms-s-md)" }, _.GridCol({ span: 12 }, _.Card("A")), _.GridCol({ span: 12 }, _.Card("B")))
+    _.Grid({ cols: 2, gap: "var(--cms-s-md)" },
+      _.GridCol(_.Card("A")),
+      _.GridCol(_.Card("B"))
+    )
   )
 );
 

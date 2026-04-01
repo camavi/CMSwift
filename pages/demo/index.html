@@ -284,13 +284,7 @@
         icon: "mobile_layout",
         items: [
           createComponentItem("tapPanel", "/demo/component/tap-panel"),
-          {
-            label: "AppShell",
-            onClick: () => {
-              currentLayout.page().innerHTML = "";
-              currentLayout.page().appendChild(cardContent());
-            },
-          },
+          createComponentItem("appShell", "/demo/component/appshell"),
           createComponentItem("Layout", "/demo/component/layout"),
           createComponentItem("Page", "/demo/component/page"),
           createComponentItem("Header", "/demo/component/header"),

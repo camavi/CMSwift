@@ -53,11 +53,11 @@ const descriptions = {
   },
   "_.Grid": {
     title: "Grid",
-    description: "Griglia CSS configurabile con `gap`, `cols`, `align` e `justify`. Utile per layout a colonne con classi `cms-grid`."
+    description: "Griglia CSS reale configurabile con `gap`, `cols`, `align` e `justify`, con 24 colonne di default e supporto a `GridCol`."
   },
   "_.GridCol": {
     title: "GridCol",
-    description: "Colonna per _.Grid con span e breakpoint `sm/md/lg`, oppure `auto`. Genera classi `cms-col-*` responsivi."
+    description: "Item per `_.Grid` con `span` responsive su `sm/md/lg` oppure `auto`, basato su CSS Grid."
   },
   "_.Icon": {
     title: "Icon",
