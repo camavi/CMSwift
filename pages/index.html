@@ -286,17 +286,14 @@
               items: [{ label: "Home", to: "#" }, { label: "Demo componenti" }],
             }),
           ),
-          _.Grid(
+          _.Row(
             { gap: "var(--cms-s-lg)" },
-            _.GridCol({ span: 24, sm: 24, class: "cms-m-b-sm" }, navCard),
-            _.GridCol(
-              { span: 24, sm: 24, class: "cms-m-b-sm" },
-              interactiveCard,
-            ),
-            _.GridCol({ span: 24, sm: 24, class: "cms-m-b-sm" }, dataCard),
-            _.GridCol({ span: 24, sm: 24, class: "cms-m-b-sm" }, notifyCard),
-            _.GridCol({ span: 24, sm: 24, class: "cms-m-b-sm" }, table),
-            _.GridCol({ span: 24 }, CMSwift.docTable("Btn")),
+            _.Col({ col: 24, sm: 24, class: "cms-m-b-sm" }, navCard),
+            _.Col({ col: 24, sm: 24, class: "cms-m-b-sm" }, interactiveCard),
+            _.Col({ col: 24, sm: 24, class: "cms-m-b-sm" }, dataCard),
+            _.Col({ col: 24, sm: 24, class: "cms-m-b-sm" }, notifyCard),
+            _.Col({ col: 24, sm: 24, class: "cms-m-b-sm" }, table),
+            _.Col({ col: 24 }, CMSwift.docTable("Btn")),
           ),
         ),
       );
