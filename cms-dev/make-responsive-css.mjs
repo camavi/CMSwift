@@ -357,9 +357,13 @@ function main() {
   lines.push(".cms-row { display: flex; align-items: stretch; flex-wrap: wrap; }");
   lines.push(".cms-col { flex-direction: column; gap: var(--cms-s-md); box-sizing: border-box; }");
   lines.push(".cms-col-auto { max-width: 100%; flex: 0 0 auto; width: auto; }");
+  lines.push(".cms-col-inline { display: inline-block; }");
+  lines.push(".cms-col-flex { display: flex; flex-direction: column; gap: var(--cms-s-md); }");
+  lines.push(".cms-col-flex.cms-col-inline { display: inline-flex; }");
   lines.push('[class*="cms-col"] { position: relative; box-sizing: border-box; flex: 1; }');
-  lines.push("");
 
+  lines.push('[class*="cms-col"] .cms-col-start, [class*="cms-col"] .cms-col-body, [class*="cms-col"] .cms-col-end { display: flex; min-width: 0; flex-direction: column; gap: inherit; }');
+  lines.push('[class*="cms-col"] .cms-col-body { flex: 1 1 auto; }');
 
   lines.push("");
 
