@@ -208,75 +208,179 @@
     };
   </script>
   <script type="module">
-    import { ColorTokensDemoPage } from "../tutorial/color.cms.js";
+    const demoRoutes = [
+      [
+        "/demo/component/color",
+        "../tutorial/color.cms.js",
+        "ColorTokensDemoPage",
+      ],
+      ["/demo/component/btn", "../tutorial/btn.cms.js", "btn"],
+      ["/demo/component/icon", "../tutorial/icon.cms.js", "icon"],
 
-    // Layout & Structure
-    import { tapPanel } from "../tutorial/tap-panel.cms.js";
-    import { appShell } from "../tutorial/app-shell.cms.js";
-    import { layout } from "../tutorial/layout.cms.js";
-    import { page } from "../tutorial/page.cms.js";
-    import { header } from "../tutorial/header.cms.js";
-    import { footer } from "../tutorial/footer.cms.js";
-    import { container } from "../tutorial/container.cms.js";
-    import { parallax } from "../tutorial/parallax.cms.js";
-    import { row } from "../tutorial/row.cms.js";
-    import { col } from "../tutorial/col.cms.js";
-    import { grid } from "../tutorial/grid.cms.js";
-    import { gridCol } from "../tutorial/grid-col.cms.js";
+      ["/demo/component/tap-panel", "../tutorial/tap-panel.cms.js", "tapPanel"],
+      ["/demo/component/appshell", "../tutorial/app-shell.cms.js", "appShell"],
+      ["/demo/component/layout", "../tutorial/layout.cms.js", "layout"],
+      ["/demo/component/page", "../tutorial/page.cms.js", "page"],
+      ["/demo/component/header", "../tutorial/header.cms.js", "header"],
+      ["/demo/component/footer", "../tutorial/footer.cms.js", "footer"],
+      [
+        "/demo/component/container",
+        "../tutorial/container.cms.js",
+        "container",
+      ],
+      ["/demo/component/parallax", "../tutorial/parallax.cms.js", "parallax"],
+      ["/demo/component/row", "../tutorial/row.cms.js", "row"],
+      ["/demo/component/col", "../tutorial/col.cms.js", "col"],
+      ["/demo/component/grid", "../tutorial/grid.cms.js", "grid"],
+      ["/demo/component/gridcol", "../tutorial/grid-col.cms.js", "gridCol"],
 
-    // Surface & Feedback
-    import { card } from "../tutorial/card.cms.js";
-    import { cardHeader } from "../tutorial/card-header.cms.js";
-    import { cardBody } from "../tutorial/card-body.cms.js";
-    import { cardFooter } from "../tutorial/card-footer.cms.js";
-    import { tooltip } from "../tutorial/tooltip.cms.js";
-    import { banner } from "../tutorial/banner.cms.js";
-    import { spinner } from "../tutorial/spinner.cms.js";
-    import { progress } from "../tutorial/progress.cms.js";
-    import { loadingBar } from "../tutorial/loading-bar.cms.js";
-    import { badge } from "../tutorial/badge.cms.js";
-    import { chip } from "../tutorial/chip.cms.js";
+      ["/demo/component/card", "../tutorial/card.cms.js", "card"],
+      [
+        "/demo/component/cardheader",
+        "../tutorial/card-header.cms.js",
+        "cardHeader",
+      ],
+      ["/demo/component/cardbody", "../tutorial/card-body.cms.js", "cardBody"],
+      [
+        "/demo/component/cardfooter",
+        "../tutorial/card-footer.cms.js",
+        "cardFooter",
+      ],
+      ["/demo/component/tooltip", "../tutorial/tooltip.cms.js", "tooltip"],
+      ["/demo/component/banner", "../tutorial/banner.cms.js", "banner"],
+      ["/demo/component/spinner", "../tutorial/spinner.cms.js", "spinner"],
+      ["/demo/component/progress", "../tutorial/progress.cms.js", "progress"],
+      [
+        "/demo/component/loadingbar",
+        "../tutorial/loading-bar.cms.js",
+        "loadingBar",
+      ],
+      ["/demo/component/badge", "../tutorial/badge.cms.js", "badge"],
+      ["/demo/component/chip", "../tutorial/chip.cms.js", "chip"],
 
-    // Navigation & Actions
+      ["/demo/component/toolbar", "../tutorial/toolbar.cms.js", "toolbar"],
+      ["/demo/component/tabs", "../tutorial/tabs.cms.js", "tabs"],
+      ["/demo/component/routetab", "../tutorial/route-tab.cms.js", "routeTab"],
+      ["/demo/component/menu", "../tutorial/menu.cms.js", "menu"],
+      [
+        "/demo/component/contextmenu",
+        "../tutorial/context-menu.cms.js",
+        "contextMenu",
+      ],
+      [
+        "/demo/component/breadcrumbs",
+        "../tutorial/breadcrumbs.cms.js",
+        "breadcrumbs",
+      ],
+      ["/demo/component/drawer", "../tutorial/drawer.cms.js", "drawer"],
 
-    import { toolbar } from "../tutorial/toolbar.cms.js";
-    import { tabs } from "../tutorial/tabs.cms.js";
-    import { routeTab } from "../tutorial/route-tab.cms.js";
-    import { menu } from "../tutorial/menu.cms.js";
-    import { contextMenu } from "../tutorial/context-menu.cms.js";
-    import { breadcrumbs } from "../tutorial/breadcrumbs.cms.js";
-    import { drawer } from "../tutorial/drawer.cms.js";
-    import { btn } from "../tutorial/btn.cms.js";
-    import { icon } from "../tutorial/icon.cms.js";
+      ["/demo/component/form", "../tutorial/form.cms.js", "form"],
+      [
+        "/demo/component/formfield",
+        "../tutorial/form-field.cms.js",
+        "formField",
+      ],
+      ["/demo/component/input", "../tutorial/input.cms.js", "input"],
+      ["/demo/component/inputraw", "../tutorial/input-raw.cms.js", "inputRaw"],
+      ["/demo/component/select", "../tutorial/select.cms.js", "select"],
+      ["/demo/component/checkbox", "../tutorial/checkbox.cms.js", "checkbox"],
+      ["/demo/component/radio", "../tutorial/radio.cms.js", "radio"],
+      ["/demo/component/toggle", "../tutorial/toggle.cms.js", "toggle"],
+      ["/demo/component/slider", "../tutorial/slider.cms.js", "slider"],
+      ["/demo/component/rating", "../tutorial/rating.cms.js", "rating"],
+      ["/demo/component/date", "../tutorial/date.cms.js", "date"],
+      ["/demo/component/time", "../tutorial/time.cms.js", "time"],
 
-    // from e inputs
-    import { form } from "../tutorial/form.cms.js";
-    import { formField } from "../tutorial/form-field.cms.js";
-    import { input } from "../tutorial/input.cms.js";
-    import { inputRaw } from "../tutorial/input-raw.cms.js";
-    import { select } from "../tutorial/select.cms.js";
-    import { checkbox } from "../tutorial/checkbox.cms.js";
-    import { radio } from "../tutorial/radio.cms.js";
-    import { toggle } from "../tutorial/toggle.cms.js";
-    import { slider } from "../tutorial/slider.cms.js";
-    import { rating } from "../tutorial/rating.cms.js";
-    import { date } from "../tutorial/date.cms.js";
-    import { time } from "../tutorial/time.cms.js";
+      ["/demo/component/list", "../tutorial/list.cms.js", "list"],
+      ["/demo/component/table", "../tutorial/table.cms.js", "table"],
+      [
+        "/demo/component/pagination",
+        "../tutorial/pagination.cms.js",
+        "pagination",
+      ],
+      ["/demo/component/dialog", "../tutorial/dialog.cms.js", "dialog"],
+      ["/demo/component/popover", "../tutorial/popover.cms.js", "popover"],
+      ["/demo/component/avatar", "../tutorial/avatar.cms.js", "avatar"],
+      ["/demo/component/item", "../tutorial/item.cms.js", "item"],
+      [
+        "/demo/component/separator",
+        "../tutorial/separator.cms.js",
+        "separator",
+      ],
+      ["/demo/component/spacer", "../tutorial/spacer.cms.js", "spacer"],
+    ];
 
-    // Data & Overlay
-    import { list } from "../tutorial/list.cms.js";
-    import { table } from "../tutorial/table.cms.js";
-    import { pagination } from "../tutorial/pagination.cms.js";
-    import { dialog } from "../tutorial/dialog.cms.js";
-    import { popover } from "../tutorial/popover.cms.js";
-    import { avatar } from "../tutorial/avatar.cms.js";
-    import { item } from "../tutorial/item.cms.js";
-    import { separator } from "../tutorial/separator.cms.js";
-    import { spacer } from "../tutorial/spacer.cms.js";
+    const demoImportBase = new URL("/demo/", window.location.origin);
+    const demoRouteMap = new Map(
+      demoRoutes.map(([route, modulePath, exportName]) => [
+        route,
+        {
+          moduleUrl: new URL(modulePath, demoImportBase).href,
+          exportName,
+        },
+      ]),
+    );
+    const demoViewCache = new Map();
+
+    function loadDemoView(route) {
+      const entry = demoRouteMap.get(route);
+      if (!entry) return Promise.resolve(null);
+
+      if (!demoViewCache.has(route)) {
+        demoViewCache.set(
+          route,
+          import(entry.moduleUrl).then((module) => {
+            const view = module[entry.exportName];
+            if (view == null) {
+              throw new Error(`Demo export non valida: ${entry.exportName}`);
+            }
+            return view;
+          }),
+        );
+      }
+
+      return demoViewCache.get(route);
+    }
+
+    function preloadDemoView(route) {
+      if (!demoRouteMap.has(route)) return;
+      loadDemoView(route).catch(() => {});
+    }
+
+    function createLazyDemoRoute(route) {
+      return (ctx) => {
+        const host = _.div({ class: "cms-p-md" }, "Loading...");
+
+        loadDemoView(route)
+          .then((view) => {
+            if (!host.isConnected) return;
+            _.mount(host, typeof view === "function" ? () => view(ctx) : view, {
+              clear: true,
+            });
+            requestAnimationFrame(() => hljs.highlightAll());
+          })
+          .catch((error) => {
+            console.error(`[demo] load failed for ${route}`, error);
+            if (!host.isConnected) return;
+            _.mount(
+              host,
+              _.Banner({
+                color: "danger",
+                title: "Errore nel caricamento",
+                message: `Impossibile caricare ${route}`,
+              }),
+              { clear: true },
+            );
+          });
+
+        return host;
+      };
+    }
 
     const createComponentItem = (label, path, onNavigate = null) => ({
       label,
       onClick: () => {
+        preloadDemoView(path);
         CMSwift.router.navigate(path);
         onNavigate?.();
       },
@@ -451,78 +555,14 @@
     let contentPage = _.div("Start");
     const layoutApp = layoutPage(contentPage);
     _.mount("#app", layoutApp);
-    const p = ColorTokensDemoPage();
     _.router.setOutlet(contentPage);
 
     //CMSwift.router.add("/demo", () => page.home());
+    for (const [route] of demoRoutes) {
+      _.router.add(route, createLazyDemoRoute(route));
+    }
 
-    _.router.add("/demo/component/color", () => ColorTokensDemoPage);
-    _.router.add("/demo/component/btn", () => btn);
-    _.router.add("/demo/component/icon", () => icon);
-
-    // Layout & Structure
-    _.router.add("/demo/component/tap-panel", () => tapPanel);
-    _.router.add("/demo/component/appshell", () => appShell);
-    _.router.add("/demo/component/layout", () => layout);
-    _.router.add("/demo/component/page", () => page);
-    _.router.add("/demo/component/header", () => header);
-    _.router.add("/demo/component/footer", () => footer);
-    _.router.add("/demo/component/container", () => container);
-    _.router.add("/demo/component/parallax", () => parallax);
-    _.router.add("/demo/component/row", () => row);
-    _.router.add("/demo/component/col", () => col);
-    _.router.add("/demo/component/grid", () => grid);
-    _.router.add("/demo/component/gridcol", () => gridCol);
-
-    // Surface & Feedback
-    _.router.add("/demo/component/card", () => card);
-    _.router.add("/demo/component/cardheader", () => cardHeader);
-    _.router.add("/demo/component/cardbody", () => cardBody);
-    _.router.add("/demo/component/cardfooter", () => cardFooter);
-    _.router.add("/demo/component/tooltip", () => tooltip);
-    _.router.add("/demo/component/banner", () => banner);
-    _.router.add("/demo/component/spinner", () => spinner);
-    _.router.add("/demo/component/progress", () => progress);
-    _.router.add("/demo/component/loadingbar", () => loadingBar);
-    _.router.add("/demo/component/badge", () => badge);
-    _.router.add("/demo/component/chip", () => chip);
-
-    // Navigation & Actions
-    _.router.add("/demo/component/toolbar", () => toolbar);
-    _.router.add("/demo/component/tabs", () => tabs);
-    _.router.add("/demo/component/routetab", () => routeTab);
-    _.router.add("/demo/component/menu", () => menu);
-    _.router.add("/demo/component/contextmenu", () => contextMenu);
-    _.router.add("/demo/component/breadcrumbs", () => breadcrumbs);
-    _.router.add("/demo/component/drawer", () => drawer);
-
-    //_.router.add("/demo/component/stepper", () => stepper);
-
-    // from e inputs
-    _.router.add("/demo/component/form", () => form);
-    _.router.add("/demo/component/formfield", () => formField);
-    _.router.add("/demo/component/input", () => input);
-    _.router.add("/demo/component/inputraw", () => inputRaw);
-    _.router.add("/demo/component/select", () => select);
-    _.router.add("/demo/component/checkbox", () => checkbox);
-    _.router.add("/demo/component/radio", () => radio);
-    _.router.add("/demo/component/toggle", () => toggle);
-    _.router.add("/demo/component/slider", () => slider);
-    _.router.add("/demo/component/rating", () => rating);
-    _.router.add("/demo/component/date", () => date);
-    _.router.add("/demo/component/time", () => time);
-
-    // Data & Overlay
-    _.router.add("/demo/component/list", () => list);
-    _.router.add("/demo/component/table", () => table);
-    _.router.add("/demo/component/pagination", () => pagination);
-    _.router.add("/demo/component/dialog", () => dialog);
-    _.router.add("/demo/component/popover", () => popover);
-    _.router.add("/demo/component/avatar", () => avatar);
-    _.router.add("/demo/component/item", () => item);
-    _.router.add("/demo/component/separator", () => separator);
-    _.router.add("/demo/component/spacer", () => spacer);
-
+    preloadDemoView(window.location.pathname);
     _.router.start();
     /* */
     hljs.highlightAll();
