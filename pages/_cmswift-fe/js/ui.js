@@ -12131,53 +12131,111 @@
   }
 
   UI.Drawer = (...args) => {
-    const { props } = CMSwift.uiNormalizeArgs(args);
-    const slots = props.slots || {};
-    const items = props.items || [];
-    const header = props.header ?? null;
-    const stateKey = props.stateKey ?? null;
-    const closeOnSelect = props.closeOnSelect ?? true;
-    const groupOpenIcon = props.groupOpenIcon;
-    const groupCloseIcon = props.groupCloseIcon;
-    const className = props.class ?? null;
-
-    if (stateKey) {
-      drawerStateKey = stateKey;
-      drawerOpen = readDrawerOpen();
+    const { props: rawProps, children } = CMSwift.uiNormalizeArgs(args);
+    const slots = rawProps.slots || {};
+    const props = { ...rawProps };
+    const hasOwn = (key) => Object.prototype.hasOwnProperty.call(rawProps, key);
+    const currentStateKey = rawProps.stateKey ?? drawerStateKey;
+    if (currentStateKey) {
+      drawerStateKey = currentStateKey;
+      drawerOpen = readDrawerOpen(currentStateKey);
     }
-    const currentStateKey = drawerStateKey;
+
+    const isDrawerOpen = () => readDrawerOpen(currentStateKey);
+    const openDrawer = () => setDrawerOpen(true, currentStateKey);
+    const closeDrawer = () => setDrawerOpen(false, currentStateKey);
+    const toggleDrawer = () => setDrawerOpen(!isDrawerOpen(), currentStateKey);
+    const ctx = {
+      props: rawProps,
+      stateKey: currentStateKey,
+      isDrawerOpen,
+      openDrawer,
+      closeDrawer,
+      toggleDrawer,
+      toggleAside: toggleDrawer
+    };
+
     const store = CMSwift?.store;
     const canStore = !!(store?.get && store?.set);
     const groupStateKey = `${currentStateKey}:groups`;
     let groupState = canStore ? (store.get(groupStateKey, {}) || {}) : {};
 
-    const isExternalLink = (it) => {
-      if (typeof it.external === "boolean") return it.external;
-      const href = it.href || it.to || "";
-      return /^(https?:)?\/\//.test(href);
+    const normalizeList = (value) => {
+      const raw = uiUnwrap(value);
+      if (raw == null || raw === false) return [];
+      if (Array.isArray(raw)) return raw.flat(Infinity);
+      return [raw];
+    };
+    const renderArea = (names, fallback, localCtx = ctx) => {
+      const list = Array.isArray(names) ? names : [names];
+      for (const name of list) {
+        if (CMSwift.ui.getSlot(slots, name) != null) {
+          return renderSlotToArray(slots, name, localCtx, fallback);
+        }
+      }
+      return fallback == null ? [] : renderSlotToArray(null, "default", localCtx, uiUnwrap(fallback));
+    };
+    const hasArea = (names) => {
+      const list = Array.isArray(names) ? names : [names];
+      return list.some((name) => CMSwift.ui.getSlot(slots, name) != null);
     };
 
-    const shouldClose = (it) => closeOnSelect && !it.keepOpen;
+    const isExternalLink = (it) => {
+      if (typeof uiUnwrap(it.external) === "boolean") return !!uiUnwrap(it.external);
+      const href = uiUnwrap(it.href || it.to || it.link || "");
+      return /^(https?:)?\/\//.test(href);
+    };
+    const closeOnSelect = rawProps.closeOnSelect ?? true;
+    const shouldClose = (it) => !!closeOnSelect && uiUnwrap(it.keepOpen) !== true;
+    const itemIconSize = rawProps.itemIconSize ?? rawProps.size ?? "sm";
+    const groupOpenIcon = rawProps.groupOpenIcon ?? "arrow_drop_up";
+    const groupCloseIcon = rawProps.groupCloseIcon ?? "arrow_drop_down";
 
-    const makeIcon = (icon, side = "left") => {
-      // deve accettare function, oggetti node e stringhe
-      if (icon == null) return null;
-      if (typeof icon === "function") return icon;
-      if (typeof icon === "string") return _.Icon(icon);
-      return icon;
+    const inferActive = (it, href) => {
+      if (uiUnwrap(it.active) != null) return !!uiUnwrap(it.active);
+      if (uiUnwrap(it.current) != null) return !!uiUnwrap(it.current);
+      if (!href || isExternalLink(it)) return false;
+      try {
+        if (href.startsWith("#")) return window.location.hash === href;
+        const fullPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        return href === fullPath || href === window.location.pathname;
+      } catch {
+        return false;
+      }
+    };
+    const hasActiveChildren = (list = []) => {
+      return normalizeList(list).some((entry) => {
+        if (!entry || typeof entry !== "object" || entry.nodeType) return false;
+        const href = uiUnwrap(entry.href || entry.to || entry.link || "");
+        if (inferActive(entry, href)) return true;
+        const nested = entry.items || entry.children || entry.sub;
+        return hasActiveChildren(nested);
+      });
+    };
+    const iconNodes = (icon, localCtx = {}) => {
+      const raw = uiUnwrap(icon);
+      if (raw == null || raw === false) return [];
+      const slotValue = typeof raw === "string"
+        ? UI.Icon({ name: raw, size: localCtx.iconSize ?? itemIconSize })
+        : CMSwift.ui.slot(raw, { ...localCtx, as: "icon" });
+      return renderSlotToArray(null, "default", localCtx, slotValue);
+    };
+    const wrapIconNodes = (icon, side, localCtx = {}) => {
+      const nodes = iconNodes(icon, localCtx);
+      return nodes.length ? [_.span({ class: uiClass(["cms-drawer-item-icon", side]) }, ...nodes)] : [];
     };
 
     const getItemIcons = (it) => {
-      const side = it.iconPosition || "left";
-      const leftIcon = it.iconLeft ?? (side !== "right" ? it.icon : null);
-      const rightIcon = it.iconRight ?? (side === "right" ? it.icon : null);
+      const side = uiUnwrap(it.iconPosition) || "left";
+      const leftIcon = Object.prototype.hasOwnProperty.call(it, "iconLeft") ? it.iconLeft : (side !== "right" ? it.icon : null);
+      const rightIcon = Object.prototype.hasOwnProperty.call(it, "iconRight") ? it.iconRight : (side === "right" ? it.icon : null);
       return {
-        left: makeIcon(leftIcon, "left"),
-        right: makeIcon(rightIcon, "right")
+        left: leftIcon,
+        right: rightIcon
       };
     };
 
-    const itemKeyPart = (it, label, level, idx) => it.key || it.id || it.to || it.href || label || `item-${level}-${idx}`;
+    const itemKeyPart = (it, label, level, idx) => uiUnwrap(it.key || it.id || it.to || it.href || label || `item-${level}-${idx}`);
 
     const readGroupOpen = (key, fallback) => {
       if (!canStore) return fallback;
@@ -12191,120 +12249,339 @@
       store.set(groupStateKey, groupState);
     };
 
+    const buildStructuredHeader = () => {
+      const headerCtx = { ...ctx, area: "header" };
+      const icon = renderArea(["headerIcon", "icon"], rawProps.icon, headerCtx);
+      const eyebrow = renderArea(["eyebrow"], rawProps.eyebrow, headerCtx);
+      const title = renderArea(["title"], rawProps.title, headerCtx);
+      const subtitle = renderArea(["subtitle"], rawProps.subtitle, headerCtx);
+      const meta = renderArea(["meta"], rawProps.meta, headerCtx);
+      const content = renderArea(["content"], rawProps.content, headerCtx);
+      const actions = renderArea(["actions"], rawProps.actions, headerCtx);
+      const extra = hasOwn("header") ? renderSlotToArray(null, "default", headerCtx, uiUnwrap(rawProps.header)) : [];
+      const hasStructured = icon.length || eyebrow.length || title.length || subtitle.length || meta.length || content.length || actions.length;
+      if (!hasStructured && !extra.length) return [];
+      if (!hasStructured) return extra;
+      return [
+        _.div(
+          { class: uiClass(["cms-drawer-header", rawProps.headerClass]) },
+          ...(icon.length ? [_.div({ class: "cms-drawer-header-icon" }, ...icon)] : []),
+          _.div(
+            { class: "cms-drawer-header-body" },
+            ...(eyebrow.length ? [_.div({ class: "cms-drawer-header-eyebrow" }, ...eyebrow)] : []),
+            ...(title.length ? [_.div({ class: "cms-drawer-header-title" }, ...title)] : []),
+            ...(subtitle.length ? [_.div({ class: "cms-drawer-header-subtitle" }, ...subtitle)] : []),
+            ...(meta.length ? [_.div({ class: "cms-drawer-header-meta" }, ...meta)] : []),
+            ...(content.length ? [_.div({ class: "cms-drawer-header-content" }, ...content)] : []),
+            ...(extra.length ? [_.div({ class: "cms-drawer-header-extra" }, ...extra)] : [])
+          ),
+          ...(actions.length ? [_.div({ class: "cms-drawer-header-actions" }, ...actions)] : [])
+        )
+      ];
+    };
+    const invokeItemHandler = (it, itemCtx, e) => {
+      const itemResult = it.onClick?.(e, itemCtx);
+      if (itemResult === false || e?.defaultPrevented) return false;
+      const rootResult = rawProps.onSelect?.(it, itemCtx, e);
+      if (rootResult === false || e?.defaultPrevented) return false;
+      return true;
+    };
+    const renderEntryNodes = (it, itemCtx, extras = {}) => {
+      const slotPrefix = itemCtx.hasChildren ? "group" : "item";
+      const labelNodes = renderSlotToArray(slots, `${slotPrefix}Label`, itemCtx, itemCtx.label);
+      const noteNodes = renderSlotToArray(slots, `${slotPrefix}Note`, itemCtx, itemCtx.note);
+      const badgeNodes = renderSlotToArray(slots, `${slotPrefix}Badge`, itemCtx, itemCtx.badge);
+      const asideNodes = renderSlotToArray(slots, `${slotPrefix}Aside`, itemCtx, itemCtx.aside);
+      const contentNodes = renderSlotToArray(slots, `${slotPrefix}Content`, itemCtx, itemCtx.content);
+      const mainChildren = [];
+
+      if (labelNodes.length || noteNodes.length || badgeNodes.length || asideNodes.length) {
+        mainChildren.push(
+          _.div(
+            { class: "cms-drawer-item-top" },
+            _.div(
+              { class: "cms-drawer-item-copy" },
+              ...(labelNodes.length ? [_.div({ class: "cms-drawer-item-label" }, ...labelNodes)] : []),
+              ...(noteNodes.length ? [_.div({ class: "cms-drawer-item-note" }, ...noteNodes)] : [])
+            ),
+            ...(badgeNodes.length || asideNodes.length
+              ? [_.div(
+                { class: "cms-drawer-item-meta" },
+                ...(badgeNodes.length ? [_.div({ class: "cms-drawer-item-badge" }, ...badgeNodes)] : []),
+                ...(asideNodes.length ? [_.div({ class: "cms-drawer-item-aside" }, ...asideNodes)] : [])
+              )]
+              : [])
+          )
+        );
+      }
+      if (contentNodes.length) mainChildren.push(_.div({ class: "cms-drawer-item-content" }, ...contentNodes));
+
+      return [
+        ...(extras.start || []),
+        ...wrapIconNodes(itemCtx.iconLeft, "left", itemCtx),
+        ...(mainChildren.length ? [_.div({ class: "cms-drawer-item-main" }, ...mainChildren)] : []),
+        ...wrapIconNodes(itemCtx.iconRight, "right", itemCtx),
+        ...(extras.end || [])
+      ];
+    };
     const renderItems = (list = [], level = 0, path = []) => {
-      return list.map((it, idx) => {
-        const children = it.items || it.children || it.sub;
-        const label = it.label || it.title || it.to || it.href || `item-${level}-${idx}`;
+      return normalizeList(list).map((entry, idx) => {
+        const it = uiUnwrap(entry);
+        if (it == null || it === false) return null;
+
+        if (it.nodeType || typeof it !== "object" || Array.isArray(it)) {
+          return _.div({
+            class: "cms-drawer-custom",
+            "data-level": String(level)
+          }, ...renderSlotToArray(null, "default", { ...ctx, item: it, level, index: idx, path }, it));
+        }
+
+        if (uiUnwrap(it.hidden) === true || uiUnwrap(it.visible) === false) return null;
+
+        const childItems = normalizeList(it.items || it.children || it.sub);
+        const href = uiUnwrap(it.href || it.to || it.link || null);
+        const rawLabel = uiUnwrap(it.label ?? it.title ?? it.text ?? href ?? null);
+        const label = rawLabel ?? `item-${level}-${idx}`;
+        const note = uiUnwrap(it.note ?? it.subtitle ?? it.description ?? null);
+        const badge = uiUnwrap(it.badge ?? null);
+        const aside = uiUnwrap(it.aside ?? it.meta ?? null);
+        const content = uiUnwrap(it.content ?? null);
         const keyPart = itemKeyPart(it, label, level, idx);
-        const stateKey = path.concat(keyPart).join("::");
+        const itemStateKey = path.concat(keyPart).join("::");
         const { left: itemIconLeft, right: itemIconRight } = getItemIcons(it);
+        const tone = normalizeState(uiUnwrap(it.state) || uiUnwrap(it.color) || "");
+        const isActive = inferActive(it, href);
+        const disabled = !!uiUnwrap(it.disabled);
+        const itemCtx = {
+          ...ctx,
+          item: it,
+          index: idx,
+          level,
+          path,
+          label,
+          note,
+          badge,
+          aside,
+          content,
+          itemStateKey,
+          iconLeft: itemIconLeft,
+          iconRight: itemIconRight,
+          iconSize: uiUnwrap(it.iconSize) || itemIconSize,
+          active: isActive,
+          disabled,
+          hasChildren: false
+        };
+        const dividerLike = uiUnwrap(it.divider) === true || it.type === "divider" || it.type === "separator";
+        const sectionLike = uiUnwrap(it.section) === true || it.type === "section" || it.type === "heading" || it.type === "label";
+        const contentOnly = it.type === "content" || it.type === "custom" || (!href && !childItems.length && !uiUnwrap(it.button) && it.type !== "button" && rawLabel == null && content != null);
 
-        const btnOpenIcon = groupOpenIcon ?? _.Icon("arrow_drop_down", { size: "lg" });
-        const btnCloseIcon = groupCloseIcon ?? _.Icon("arrow_drop_up", { size: "lg" });
+        if (dividerLike) {
+          return _.div({
+            class: uiClass(["cms-drawer-separator", it.class]),
+            "data-level": String(level)
+          });
+        }
 
-        if (Array.isArray(children) && children.length) {
-          let open = readGroupOpen(stateKey, !!it.expanded);
-          const openIcon = it.openIcon || btnOpenIcon;
-          const closeIcon = it.closeIcon || btnCloseIcon;
-          const openIconSide = it.iconSidePosition || it.openIconSide || it.openIconPosition || "left";
-          const closeIconSide = it.iconSidePosition || it.closeIconSide || it.closeIconPosition || "left";
+        if (sectionLike) {
+          const sectionNodes = renderSlotToArray(slots, "sectionLabel", itemCtx, label || content);
+          return _.div({
+            class: uiClass(["cms-drawer-section-label", it.class]),
+            "data-level": String(level)
+          }, ...sectionNodes);
+        }
+
+        if (contentOnly) {
+          const customNodes = renderSlotToArray(slots, "item", itemCtx, content ?? label);
+          return _.div({
+            class: uiClass(["cms-drawer-custom", tone ? `cms-drawer-tone-${tone}` : "", it.class]),
+            style: it.style,
+            "data-level": String(level)
+          }, ...customNodes);
+        }
+
+        if (childItems.length) {
+          const activeInGroup = isActive || hasActiveChildren(childItems);
+          let open = readGroupOpen(itemStateKey, !!uiUnwrap(it.expanded) || !!uiUnwrap(it.open) || activeInGroup);
           const toggleIconEl = _.span({ class: "cms-drawer-group-icon" });
-          const labelContent = CMSwift.ui.renderSlot(slots, "groupLabel", { item: it, label }, label);
-          const labelEl = _.span({ class: "cms-drawer-group-label" }, ...renderSlotToArray(null, "default", {}, labelContent));
-          const groupItems = _.div({ class: "cms-drawer-group-items" }, ...renderItems(children, level + 1, path.concat(keyPart)));
-          const toggleBtn = _.button({
-            class: "cms-drawer-group-toggle",
-            onClick: () => setOpen(!open)
-          }, toggleIconEl, itemIconLeft, labelEl, itemIconRight);
-          const spacerRight = _.Spacer();
-          const setToggleIcon = (isOpen) => {
-            const icon = isOpen ? openIcon : closeIcon;
-            const side = (isOpen ? openIconSide : closeIconSide) === "right" ? "right" : "left";
+          const groupCtx = {
+            ...itemCtx,
+            active: activeInGroup,
+            hasChildren: true,
+            isOpen: () => open,
+            setOpen: (value) => setOpen(value),
+            toggle: () => setOpen(!open)
+          };
+          const paintToggleIcon = () => {
+            const icon = open ? (it.openIcon ?? groupOpenIcon) : (it.closeIcon ?? groupCloseIcon);
+            const side = uiUnwrap(
+              open
+                ? (it.iconSidePosition || it.openIconSide || it.openIconPosition || "right")
+                : (it.iconSidePosition || it.closeIconSide || it.closeIconPosition || "right")
+            ) === "left" ? "left" : "right";
             toggleIconEl.innerHTML = "";
-            if (icon) toggleIconEl.appendChild(_.span(icon));
-            if (side === "right") {
-              toggleIconEl.classList.remove("left");
-              toggleIconEl.classList.add("right");
-              toggleBtn.appendChild(spacerRight);
-              toggleBtn.appendChild(toggleIconEl);
-            } else {
-              toggleIconEl.classList.remove("right");
-              toggleIconEl.classList.add("left");
-              toggleBtn.insertBefore(toggleIconEl, toggleBtn.firstChild);
+            toggleIconEl.className = `cms-drawer-group-icon ${side}`;
+            iconNodes(icon, { ...groupCtx, as: "toggleIcon" }).forEach((node) => toggleIconEl.appendChild(node));
+          };
+          const toggleBtn = _.button({
+            type: "button",
+            class: uiClass([
+              "cms-drawer-group-toggle",
+              "cms-drawer-entry",
+              open ? "open" : "",
+              activeInGroup ? "active" : "",
+              disabled ? "is-disabled" : "",
+              tone ? `cms-drawer-tone-${tone}` : "",
+              it.class
+            ]),
+            style: it.style,
+            "data-level": String(level),
+            "aria-expanded": String(open),
+            "aria-disabled": disabled ? "true" : null,
+            onClick: (e) => {
+              if (disabled) {
+                e.preventDefault();
+                return;
+              }
+              setOpen(!open);
             }
-          };
-          const setOpen = (val) => {
-            open = !!val;
-            setToggleIcon(open);
-            groupWrap.classList.toggle("open", open);
-            writeGroupOpen(stateKey, open);
-          };
+          }, ...renderEntryNodes(it, groupCtx, {
+            start: uiUnwrap(it.iconSidePosition || it.openIconSide || it.closeIconSide || it.openIconPosition || it.closeIconPosition || "right") === "left" ? [toggleIconEl] : [],
+            end: uiUnwrap(it.iconSidePosition || it.openIconSide || it.closeIconSide || it.openIconPosition || it.closeIconPosition || "right") === "right" ? [toggleIconEl] : []
+          }));
+          const customGroupHeader = renderSlotToArray(slots, "group", groupCtx, null);
+          const groupItems = _.div({ class: "cms-drawer-group-items" }, ...renderItems(childItems, level + 1, path.concat(keyPart)));
           const groupWrap = _.div({
-            class: uiClass(["cms-drawer-group", open ? "open" : "", it.class])
-          }, toggleBtn, groupItems);
-          setToggleIcon(open);
+            class: uiClass([
+              "cms-drawer-group",
+              open ? "open" : "",
+              activeInGroup ? "active" : "",
+              tone ? `cms-drawer-tone-${tone}` : ""
+            ]),
+            "data-level": String(level)
+          }, ...(customGroupHeader.length ? customGroupHeader : [toggleBtn]), groupItems);
+          const setOpen = (value) => {
+            open = !!value;
+            groupWrap.classList.toggle("open", open);
+            toggleBtn.classList.toggle("open", open);
+            toggleBtn.setAttribute("aria-expanded", String(open));
+            paintToggleIcon();
+            writeGroupOpen(itemStateKey, open);
+          };
+          paintToggleIcon();
           return groupWrap;
         }
 
-        const needsFlex = !!itemIconRight;
-        const itemStyle = needsFlex ? Object.assign({ display: "flex", alignItems: "center", gap: "8px" }, it.style || {}) : it.style;
-        const href = it.href || it.to || null;
-        const labelText = it.label || href;
-        const itemLabel = CMSwift.ui.renderSlot(slots, "itemLabel", { item: it, label: labelText }, labelText);
+        const customItem = renderSlotToArray(slots, "item", itemCtx, null);
+        const isButtonItem = uiUnwrap(it.button) === true || it.type === "button" || (!href && typeof it.onClick === "function");
+        const sharedProps = {
+          class: uiClass([
+            "cms-drawer-entry",
+            isButtonItem ? "cms-drawer-btn" : "cms-drawer-link",
+            isActive ? "active" : "",
+            disabled ? "is-disabled" : "",
+            tone ? `cms-drawer-tone-${tone}` : "",
+            it.class
+          ]),
+          style: it.style,
+          "data-level": String(level),
+          "aria-current": isActive ? "page" : null,
+          "aria-disabled": disabled ? "true" : null
+        };
+        const entryNodes = customItem.length ? customItem : renderEntryNodes(it, itemCtx);
 
-        if (it.button || it.type === "button") {
-          return UI.Btn({
-            class: uiClass(["cms-drawer-btn", it.class]),
-            style: itemStyle,
-            onClick: () => {
-              if (shouldClose(it)) setDrawerOpen(false);
+        if (isButtonItem) {
+          return _.button({
+            ...sharedProps,
+            type: it.buttonType || "button",
+            disabled,
+            onClick: (e) => {
+              if (disabled) {
+                e.preventDefault();
+                return;
+              }
+              if (!invokeItemHandler(it, itemCtx, e)) return;
+              if (shouldClose(it)) closeDrawer();
             }
-          }, itemIconLeft, ...renderSlotToArray(null, "default", {}, itemLabel), itemIconRight);
+          }, ...entryNodes);
         }
 
         const external = isExternalLink(it);
-        const target = external ? (it.target || "_blank") : it.target;
-        const rel = external ? (it.rel || "noopener noreferrer") : it.rel;
-        const attr = {};
-
-        if (external) attr.target = target;
-        if (rel) attr.rel = rel;
-        if (href) attr.href = href;
-        if (itemStyle) attr.style = itemStyle;
+        const target = external ? (uiUnwrap(it.target) || "_blank") : uiUnwrap(it.target);
+        const rel = external ? (uiUnwrap(it.rel) || "noopener noreferrer") : uiUnwrap(it.rel);
 
         return _.a({
-          class: uiClass(["cms-drawer-link", it.class]),
-          ...attr,
+          ...sharedProps,
+          href: href || "#",
+          target: target || null,
+          rel: rel || null,
+          tabIndex: disabled ? -1 : null,
           onClick: (e) => {
-            it.onClick?.(e);
+            if (disabled) {
+              e.preventDefault();
+              return;
+            }
+            if (!invokeItemHandler(it, itemCtx, e)) return;
             if (!external && it.to && app.router?.navigate) {
               e.preventDefault();
               app.router.navigate(it.to);
             }
-            if (shouldClose(it)) setDrawerOpen(false);
+            if (shouldClose(it)) closeDrawer();
           }
-        }, itemIconLeft, ...renderSlotToArray(null, "default", {}, itemLabel), itemIconRight);
-      });
+        }, ...entryNodes);
+      }).filter(Boolean);
     };
 
+    const beforeNodes = renderArea(["before", "beforeItems"], rawProps.before ?? rawProps.beforeItems);
+    const bodyCustom = hasArea(["body"]) ? renderArea(["body"], null) : [];
+    const itemNodes = renderItems(rawProps.items || []);
+    const defaultNodes = renderArea(["default"], children);
+    const afterNodes = renderArea(["after", "afterItems"], rawProps.after ?? rawProps.afterItems);
+    const bodyNodes = bodyCustom.length ? bodyCustom : [...beforeNodes, ...itemNodes, ...defaultNodes, ...afterNodes];
+    const emptyFallback = hasOwn("empty") || hasOwn("emptyText")
+      ? (rawProps.empty ?? _.div({ class: uiClass(["cms-drawer-empty", rawProps.emptyClass]) }, rawProps.emptyText || "Nessun contenuto"))
+      : _.div({ class: uiClass(["cms-drawer-empty", rawProps.emptyClass]) }, "Nessun contenuto");
+    const headerNodes = renderArea(["header"], buildStructuredHeader());
+    const footerNodes = renderArea(["footer"], rawProps.footer);
+    const finalBodyNodes = bodyNodes.length ? bodyNodes : renderArea(["empty"], emptyFallback);
+
+    const p = CMSwift.omit(props, [
+      "items", "header", "footer", "before", "beforeItems", "after", "afterItems",
+      "title", "subtitle", "eyebrow", "icon", "content", "meta", "actions",
+      "empty", "emptyText", "closeOnSelect", "groupOpenIcon", "groupCloseIcon",
+      "stateKey", "sticky", "slots", "headerClass", "bodyClass", "footerClass",
+      "emptyClass", "itemIconSize", "gap", "indent", "padding", "minHeight",
+      "maxHeight", "width", "onSelect"
+    ]);
+    p.class = uiClass([
+      "cms-panel",
+      "cms-drawer",
+      drawerOpen ? "open" : "",
+      uiWhen(rawProps.sticky, "sticky"),
+      props.class
+    ]);
+    p.style = { ...(props.style || {}) };
+    if (rawProps.gap != null) p.style["--cms-drawer-gap"] = toCssSize(uiUnwrap(rawProps.gap));
+    if (rawProps.indent != null) p.style["--cms-drawer-indent"] = toCssSize(uiUnwrap(rawProps.indent));
+    if (rawProps.padding != null) p.style["--cms-drawer-padding"] = toCssSize(uiUnwrap(rawProps.padding));
+    if (rawProps.width != null) p.style.width = toCssSize(uiUnwrap(rawProps.width));
+    if (rawProps.minHeight != null) p.style.minHeight = toCssSize(uiUnwrap(rawProps.minHeight));
+    if (rawProps.maxHeight != null) p.style.maxHeight = toCssSize(uiUnwrap(rawProps.maxHeight));
+
     const drawerEl = _.div(
-      {
-        class: uiClass([
-          "cms-panel",
-          "cms-drawer",
-          drawerOpen ? "open" : "",
-          uiWhen(props.sticky, "sticky"),
-          className
-        ]),
-        style: props.style
-      },
-      ...renderSlotToArray(slots, "header", {}, header),
-      ...renderItems(items)
+      p,
+      ...(headerNodes.length ? headerNodes : []),
+      _.div({ class: uiClass(["cms-drawer-body", rawProps.bodyClass]) }, ...finalBodyNodes),
+      ...(footerNodes.length ? [_.div({ class: uiClass(["cms-drawer-footer", rawProps.footerClass]) }, ...footerNodes)] : [])
     );
     const drawerSet = drawerElsByKey.get(currentStateKey) || new Set();
     drawerSet.add(drawerEl);
     drawerElsByKey.set(currentStateKey, drawerSet);
     setDrawerOpen(drawerOpen, currentStateKey);
+    drawerEl.isDrawerOpen = isDrawerOpen;
+    drawerEl.openDrawer = openDrawer;
+    drawerEl.closeDrawer = closeDrawer;
+    drawerEl.toggleDrawer = toggleDrawer;
+    setPropertyProps(drawerEl, rawProps);
     return drawerEl;
   };
   if (CMSwift.isDev?.()) {
@@ -12314,22 +12591,58 @@
       props: {
         items: "Array",
         header: "Node|Function|Array",
+        footer: "Node|Function|Array",
+        before: "Node|Function|Array",
+        after: "Node|Function|Array",
+        title: "String|Node|Function|Array",
+        subtitle: "String|Node|Function|Array",
+        eyebrow: "String|Node|Function|Array",
+        icon: "String|Node|Function|Array",
+        content: "Node|Function|Array",
+        meta: "Node|Function|Array",
+        actions: "Node|Function|Array",
+        empty: "Node|Function|Array",
+        emptyText: "string",
         stateKey: "string",
         closeOnSelect: "boolean",
-        groupOpenIcon: "Node",
-        groupCloseIcon: "Node",
+        groupOpenIcon: "String|Node|Function|Array",
+        groupCloseIcon: "String|Node|Function|Array",
+        itemIconSize: "string|number",
+        gap: "string|number",
+        indent: "string|number",
+        padding: "string|number",
+        width: "string|number",
+        minHeight: "string|number",
+        maxHeight: "string|number",
+        onSelect: "function(item, ctx, event)",
         sticky: "boolean",
-        slots: "{ header?, itemLabel?, groupLabel? }",
+        slots: "{ header?, body?, footer?, before?, after?, empty?, item?, itemLabel?, itemNote?, itemBadge?, itemAside?, itemContent?, group?, groupLabel?, groupNote?, groupBadge?, groupAside?, groupContent?, sectionLabel? }",
         class: "string",
         style: "object"
       },
       slots: {
-        header: "Drawer header content",
-        itemLabel: "Item label renderer (ctx: { item, label })",
-        groupLabel: "Group label renderer (ctx: { item, label })"
+        header: "Header del drawer, override completo",
+        body: "Override completo del body",
+        footer: "Footer del drawer",
+        before: "Contenuto prima della lista items",
+        after: "Contenuto dopo la lista items",
+        empty: "Empty state quando non ci sono contenuti",
+        item: "Override completo di un item semplice",
+        itemLabel: "Label item (ctx: { item, label, note, badge, aside, content })",
+        itemNote: "Note/subtitle item",
+        itemBadge: "Badge item",
+        itemAside: "Aside/meta item",
+        itemContent: "Contenuto extra item",
+        group: "Override completo header di un gruppo (ctx include toggle/isOpen)",
+        groupLabel: "Label gruppo",
+        groupNote: "Note gruppo",
+        groupBadge: "Badge gruppo",
+        groupAside: "Aside/meta gruppo",
+        groupContent: "Contenuto extra gruppo",
+        sectionLabel: "Label per elementi section/heading"
       },
-      returns: "HTMLDivElement",
-      description: "Drawer navigazione con gruppi e stato persistente."
+      returns: "HTMLDivElement con methods openDrawer/closeDrawer/toggleDrawer/isDrawerOpen",
+      description: "Drawer strutturato e retro compatibile con header/footer, gruppi, slot estesi, empty state e stato persistente."
     };
   }
 
