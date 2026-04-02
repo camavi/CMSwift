@@ -4609,6 +4609,205 @@
 }
 
 /* COMPONENTS */
+.cms-tabs {
+  --cms-tabs-gap: 12px;
+  --cms-tabs-tab-gap: 6px;
+  --cms-tabs-accent: var(--cms-primary);
+}
+
+.cms-tabs-bar {
+  display: flex;
+  gap: var(--cms-tabs-gap);
+  min-width: 0;
+}
+
+.cms-tabs.horizontal .cms-tabs-bar {
+  flex-wrap: wrap;
+}
+
+.cms-tabs.vertical .cms-tabs-bar {
+  align-items: stretch;
+}
+
+.cms-tabs-nav {
+  display: flex;
+  gap: var(--cms-tabs-tab-gap);
+  padding: var(--cms-s-sm);
+  border: 1px solid var(--cms-border-color);
+  background-color: color-mix(in srgb, var(--cms-gray-500), transparent 80%);
+  border-radius: var(--set-border-radius, var(--cms-b-radius-default, 2px));
+  min-width: 0;
+  overflow: auto;
+  flex: 1 1 auto;
+}
+
+.cms-tabs.wrap .cms-tabs-nav {
+  flex-wrap: wrap;
+}
+
+.cms-tabs.vertical .cms-tabs-nav {
+  flex-direction: column;
+  align-items: stretch;
+  min-width: min(240px, 100%);
+}
+
+.cms-tabs.fill .cms-tabs-item {
+  flex: 1 1 0;
+}
+
+.cms-tabs-extra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cms-tabs.vertical .cms-tabs-extra {
+  align-content: flex-start;
+}
+
+.cms-tabs-item {
+  --cms-tabs-item-accent: var(--cms-tabs-accent);
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+
+.cms-tabs-tab {
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  background: transparent;
+  color: var(--cms-text);
+  box-shadow: none;
+  transform: none;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+
+.cms-tabs-tab:hover,
+.cms-tabs-tab:active {
+  transform: none;
+  box-shadow: none;
+}
+
+.cms-tabs-tab:hover {
+  background: color-mix(in srgb, var(--cms-tabs-item-accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--cms-tabs-item-accent) 22%, var(--cms-border-color));
+}
+
+.cms-tabs-tab.active {
+  background: color-mix(in srgb, var(--cms-tabs-item-accent) 10%, transparent);
+  color: color-mix(in srgb, var(--cms-tabs-item-accent) 78%, var(--cms-text) 22%);
+  border-color: color-mix(in srgb, var(--cms-tabs-item-accent) 28%, var(--cms-border-color));
+}
+
+.cms-tabs-tab:disabled,
+.cms-tabs-item.disabled .cms-tabs-tab {
+  opacity: 0.6;
+}
+
+.cms-tabs-tab-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.cms-tabs-tab-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.cms-tabs-tab-label {
+  display: block;
+  min-width: 0;
+}
+
+.cms-tabs-tab-note {
+  display: block;
+  color: var(--cms-muted);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.cms-tabs-tab.active .cms-tabs-tab-note {
+  color: color-mix(in srgb, var(--cms-tabs-item-accent) 68%, var(--cms-text) 32%);
+}
+
+.cms-tabs-tab-icon,
+.cms-tabs-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cms-tabs-item .tab-indicator {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease, transform 160ms ease;
+  background-color: var(--cms-tabs-item-accent);
+}
+
+.cms-tabs.horizontal .cms-tabs-item .tab-indicator {
+  left: 10px;
+  right: 10px;
+  bottom: 2px;
+  height: 2px;
+  transform: scaleX(0.35);
+}
+
+.cms-tabs.vertical .cms-tabs-item .tab-indicator {
+  left: 2px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  transform: scaleY(0.35);
+}
+
+.cms-tabs-item.active .tab-indicator {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.cms-tabs.variant-pills .cms-tabs-nav {
+  background-color: color-mix(in srgb, var(--cms-panel) 92%, transparent);
+}
+
+.cms-tabs.variant-pills .cms-tabs-item .tab-indicator {
+  display: none;
+}
+
+.cms-tabs.variant-pills .cms-tabs-tab.active {
+  background: color-mix(in srgb, var(--cms-tabs-item-accent) 18%, transparent);
+  color: color-mix(in srgb, var(--cms-tabs-item-accent) 82%, var(--cms-text) 18%);
+  border-color: color-mix(in srgb, var(--cms-tabs-item-accent) 38%, var(--cms-border-color));
+}
+
+.cms-tabs.variant-soft .cms-tabs-nav {
+  background-color: transparent;
+  border-style: dashed;
+}
+
+.cms-tabs.dense .cms-tabs-nav {
+  padding: 6px;
+}
+
+.cms-tabs.dense .cms-tabs-tab {
+  padding: 8px 12px;
+}
+
+.cms-tabs-empty {
+  color: var(--cms-muted);
+  font-size: 13px;
+  padding: 8px 4px;
+}
+
 .cms-tabpanel {
   display: flex;
   align-items: stretch;
