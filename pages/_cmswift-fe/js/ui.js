@@ -1166,27 +1166,249 @@
   }
 
   UI.Container = (...args) => {
-    const { props, children } = CMSwift.uiNormalizeArgs(args);
-    const slots = props.slots || {};
-    const p = CMSwift.omit(props, ["slots"]);
-    p.class = uiClass(["cms-container", props.class]);
-    const content = renderSlotToArray(slots, "default", {}, children);
-    return _.div(p, ...content);
+    const { props: rawProps, children } = CMSwift.uiNormalizeArgs(args);
+    const slots = rawProps.slots || {};
+    const props = { ...rawProps };
+    const hasOwn = (key) => Object.prototype.hasOwnProperty.call(rawProps, key);
+    const containerWidthMap = {
+      xxs: "360px",
+      xs: "480px",
+      sm: "640px",
+      md: "820px",
+      lg: "1100px",
+      xl: "1280px",
+      xxl: "1440px",
+      narrow: "760px",
+      prose: "760px",
+      wide: "1360px"
+    };
+    const resolveWidthValue = (value) => {
+      if (value == null || value === false || value === "") return "";
+      if (typeof value === "number") return `${value}px`;
+      const key = String(value).trim().toLowerCase();
+      if (!key) return "";
+      if (key === "full" || key === "fluid") return "100%";
+      return containerWidthMap[key] || String(value);
+    };
+    const resolveSpaceValue = (value) => {
+      if (value == null || value === false || value === "") return "";
+      if (typeof value === "number") return `${value}px`;
+      if (typeof value === "string" && CMSwift.uiSizes?.includes(value)) return `var(--cms-s-${value})`;
+      return String(value);
+    };
+    const resolveColsValue = (value) => {
+      if (value == null || value === false || value === "") return "";
+      if (typeof value === "number" && Number.isFinite(value)) return `repeat(${Math.max(1, Math.floor(value))}, minmax(0, 1fr))`;
+      const raw = String(value).trim();
+      if (!raw) return "";
+      if (/^\d+$/.test(raw)) return `repeat(${Math.max(1, Number(raw))}, minmax(0, 1fr))`;
+      return raw;
+    };
+    const resolveWrapValue = (value) => {
+      if (value == null || value === "") return "";
+      if (value === true) return "wrap";
+      if (value === false) return "nowrap";
+      return String(value);
+    };
+    const ctx = { props: rawProps };
+    const appendResolvedValue = (host, value) => {
+      if (value == null || value === false) return;
+      if (Array.isArray(value)) {
+        value.forEach((item) => appendResolvedValue(host, item));
+        return;
+      }
+      if (value?.nodeType) {
+        host.appendChild(value);
+        return;
+      }
+      host.appendChild(document.createTextNode(String(value)));
+    };
+    const renderPropNodes = (name, fallback) => {
+      const slot = CMSwift.ui.getSlot(slots, name);
+      if (slot !== null && slot !== undefined) {
+        return renderSlotToArray(slots, name, ctx, null);
+      }
+      if (typeof fallback === "function") {
+        const host = _.div({ class: `cms-container-slot-${name}` });
+        CMSwift.reactive.effect(() => {
+          const normalized = flattenSlotValue(CMSwift.ui.slot(fallback(ctx)));
+          host.replaceChildren();
+          if (Array.isArray(normalized)) normalized.forEach((item) => appendResolvedValue(host, item));
+          else appendResolvedValue(host, normalized);
+        }, `UI.Container:${name}`);
+        return [host];
+      }
+      return renderSlotToArray(slots, name, ctx, fallback);
+    };
+    const contentFallback = hasOwn("content") ? rawProps.content : (children?.length ? children : null);
+    const beforeNodes = renderPropNodes("before", rawProps.before ?? rawProps.top);
+    const headerNodes = renderPropNodes("header", rawProps.header);
+    const startNodes = [
+      ...renderPropNodes("left", rawProps.left),
+      ...renderPropNodes("start", rawProps.start)
+    ];
+    const bodyNodes = renderPropNodes("body", hasOwn("body") ? rawProps.body : null);
+    const contentNodes = (() => {
+      const explicit = renderPropNodes("content", hasOwn("content") ? rawProps.content : null);
+      return explicit.length ? explicit : renderPropNodes("default", contentFallback);
+    })();
+    const endNodes = [
+      ...renderPropNodes("right", rawProps.right),
+      ...renderPropNodes("end", rawProps.end)
+    ];
+    const footerNodes = renderPropNodes("footer", rawProps.footer);
+    const afterNodes = renderPropNodes("after", rawProps.after ?? rawProps.bottom);
+    const hasShellSections = beforeNodes.length || headerNodes.length || startNodes.length || endNodes.length || footerNodes.length || afterNodes.length
+      || CMSwift.ui.getSlot(slots, "before") != null
+      || CMSwift.ui.getSlot(slots, "header") != null
+      || CMSwift.ui.getSlot(slots, "left") != null
+      || CMSwift.ui.getSlot(slots, "start") != null
+      || CMSwift.ui.getSlot(slots, "right") != null
+      || CMSwift.ui.getSlot(slots, "end") != null
+      || CMSwift.ui.getSlot(slots, "footer") != null
+      || CMSwift.ui.getSlot(slots, "after") != null;
+    const hasStructuredLayout = !!hasShellSections || (bodyNodes.length > 0 && (CMSwift.ui.getSlot(slots, "body") != null || hasShellSections));
+    const resolveLayoutMode = () => {
+      const explicit = String(uiUnwrap(rawProps.layout ?? rawProps.display) || "").trim().toLowerCase();
+      if (["flex", "grid", "stack"].includes(explicit)) return explicit;
+      if (["inline", "inline-flex", "inlineflex"].includes(explicit)) return "inline";
+      if (!!uiUnwrap(rawProps.inline)) return "inline";
+      if (!!uiUnwrap(rawProps.grid) || uiUnwrap(rawProps.cols) != null) return "grid";
+      if (explicit === "block") return "block";
+      if (uiUnwrap(rawProps.direction) != null || uiUnwrap(rawProps.wrap) != null || uiUnwrap(rawProps.align) != null || uiUnwrap(rawProps.justify) != null || uiUnwrap(rawProps.gap) != null) return "flex";
+      if (startNodes.length || endNodes.length) return "flex";
+      return "block";
+    };
+    const layoutClass = uiComputed([
+      rawProps.layout, rawProps.display, rawProps.inline, rawProps.grid, rawProps.cols,
+      rawProps.direction, rawProps.wrap, rawProps.align, rawProps.justify, rawProps.gap
+    ], () => {
+      const mode = resolveLayoutMode();
+      return mode === "block" ? "" : `is-${mode}`;
+    });
+    const rootStyle = { ...(props.style || {}) };
+    const assignStyle = (key, value) => {
+      if (value != null) rootStyle[key] = value;
+    };
+    assignStyle("maxWidth", uiComputed([rawProps.maxWidth, rawProps.fluid], () => {
+      if (uiUnwrap(rawProps.fluid)) return "none";
+      const value = resolveWidthValue(uiUnwrap(rawProps.maxWidth));
+      return value || "";
+    }));
+    assignStyle("width", uiStyleValue(rawProps.width, resolveWidthValue));
+    assignStyle("minWidth", uiStyleValue(rawProps.minWidth, resolveWidthValue));
+    assignStyle("--cms-container-padding", uiStyleValue(rawProps.padding, resolveSpaceValue));
+    assignStyle("--cms-container-padding-x", uiStyleValue(rawProps.paddingX ?? rawProps.gutter, resolveSpaceValue));
+    assignStyle("--cms-container-padding-y", uiStyleValue(rawProps.paddingY, resolveSpaceValue));
+    assignStyle("--cms-container-gap", uiStyleValue(rawProps.gap, resolveSpaceValue));
+    assignStyle("--cms-container-section-gap", uiStyleValue(rawProps.sectionGap ?? rawProps.gap, resolveSpaceValue));
+    assignStyle("--cms-container-cols", uiStyleValue(rawProps.cols, resolveColsValue));
+    assignStyle("--cms-container-align", uiStyleValue(rawProps.align, (value) => String(value)));
+    assignStyle("--cms-container-justify", uiStyleValue(rawProps.justify, (value) => String(value)));
+    assignStyle("--cms-container-direction", uiStyleValue(rawProps.direction, (value) => String(value)));
+    assignStyle("--cms-container-wrap", uiStyleValue(rawProps.wrap, resolveWrapValue));
+
+    const p = CMSwift.omit(props, [
+      "after", "afterClass", "align", "as", "before", "beforeClass", "body", "bodyClass",
+      "bottom", "cols", "content", "contentClass", "direction", "display", "end",
+      "endClass", "fluid", "footer", "footerClass", "gap", "grid", "gutter", "header",
+      "headerClass", "inline", "justify", "layout", "left", "mainClass", "maxWidth",
+      "minWidth", "padding", "paddingX", "paddingY", "right", "sectionGap", "slots",
+      "start", "startClass", "tag", "top", "width", "wrap"
+    ]);
+    p.class = uiClass([
+      "cms-container",
+      uiWhen(rawProps.fluid, "is-fluid"),
+      uiWhen(hasStructuredLayout, "has-structure"),
+      hasStructuredLayout ? "" : layoutClass,
+      props.class
+    ]);
+    p.style = rootStyle;
+
+    const createSection = (name, nodes, extraClass) => {
+      if (!nodes.length) return null;
+      return _.div({ class: uiClass(["cms-container-section", `cms-container-${name}`, extraClass]) }, ...nodes);
+    };
+
+    const contentRoot = bodyNodes.length
+      ? _.div({ class: uiClass(["cms-container-body", hasStructuredLayout ? layoutClass : "", rawProps.bodyClass]) }, ...bodyNodes)
+      : (
+        (startNodes.length || contentNodes.length || endNodes.length)
+          ? _.div(
+            { class: uiClass(["cms-container-body", hasStructuredLayout ? layoutClass : "", rawProps.bodyClass]) },
+            createSection("start", startNodes, rawProps.startClass),
+            contentNodes.length ? _.div({ class: uiClass(["cms-container-main", rawProps.mainClass, rawProps.contentClass]) }, ...contentNodes) : null,
+            createSection("end", endNodes, rawProps.endClass)
+          )
+          : null
+      );
+
+    const creator = (() => {
+      const tag = String(uiUnwrap(rawProps.tag ?? rawProps.as) || "div").toLowerCase();
+      return typeof _[tag] === "function" ? _[tag] : _.div;
+    })();
+
+    const el = hasStructuredLayout
+      ? creator(
+        p,
+        createSection("before", beforeNodes, rawProps.beforeClass),
+        createSection("header", headerNodes, rawProps.headerClass),
+        contentRoot,
+        createSection("footer", footerNodes, rawProps.footerClass),
+        createSection("after", afterNodes, rawProps.afterClass)
+      )
+      : creator(p, ...(bodyNodes.length ? bodyNodes : contentNodes));
+    setPropertyProps(el, rawProps);
+    return el;
   };
   if (CMSwift.isDev?.()) {
     UI.meta = UI.meta || {};
     UI.meta.Container = {
       signature: "UI.Container(...children) | UI.Container(props, ...children)",
       props: {
-        slots: "{ default?: Slot }",
+        tag: "string",
+        fluid: "boolean",
+        maxWidth: "number|string",
+        minWidth: "number|string",
+        width: "number|string",
+        padding: "number|string",
+        paddingX: "number|string",
+        paddingY: "number|string",
+        gap: "number|string",
+        sectionGap: "number|string",
+        layout: '"block|flex|grid|stack|inline"',
+        direction: '"row|column"',
+        wrap: "boolean|string",
+        align: "string",
+        justify: "string",
+        cols: "number|string",
+        before: "String|Node|Function|Array",
+        header: "String|Node|Function|Array",
+        start: "String|Node|Function|Array",
+        body: "String|Node|Function|Array",
+        content: "String|Node|Function|Array",
+        end: "String|Node|Function|Array",
+        footer: "String|Node|Function|Array",
+        after: "String|Node|Function|Array",
+        slots: "{ before?, header?, left?, start?, body?, content?, default?, right?, end?, footer?, after? }",
         class: "string",
         style: "object"
       },
       slots: {
-        default: "Container content"
+        before: "Top content before the main container body",
+        header: "Structured header area",
+        left: "Alias for start",
+        start: "Leading area inside the main body",
+        body: "Custom body renderer overriding start/content/end wrappers",
+        content: "Explicit main content",
+        default: "Fallback content from children",
+        right: "Alias for end",
+        end: "Trailing area inside the main body",
+        footer: "Structured footer area",
+        after: "Bottom content after the main container body"
       },
       returns: "HTMLDivElement",
-      description: "Container layout wrapper."
+      description: "Container composabile con max-width, spacing, layout props e sezioni opzionali."
     };
   }
 
