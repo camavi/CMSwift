@@ -4367,29 +4367,47 @@
   UI.GridCol = (...args) => {
     const { props, children } = CMSwift.uiNormalizeArgs(args);
     const slots = props.slots || {};
-    const cls = uiClass([
-      "cms-grid-col",
-      uiWhen(props.auto, "is-auto"),
-      props.class
-    ]);
-
-    const p = CMSwift.omit(props, ["span", "sm", "md", "lg", "auto", "row", "rowSpan", "area", "align", "justify", "place", "slots", "style"]);
-    p.class = cls;
+    const hasOwn = (key) => Object.prototype.hasOwnProperty.call(props, key);
+    const renderArea = (names, fallback, ctx = {}) => {
+      const list = Array.isArray(names) ? names : [names];
+      for (const name of list) {
+        if (CMSwift.ui.getSlot(slots, name) != null) {
+          return renderSlotToArray(slots, name, ctx, fallback);
+        }
+      }
+      return fallback == null ? [] : renderSlotToArray(null, "default", ctx, fallback);
+    };
+    const resolveSpaceValue = (value) => {
+      if (value == null || value === false || value === "") return "";
+      if (typeof value === "string" && CMSwift.uiSizes?.includes(value)) return `var(--cms-s-${value})`;
+      return toCssSize(value);
+    };
+    const resolveSizeValue = (value) => {
+      if (value == null || value === false || value === "") return "";
+      if (typeof value === "string" && CMSwift.uiSizes?.includes(value)) return unitCover(value, "size");
+      return toCssSize(value);
+    };
 
     const style = { ...(props.style || {}) };
     const toGridSpan = (value) => {
       if (value == null || value === "") return null;
       if (value === "auto") return "auto";
-      if (value === "full") return "1 / -1";
+      if (value === "full" || value === true) return "1 / -1";
       const n = Number(value);
-      if (Number.isFinite(n) && n > 0) return `span ${n} / span ${n}`;
+      if (Number.isFinite(n) && n > 0) {
+        const spanValue = Math.max(1, Math.round(n));
+        return `span ${spanValue} / span ${spanValue}`;
+      }
       return String(value);
     };
     const toGridRow = (value) => {
       if (value == null || value === "") return null;
-      if (value === "full") return "1 / -1";
+      if (value === "full" || value === true) return "1 / -1";
       const n = Number(value);
-      if (Number.isFinite(n) && n > 0) return `span ${n} / span ${n}`;
+      if (Number.isFinite(n) && n > 0) {
+        const spanValue = Math.max(1, Math.round(n));
+        return `span ${spanValue} / span ${spanValue}`;
+      }
       return String(value);
     };
 
@@ -4403,6 +4421,113 @@
     const align = uiStyleValue(props.align);
     const justify = uiStyleValue(props.justify);
     const place = uiStyleValue(props.place);
+    const gap = uiStyleValue(props.gap, resolveSpaceValue);
+    const rowGap = uiStyleValue(props.rowGap, resolveSpaceValue);
+    const columnGap = uiStyleValue(props.columnGap, resolveSpaceValue);
+    const padding = uiStyleValue(props.padding, resolveSpaceValue);
+    const width = uiStyleValue(props.width, resolveSizeValue);
+    const minHeight = uiStyleValue(props.minHeight, resolveSizeValue);
+    const height = uiStyleValue(props.height, resolveSizeValue);
+    const maxHeight = uiStyleValue(props.maxHeight, resolveSizeValue);
+    const contentAlign = uiStyleValue(props.contentAlign);
+    const contentJustify = uiStyleValue(props.contentJustify);
+    const direction = uiStyleValue(props.direction);
+    const scroll = uiStyleValue(props.scroll, (value) => value === true ? "auto" : String(value), "");
+    const fullHeight = uiStyleValue(props.fullHeight, (value) => value ? "100%" : "", "");
+    const centerContent = uiComputed([props.center, props.contentAlign, props.contentJustify], () => {
+      return !!uiUnwrap(props.center)
+        && (uiUnwrap(props.contentAlign) == null || uiUnwrap(props.contentAlign) === "")
+        && (uiUnwrap(props.contentJustify) == null || uiUnwrap(props.contentJustify) === "");
+    });
+
+    const ctx = { props };
+    const startNodes = renderArea(
+      ["start", "top", "header", "before"],
+      props.start ?? props.top ?? props.header ?? props.before,
+      ctx
+    );
+    const bodyFallback = hasOwn("body")
+      ? props.body
+      : (hasOwn("content") ? props.content : children);
+    const bodyNodes = renderArea(["body", "content", "default"], bodyFallback, ctx);
+    const endNodes = renderArea(
+      ["end", "bottom", "footer", "after"],
+      props.end ?? props.bottom ?? props.footer ?? props.after,
+      ctx
+    );
+    const hasStructuredContent = startNodes.length || endNodes.length
+      || hasOwn("start") || hasOwn("top") || hasOwn("header") || hasOwn("before")
+      || hasOwn("body") || hasOwn("content")
+      || hasOwn("end") || hasOwn("bottom") || hasOwn("footer") || hasOwn("after")
+      || props.startClass || props.bodyClass || props.contentClass || props.endClass
+      || props.topClass || props.headerClass || props.bottomClass || props.footerClass
+      || CMSwift.ui.getSlot(slots, "start") != null
+      || CMSwift.ui.getSlot(slots, "top") != null
+      || CMSwift.ui.getSlot(slots, "header") != null
+      || CMSwift.ui.getSlot(slots, "before") != null
+      || CMSwift.ui.getSlot(slots, "body") != null
+      || CMSwift.ui.getSlot(slots, "content") != null
+      || CMSwift.ui.getSlot(slots, "end") != null
+      || CMSwift.ui.getSlot(slots, "bottom") != null
+      || CMSwift.ui.getSlot(slots, "footer") != null
+      || CMSwift.ui.getSlot(slots, "after") != null;
+    const useStackLayout = uiComputed([
+      props.stack, props.gap, props.rowGap, props.columnGap,
+      props.contentAlign, props.contentJustify, props.direction, props.center
+    ], () => {
+      if (hasStructuredContent || !!uiUnwrap(props.stack)) return true;
+      const values = [
+        uiUnwrap(props.gap),
+        uiUnwrap(props.rowGap),
+        uiUnwrap(props.columnGap),
+        uiUnwrap(props.contentAlign),
+        uiUnwrap(props.contentJustify),
+        uiUnwrap(props.direction)
+      ];
+      if (values.some((value) => value != null && value !== false && value !== "")) return true;
+      return !!uiUnwrap(props.center);
+    });
+    const surfaceClasses = uiComputed([
+      props.panel, props.color, props.clickable, props.border, props.glossy, props.glow,
+      props.glass, props.shadow, props.outline, props.gradient, props.textGradient,
+      props.lightShadow, props.radius
+    ], () => {
+      const active = !!(
+        uiUnwrap(props.panel) || uiUnwrap(props.color) || uiUnwrap(props.clickable) ||
+        uiUnwrap(props.border) || uiUnwrap(props.glossy) || uiUnwrap(props.glow) ||
+        uiUnwrap(props.glass) || uiUnwrap(props.shadow) || uiUnwrap(props.outline) ||
+        uiUnwrap(props.gradient) || uiUnwrap(props.textGradient) || uiUnwrap(props.lightShadow) ||
+        uiUnwrap(props.radius)
+      );
+      return active ? ["cms-clear-set", "cms-singularity", "cms-grid-col-surface"] : [];
+    });
+    const cls = uiClass([
+      "cms-grid-col",
+      surfaceClasses,
+      uiWhen(props.panel, "cms-grid-col-panel"),
+      uiWhen(props.auto, "is-auto"),
+      uiWhen(useStackLayout, "cms-grid-col-stack"),
+      uiWhen(props.inline, "cms-grid-col-inline"),
+      uiWhen(centerContent, "cms-grid-col-center"),
+      props.class
+    ]);
+
+    const p = CMSwift.omit(props, [
+      "span", "sm", "md", "lg", "auto",
+      "row", "rowSpan", "area", "align", "justify", "place",
+      "gap", "rowGap", "columnGap", "padding",
+      "width", "height", "minHeight", "maxHeight", "fullHeight",
+      "stack", "inline", "direction", "contentAlign", "contentJustify", "center", "scroll",
+      "panel", "to",
+      "start", "top", "header", "before", "startClass", "topClass", "headerClass",
+      "body", "content", "bodyClass", "contentClass",
+      "end", "bottom", "footer", "after", "endClass", "bottomClass", "footerClass",
+      "slots", "style",
+      "clickable", "dense", "flat", "border", "glossy", "glow", "glass", "shadow",
+      "outline", "rounded", "gradient", "textGradient", "lightShadow", "color", "textColor",
+      "size", "radius"
+    ]);
+    p.class = cls;
 
     if (uiUnwrap(props.auto) === true) style["--cms-grid-col-base"] = "auto";
     else if (span != null) style["--cms-grid-col-base"] = span;
@@ -4415,9 +4540,86 @@
     if (align != null) style.alignSelf = align;
     if (justify != null) style.justifySelf = justify;
     if (place != null) style.placeSelf = place;
+    if (gap != null) style.gap = gap;
+    if (rowGap != null) style.rowGap = rowGap;
+    if (columnGap != null) style.columnGap = columnGap;
+    if (padding != null) style.padding = padding;
+    if (width != null) style.width = width;
+    if (fullHeight != null && fullHeight !== "") style.height = fullHeight;
+    else if (height != null) style.height = height;
+    if (minHeight != null) style.minHeight = minHeight;
+    if (maxHeight != null) style.maxHeight = maxHeight;
+    if (direction != null) style.flexDirection = direction;
+    if (contentAlign != null) style.alignItems = contentAlign;
+    else if (centerContent != null && centerContent !== "") style.alignItems = centerContent ? "center" : "";
+    if (contentJustify != null) style.justifyContent = contentJustify;
+    else if (centerContent != null && centerContent !== "") style.justifyContent = centerContent ? "center" : "";
+    if (scroll != null && scroll !== "") style.overflow = scroll;
     if (Object.keys(style).length) p.style = style;
 
-    return _.div(p, ...renderSlotToArray(slots, "default", {}, children));
+    const userOnClick = props.onClick;
+    const userOnKeydown = props.onKeydown;
+    const isInteractive = !!(uiUnwrap(props.clickable) || uiUnwrap(props.to));
+    const onClick = (e) => {
+      userOnClick?.(e);
+      if (e.defaultPrevented) return;
+      const to = uiUnwrap(props.to);
+      if (to && CMSwift.router?.navigate) {
+        e.preventDefault();
+        CMSwift.router.navigate(to);
+      }
+    };
+    const onKeydown = (e) => {
+      userOnKeydown?.(e);
+      if (e.defaultPrevented) return;
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onClick(e);
+      }
+    };
+    if (isInteractive) {
+      p.onClick = onClick;
+      p.onKeydown = onKeydown;
+      if (p.tabIndex == null) p.tabIndex = 0;
+      if (p.role == null) p.role = "button";
+    }
+
+    if (!hasStructuredContent) {
+      const el = _.div(p, ...renderSlotToArray(slots, "default", ctx, children));
+      setPropertyProps(el, props);
+      return el;
+    }
+
+    const sectionStyle = {
+      display: "flex",
+      flexDirection: "column",
+      gap: "inherit",
+      minWidth: 0
+    };
+    const parts = [
+      startNodes.length
+        ? _.div({
+          class: uiClass(["cms-grid-col-start", props.startClass, props.topClass, props.headerClass]),
+          style: { ...sectionStyle }
+        }, ...startNodes)
+        : null,
+      bodyNodes.length
+        ? _.div({
+          class: uiClass(["cms-grid-col-body", props.bodyClass, props.contentClass]),
+          style: { ...sectionStyle, flex: "1 1 auto" }
+        }, ...bodyNodes)
+        : null,
+      endNodes.length
+        ? _.div({
+          class: uiClass(["cms-grid-col-end", props.endClass, props.bottomClass, props.footerClass]),
+          style: { ...sectionStyle }
+        }, ...endNodes)
+        : null
+    ].filter(Boolean);
+
+    const el = _.div(p, ...parts);
+    setPropertyProps(el, props);
+    return el;
   };
   if (CMSwift.isDev?.()) {
     UI.meta = UI.meta || {};
@@ -4432,18 +4634,51 @@
         row: "number|string",
         rowSpan: "number|string",
         area: "string",
-        align: "string",
-        justify: "string",
-        place: "string",
-        slots: "{ default? }",
+        align: "string (align-self)",
+        justify: "string (justify-self)",
+        place: "string (place-self)",
+        gap: "string|number",
+        rowGap: "string|number",
+        columnGap: "string|number",
+        padding: "string|number",
+        width: "string|number",
+        height: "string|number",
+        minHeight: "string|number",
+        maxHeight: "string|number",
+        fullHeight: "boolean",
+        stack: "boolean",
+        inline: "boolean",
+        direction: "column|row|string",
+        contentAlign: "string",
+        contentJustify: "string",
+        center: "boolean",
+        scroll: "boolean|string",
+        panel: "boolean",
+        clickable: "boolean",
+        to: "string",
+        start: "Node|Function|Array",
+        body: "Node|Function|Array",
+        end: "Node|Function|Array",
+        color: "string",
+        outline: "boolean",
+        shadow: "boolean|string",
+        radius: "number|string",
+        slots: "{ start?, body?, end?, default? }",
         class: "string",
         style: "object"
       },
       slots: {
-        default: "Column content"
+        start: "Top/header region",
+        body: "Main body region",
+        end: "Bottom/footer region",
+        default: "Fallback content"
+      },
+      events: {
+        onClick: "MouseEvent",
+        onKeydown: "KeyboardEvent"
       },
       returns: "HTMLDivElement",
-      description: "Item per CSS Grid con span responsive, row span, area e self-alignment."
+      description: "Item per CSS Grid con span responsive, layout interno opzionale a stack, regioni start/body/end e varianti visuali leggere."
     };
   }
   // Esempio: CMSwift.ui.GridCol({ span: 6, sm: 12 }, "Colonna")
