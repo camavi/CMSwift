@@ -1243,52 +1243,291 @@
   CMSwift.uiComputed = uiComputed;
   CMSwift.uiStyleValue = uiStyleValue;
   UI.Col = (...args) => {
-    try {
-      const { props, children } = CMSwift.uiNormalizeArgs(args);
-      const slots = props.slots || {};
-      const style = { ...(props.style || {}) };
-      const colClass = uiComputed([props.auto, props.col], () => {
-        const auto = uiUnwrap(props.auto);
-        const col = auto ? "" : uiUnwrap(props.col);
-        return col === "" ? "cms-col" : col != null ? `cms-col-${col}` : "cms-col";
-      });
-      const cls = uiClass([
-        colClass,
-        uiClassValue(props.sm, "cms-sm-col-"),
-        uiClassValue(props.md, "cms-md-col-"),
-        uiClassValue(props.lg, "cms-lg-col-"),
-        props.class
-      ]);
+    const { props: rawProps, children } = CMSwift.uiNormalizeArgs(args);
+    const slots = rawProps.slots || {};
+    const hasOwn = (key) => Object.prototype.hasOwnProperty.call(rawProps, key);
+    const renderArea = (names, fallback, ctx = {}) => {
+      const list = Array.isArray(names) ? names : [names];
+      for (const name of list) {
+        if (CMSwift.ui.getSlot(slots, name) != null) {
+          return renderSlotToArray(slots, name, ctx, fallback);
+        }
+      }
+      return fallback == null ? [] : renderSlotToArray(null, "default", ctx, fallback);
+    };
+    const resolveSpaceValue = (value) => {
+      if (value == null || value === false || value === "") return "";
+      if (typeof value === "number") return `${value}px`;
+      if (typeof value === "string" && CMSwift.uiSizes?.includes(value)) return `var(--cms-s-${value})`;
+      return String(value);
+    };
+    const resolveSizeValue = (value) => {
+      if (value == null || value === false || value === "") return "";
+      if (typeof value === "string" && CMSwift.uiSizes?.includes(value)) return unitCover(value, "size");
+      return toCssSize(value);
+    };
+    const resolveSpanClass = (value, prefix) => {
+      const raw = uiUnwrap(value);
+      if (raw == null || raw === false || raw === "") return "";
+      if (raw === "auto") return prefix === "cms-col-" ? "cms-col-auto" : "";
+      if (raw === true) return `${prefix}24`;
+      const n = Number(raw);
+      if (Number.isFinite(n) && n > 0) {
+        return `${prefix}${Math.max(1, Math.min(24, Math.round(n)))}`;
+      }
+      if (typeof raw === "string") {
+        const normalized = raw.trim();
+        if (!normalized) return "";
+        if (normalized.startsWith(prefix)) return normalized;
+        if (/^\d+$/.test(normalized)) {
+          return `${prefix}${Math.max(1, Math.min(24, Number(normalized)))}`;
+        }
+      }
+      return "";
+    };
+    const resolveFlexValue = () => {
+      const explicit = uiUnwrap(rawProps.flex);
+      if (explicit != null && explicit !== false && explicit !== "") return String(explicit);
+      if (uiUnwrap(rawProps.fill)) return "1 1 auto";
+      const hasGrow = hasOwn("grow");
+      const hasShrink = hasOwn("shrink");
+      const hasBasis = hasOwn("basis");
+      if (!hasGrow && !hasShrink && !hasBasis) return "";
+      const grow = hasGrow ? uiUnwrap(rawProps.grow) : 0;
+      const shrink = hasShrink ? uiUnwrap(rawProps.shrink) : 1;
+      const basis = hasBasis ? resolveSizeValue(uiUnwrap(rawProps.basis)) : "auto";
+      return `${grow} ${shrink} ${basis || "auto"}`;
+    };
 
-      const p = CMSwift.omit(props, ["slots", "col", "sm", "md", "lg", "auto", "size", "style"]);
-      p.class = cls;
-      const width = uiStyleValue(props.size, (v) => unitCover(v, "w"));
-      const flex = uiStyleValue(props.size, () => "0 0 auto");
-      if (width != null) style.width = width;
-      if (flex != null) style.flex = flex;
+    const baseColClass = uiComputed([rawProps.auto, rawProps.col, rawProps.span], () => {
+      if (uiUnwrap(rawProps.auto)) return "cms-col-auto";
+      const spanSource = hasOwn("span") ? rawProps.span : rawProps.col;
+      return resolveSpanClass(spanSource, "cms-col-") || "cms-col";
+    });
 
-      p.style = style;
+    const p = CMSwift.omit(rawProps, [
+      "slots",
+      "col", "span", "sm", "md", "lg", "auto",
+      "size", "width", "minWidth", "maxWidth",
+      "height", "minHeight", "maxHeight",
+      "gap", "rowGap", "columnGap",
+      "align", "justify", "inline", "center", "stack",
+      "flex", "fill", "grow", "shrink", "basis",
+      "self", "order", "scroll",
+      "start", "top", "header", "before", "startClass", "topClass", "headerClass",
+      "body", "content", "bodyClass", "contentClass",
+      "end", "bottom", "footer", "after", "endClass", "bottomClass", "footerClass"
+    ]);
 
-      const content = renderSlotToArray(slots, "default", {}, children);
-      return _.div(p, ...content);
-    } catch (e) {
-      console.log(e);
+    const style = { minWidth: 0, ...(rawProps.style || {}) };
+    const gap = uiStyleValue(rawProps.gap, resolveSpaceValue);
+    const rowGap = uiStyleValue(rawProps.rowGap, resolveSpaceValue);
+    const columnGap = uiStyleValue(rawProps.columnGap, resolveSpaceValue);
+    const align = uiStyleValue(rawProps.align);
+    const justify = uiStyleValue(rawProps.justify);
+    const widthSource = hasOwn("width") ? rawProps.width : rawProps.size;
+    const width = uiStyleValue(widthSource, resolveSizeValue);
+    const minWidth = uiStyleValue(rawProps.minWidth, resolveSizeValue);
+    const maxWidth = uiStyleValue(rawProps.maxWidth, resolveSizeValue);
+    const height = uiStyleValue(rawProps.height, resolveSizeValue);
+    const minHeight = uiStyleValue(rawProps.minHeight, resolveSizeValue);
+    const maxHeight = uiStyleValue(rawProps.maxHeight, resolveSizeValue);
+    const self = uiStyleValue(rawProps.self);
+    const order = uiStyleValue(rawProps.order, (v) => String(v));
+    const scroll = uiStyleValue(rawProps.scroll, (v) => v ? "auto" : "", "");
+    const flexValue = uiComputed([
+      rawProps.flex, rawProps.fill, rawProps.grow, rawProps.shrink, rawProps.basis
+    ], resolveFlexValue);
+    const center = uiComputed([rawProps.center, rawProps.align, rawProps.justify], () => {
+      return !!uiUnwrap(rawProps.center)
+        && (uiUnwrap(rawProps.align) == null || uiUnwrap(rawProps.align) === "")
+        && (uiUnwrap(rawProps.justify) == null || uiUnwrap(rawProps.justify) === "");
+    });
+    if (flexValue != null && flexValue !== "") style.flex = flexValue;
+    if (self != null) style.alignSelf = self;
+    if (order != null) style.order = order;
+    if (scroll != null && scroll !== "") style.overflow = scroll;
+    if (width != null && width !== "") {
+      style.width = width;
+      if (!hasOwn("flex") && !hasOwn("fill") && !hasOwn("grow") && !hasOwn("shrink") && !hasOwn("basis")) {
+        style.flex = "0 0 auto";
+      }
     }
+    if (minWidth != null) style.minWidth = minWidth;
+    if (maxWidth != null) style.maxWidth = maxWidth;
+    if (height != null) style.height = height;
+    if (minHeight != null) style.minHeight = minHeight;
+    if (maxHeight != null) style.maxHeight = maxHeight;
+    if (Object.keys(style).length) p.style = style;
+
+    const ctx = { props: rawProps };
+    const startNodes = renderArea(
+      ["start", "top", "header", "before"],
+      rawProps.start ?? rawProps.top ?? rawProps.header ?? rawProps.before,
+      ctx
+    );
+    const bodyFallback = hasOwn("body")
+      ? rawProps.body
+      : (hasOwn("content") ? rawProps.content : children);
+    const bodyNodes = renderArea(["body", "content", "default"], bodyFallback, ctx);
+    const endNodes = renderArea(
+      ["end", "bottom", "footer", "after"],
+      rawProps.end ?? rawProps.bottom ?? rawProps.footer ?? rawProps.after,
+      ctx
+    );
+    const hasStructuredContent = startNodes.length || endNodes.length
+      || hasOwn("start") || hasOwn("top") || hasOwn("header") || hasOwn("before")
+      || hasOwn("body") || hasOwn("content")
+      || hasOwn("end") || hasOwn("bottom") || hasOwn("footer") || hasOwn("after")
+      || rawProps.startClass || rawProps.bodyClass || rawProps.contentClass || rawProps.endClass
+      || rawProps.topClass || rawProps.headerClass || rawProps.bottomClass || rawProps.footerClass
+      || CMSwift.ui.getSlot(slots, "start") != null
+      || CMSwift.ui.getSlot(slots, "top") != null
+      || CMSwift.ui.getSlot(slots, "header") != null
+      || CMSwift.ui.getSlot(slots, "before") != null
+      || CMSwift.ui.getSlot(slots, "body") != null
+      || CMSwift.ui.getSlot(slots, "content") != null
+      || CMSwift.ui.getSlot(slots, "end") != null
+      || CMSwift.ui.getSlot(slots, "bottom") != null
+      || CMSwift.ui.getSlot(slots, "footer") != null
+      || CMSwift.ui.getSlot(slots, "after") != null;
+
+    const useFlexLayout = uiComputed([
+      rawProps.stack, rawProps.gap, rawProps.rowGap, rawProps.columnGap,
+      rawProps.align, rawProps.justify, rawProps.center
+    ], () => {
+      if (!!uiUnwrap(rawProps.stack)) return true;
+      if (hasStructuredContent) return true;
+      const values = [
+        uiUnwrap(rawProps.gap),
+        uiUnwrap(rawProps.rowGap),
+        uiUnwrap(rawProps.columnGap),
+        uiUnwrap(rawProps.align),
+        uiUnwrap(rawProps.justify)
+      ];
+      if (values.some((value) => value != null && value !== false && value !== "")) return true;
+      return !!uiUnwrap(rawProps.center);
+    });
+
+    p.class = uiClass([
+      "cms-col",
+      baseColClass,
+      uiComputed(rawProps.sm, () => resolveSpanClass(rawProps.sm, "cms-sm-col-")),
+      uiComputed(rawProps.md, () => resolveSpanClass(rawProps.md, "cms-md-col-")),
+      uiComputed(rawProps.lg, () => resolveSpanClass(rawProps.lg, "cms-lg-col-")),
+      uiWhen(useFlexLayout, "cms-col-flex"),
+      uiWhen(rawProps.inline, "cms-col-inline"),
+      rawProps.class
+    ]);
+
+    if (gap != null) style.gap = gap;
+    if (rowGap != null) style.rowGap = rowGap;
+    if (columnGap != null) style.columnGap = columnGap;
+    if (align != null) style.alignItems = align;
+    else if (center != null && center !== "") style.alignItems = center ? "center" : "";
+    if (justify != null) style.justifyContent = justify;
+    else if (center != null && center !== "") style.justifyContent = center ? "center" : "";
+    if (Object.keys(style).length) p.style = style;
+
+    if (!hasStructuredContent) {
+      const el = _.div(p, ...renderSlotToArray(slots, "default", ctx, children));
+      setPropertyProps(el, rawProps);
+      return el;
+    }
+
+    const sectionStyle = {
+      display: "flex",
+      flexDirection: "column",
+      gap: "inherit",
+      minWidth: 0
+    };
+    const parts = [
+      startNodes.length
+        ? _.div({
+          class: uiClass(["cms-col-start", rawProps.startClass, rawProps.topClass, rawProps.headerClass]),
+          style: { ...sectionStyle }
+        }, ...startNodes)
+        : null,
+      bodyNodes.length
+        ? _.div({
+          class: uiClass(["cms-col-body", rawProps.bodyClass, rawProps.contentClass]),
+          style: { ...sectionStyle, flex: "1 1 auto" }
+        }, ...bodyNodes)
+        : null,
+      endNodes.length
+        ? _.div({
+          class: uiClass(["cms-col-end", rawProps.endClass, rawProps.bottomClass, rawProps.footerClass]),
+          style: { ...sectionStyle }
+        }, ...endNodes)
+        : null
+    ].filter(Boolean);
+
+    const el = _.div(p, ...parts);
+    setPropertyProps(el, rawProps);
+    return el;
   };
   if (CMSwift.isDev?.()) {
     UI.meta = UI.meta || {};
     UI.meta.Col = {
       signature: "UI.Col(...children) | UI.Col(props, ...children)",
       props: {
-        slots: "{ default?: Slot }",
+        col: "number|string",
+        span: "Alias di col",
+        sm: "number|string",
+        md: "number|string",
+        lg: "number|string",
+        auto: "boolean",
+        gap: "number|string",
+        rowGap: "number|string",
+        columnGap: "number|string",
+        align: "string",
+        justify: "string",
+        inline: "boolean",
+        stack: "boolean",
+        center: "boolean",
+        width: "number|string",
+        size: "Alias di width",
+        minWidth: "number|string",
+        maxWidth: "number|string",
+        height: "number|string",
+        minHeight: "number|string",
+        maxHeight: "number|string",
+        flex: "string",
+        fill: "boolean",
+        grow: "number",
+        shrink: "number",
+        basis: "number|string",
+        self: "string",
+        order: "number|string",
+        scroll: "boolean",
+        start: "Node|Function|Array",
+        top: "Alias di start",
+        header: "Alias di start",
+        body: "Node|Function|Array",
+        content: "Alias di body",
+        end: "Node|Function|Array",
+        bottom: "Alias di end",
+        footer: "Alias di end",
+        startClass: "string",
+        bodyClass: "string",
+        endClass: "string",
+        slots: "{ start?, top?, header?, body?, content?, end?, bottom?, footer?, default? }",
         class: "string",
         style: "object"
       },
       slots: {
-        default: "Column content"
+        start: "Area iniziale della colonna",
+        top: "Alias di start",
+        header: "Alias di start",
+        body: "Area principale della colonna",
+        content: "Alias di body",
+        end: "Area finale della colonna",
+        bottom: "Alias di end",
+        footer: "Alias di end",
+        default: "Contenuto fallback della colonna"
       },
       returns: "HTMLDivElement",
-      description: "Column layout wrapper."
+      description: "Wrapper responsive a 24 colonne. Di default si comporta come un contenitore normale e attiva il layout flex verticale quando usi gap/allineamento, regioni strutturate o `stack`."
     };
   }
 
