@@ -3766,6 +3766,15 @@
   grid-auto-flow: dense;
 }
 
+.cms-grid.cms-grid-inline {
+  display: inline-grid;
+}
+
+.cms-grid.cms-grid-debug > * {
+  outline: 1px dashed color-mix(in srgb, var(--cms-primary, #3b82f6) 35%, transparent);
+  outline-offset: -1px;
+}
+
 .cms-grid > .cms-grid-col {
   min-width: 0;
   grid-column: var(--cms-grid-col-base, auto);

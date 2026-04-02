@@ -4145,53 +4145,221 @@
   }
   // Esempio: CMSwift.ui.Toolbar({}, CMSwift.ui.Btn({}, "Azione"))
 
+  const isGridColNode = (value) => value && value.nodeType === 1 && value.classList?.contains("cms-grid-col");
+
   UI.Grid = (...args) => {
-    const { props, children } = CMSwift.uiNormalizeArgs(args);
-    const slots = props.slots || {};
+    const { props: rawProps, children } = CMSwift.uiNormalizeArgs(args);
+    const slots = rawProps.slots || {};
+    const itemSource = uiUnwrap(rawProps.items);
+    const items = Array.isArray(itemSource) ? itemSource : (itemSource == null ? [] : [itemSource]);
+
+    const buildItemProps = (entryProps = {}) => {
+      const baseProps = rawProps.itemProps || {};
+      const merged = { ...baseProps, ...entryProps };
+      merged.class = uiClass([baseProps.class, rawProps.itemClass, entryProps.class]);
+      merged.style = {
+        ...(baseProps.style || {}),
+        ...(rawProps.itemStyle || {}),
+        ...(entryProps.style || {})
+      };
+      return merged;
+    };
+
+    const normalizeResolvedNode = (value, entryProps = {}) => {
+      if (value == null || value === false) return [];
+      if (isGridColNode(value)) return [value];
+      if (isUIPlainObject(value)) {
+        const childContent = value.children != null
+          ? asNodeArray(value.children)
+          : (value.content != null
+            ? asNodeArray(value.content)
+            : (value.node != null
+              ? asNodeArray(value.node)
+              : (value.label != null ? asNodeArray(value.label) : [])));
+        return [UI.GridCol(buildItemProps(value), ...childContent)];
+      }
+      if (Array.isArray(value)) {
+        return [UI.GridCol(buildItemProps(entryProps), ...value)];
+      }
+      return [UI.GridCol(buildItemProps(entryProps), value)];
+    };
+
+    const normalizeItemNode = (value, index, total, useItemSlot = true) => {
+      if (value == null || value === false) return [];
+      const entryProps = isUIPlainObject(value) ? value : {};
+      if (useItemSlot) {
+        const ctx = {
+          item: value,
+          index,
+          count: total,
+          first: index === 0,
+          last: index === total - 1
+        };
+        const slotted = renderSlotToArray(slots, "item", ctx, null);
+        if (slotted.length) {
+          return slotted.flatMap((node) => normalizeResolvedNode(node, entryProps));
+        }
+      }
+      return normalizeResolvedNode(value, entryProps);
+    };
+
+    const content = [];
+    items.forEach((item, index) => {
+      content.push(...normalizeItemNode(item, index, items.length));
+    });
+
+    const defaultNodes = renderSlotToArray(slots, "default", { items, count: items.length }, children);
+    defaultNodes.forEach((node) => {
+      content.push(...normalizeResolvedNode(node));
+    });
+
+    if (!content.length) {
+      const emptyNodes = renderSlotToArray(slots, "empty", { items, count: 0 }, rawProps.empty);
+      emptyNodes.forEach((node) => {
+        const normalized = normalizeResolvedNode(node, {
+          style: { gridColumn: "1 / -1" }
+        });
+        content.push(...normalized);
+      });
+    }
+
     const cls = uiClass([
       "cms-grid",
-      uiWhen(props.dense, "dense"),
-      props.class
+      uiWhen(rawProps.dense, "dense"),
+      uiWhen(rawProps.inline, "cms-grid-inline"),
+      uiWhen(rawProps.debug, "cms-grid-debug"),
+      rawProps.class
     ]);
 
-    const p = CMSwift.omit(props, ["gap", "cols", "align", "justify", "dense", "slots"]);
+    const p = CMSwift.omit(rawProps, [
+      "gap", "rowGap", "columnGap", "colGap", "cols", "columns", "rows", "areas", "align", "justify",
+      "alignItems", "justifyItems", "placeItems", "placeContent", "dense", "flow", "inline", "debug",
+      "autoFit", "autoFill", "min", "max", "autoRows", "items", "itemClass", "itemStyle", "itemProps",
+      "empty", "slots", "full", "width", "minWidth", "maxWidth", "padding"
+    ]);
     p.class = cls;
 
-    const style = { ...(props.style || {}) };
-    const gap = uiStyleValue(props.gap, toCssSize);
-    if (gap != null) style["--cms-grid-gap"] = gap;
-    const cols = uiStyleValue(props.cols, (v) => typeof v === "number"
-      ? `repeat(${v}, minmax(0, 1fr))`
+    const style = { ...(rawProps.style || {}) };
+    const gap = uiStyleValue(rawProps.gap, toCssSize);
+    if (gap != null) {
+      style["--cms-grid-gap"] = gap;
+      style.gap = gap;
+    }
+    const rowGap = uiStyleValue(rawProps.rowGap, toCssSize);
+    if (rowGap != null) style.rowGap = rowGap;
+    const columnGap = uiStyleValue(rawProps.columnGap ?? rawProps.colGap, toCssSize);
+    if (columnGap != null) style.columnGap = columnGap;
+
+    const trackMax = uiStyleValue(rawProps.max, toCssSize, "1fr");
+    const min = uiStyleValue(rawProps.min, toCssSize);
+    if (min != null) {
+      const mode = uiUnwrap(rawProps.autoFill) ? "auto-fill" : "auto-fit";
+      style.gridTemplateColumns = `repeat(${mode}, minmax(${min}, ${trackMax || "1fr"}))`;
+    } else {
+      const cols = uiStyleValue(rawProps.columns ?? rawProps.cols, (v) => typeof v === "number"
+        ? `repeat(${v}, minmax(0, 1fr))`
+        : String(v)
+      );
+      if (cols != null) style.gridTemplateColumns = cols;
+    }
+
+    const rows = uiStyleValue(rawProps.rows, (v) => typeof v === "number"
+      ? `repeat(${v}, minmax(0, auto))`
       : String(v)
     );
-    if (cols != null) style.gridTemplateColumns = cols;
-    const align = uiStyleValue(props.align);
+    if (rows != null) style.gridTemplateRows = rows;
+
+    const autoRows = uiStyleValue(rawProps.autoRows, toCssSize);
+    if (autoRows != null) style.gridAutoRows = autoRows;
+
+    const flow = uiStyleValue(rawProps.flow, (v) => {
+      const value = String(v);
+      return rawProps.dense && !value.includes("dense") ? `${value} dense` : value;
+    });
+    if (flow != null) style.gridAutoFlow = flow;
+
+    const areas = uiStyleValue(rawProps.areas, (value) => {
+      if (Array.isArray(value)) {
+        return value.map((row) => `"${Array.isArray(row) ? row.join(" ") : String(row)}"`).join(" ");
+      }
+      return String(value);
+    });
+    if (areas != null) style.gridTemplateAreas = areas;
+
+    const align = uiStyleValue(rawProps.align ?? rawProps.alignItems);
     if (align != null) style.alignItems = align;
-    const justify = uiStyleValue(props.justify);
+    const justify = uiStyleValue(rawProps.justify);
     if (justify != null) style.justifyContent = justify;
+    const justifyItems = uiStyleValue(rawProps.justifyItems);
+    if (justifyItems != null) style.justifyItems = justifyItems;
+    const placeItems = uiStyleValue(rawProps.placeItems);
+    if (placeItems != null) style.placeItems = placeItems;
+    const placeContent = uiStyleValue(rawProps.placeContent);
+    if (placeContent != null) style.placeContent = placeContent;
+    const width = uiStyleValue(rawProps.width, toCssSize);
+    if (width != null) style.width = width;
+    if (uiUnwrap(rawProps.full) === true) style.width = "100%";
+    const minWidth = uiStyleValue(rawProps.minWidth, toCssSize);
+    if (minWidth != null) style.minWidth = minWidth;
+    const maxWidth = uiStyleValue(rawProps.maxWidth, toCssSize);
+    if (maxWidth != null) style.maxWidth = maxWidth;
+    const padding = uiStyleValue(rawProps.padding, toCssSize);
+    if (padding != null) style.padding = padding;
     if (Object.keys(style).length) p.style = style;
 
-    return _.div(p, ...renderSlotToArray(slots, "default", {}, children));
+    const el = _.div(p, ...content);
+    setPropertyProps(el, rawProps);
+    return el;
   };
   if (CMSwift.isDev?.()) {
     UI.meta = UI.meta || {};
     UI.meta.Grid = {
       signature: "UI.Grid(...children) | UI.Grid(props, ...children)",
       props: {
-        gap: "string|number",
         cols: "number|string",
+        columns: "alias di cols",
+        min: "string|number (auto-fit/auto-fill min width)",
+        max: "string|number (max track size, default 1fr)",
+        gap: "string|number",
+        rowGap: "string|number",
+        columnGap: "string|number",
+        colGap: "alias di columnGap",
+        rows: "number|string",
+        autoRows: "string|number",
+        areas: "string|array",
+        flow: "row|column|dense|row dense|column dense",
         align: `stretch|start|center|end`,
+        alignItems: "alias di align",
         justify: `start|center|end|space-between|space-around|space-evenly`,
+        justifyItems: `stretch|start|center|end`,
+        placeItems: "string",
+        placeContent: "string",
         dense: "boolean",
-        slots: "{ default? }",
+        inline: "boolean",
+        debug: "boolean",
+        autoFit: "boolean",
+        autoFill: "boolean",
+        full: "boolean",
+        width: "string|number",
+        minWidth: "string|number",
+        maxWidth: "string|number",
+        padding: "string|number",
+        items: "Array<Node|Object|string>",
+        itemClass: "string",
+        itemStyle: "object",
+        itemProps: "object",
+        empty: "String|Node|Function|Array",
+        slots: "{ default?, item?, empty? }",
         class: "string",
         style: "object"
       },
       slots: {
-        default: "Grid content"
+        default: "Grid content fallback",
+        item: "Render custom di ogni item ({ item, index, count, first, last })",
+        empty: "Empty state della griglia"
       },
       returns: "HTMLDivElement",
-      description: "Griglia base con gap e colonne configurabili."
+      description: "Griglia dichiarativa per layout responsive: supporta children, items/slot item, auto-fit, template custom e empty state."
     };
   }
   // Esempio: CMSwift.ui.Grid({}, CMSwift.ui.GridCol({ span: 12 }, "Col"))
@@ -4205,13 +4373,21 @@
       props.class
     ]);
 
-    const p = CMSwift.omit(props, ["span", "sm", "md", "lg", "auto", "slots", "style"]);
+    const p = CMSwift.omit(props, ["span", "sm", "md", "lg", "auto", "row", "rowSpan", "area", "align", "justify", "place", "slots", "style"]);
     p.class = cls;
 
     const style = { ...(props.style || {}) };
     const toGridSpan = (value) => {
       if (value == null || value === "") return null;
       if (value === "auto") return "auto";
+      if (value === "full") return "1 / -1";
+      const n = Number(value);
+      if (Number.isFinite(n) && n > 0) return `span ${n} / span ${n}`;
+      return String(value);
+    };
+    const toGridRow = (value) => {
+      if (value == null || value === "") return null;
+      if (value === "full") return "1 / -1";
       const n = Number(value);
       if (Number.isFinite(n) && n > 0) return `span ${n} / span ${n}`;
       return String(value);
@@ -4221,12 +4397,24 @@
     const sm = uiStyleValue(props.sm, toGridSpan);
     const md = uiStyleValue(props.md, toGridSpan);
     const lg = uiStyleValue(props.lg, toGridSpan);
+    const rowSpan = uiStyleValue(props.rowSpan, toGridRow);
+    const row = uiStyleValue(props.row, toGridRow);
+    const area = uiStyleValue(props.area);
+    const align = uiStyleValue(props.align);
+    const justify = uiStyleValue(props.justify);
+    const place = uiStyleValue(props.place);
 
     if (uiUnwrap(props.auto) === true) style["--cms-grid-col-base"] = "auto";
     else if (span != null) style["--cms-grid-col-base"] = span;
     if (sm != null) style["--cms-grid-col-sm"] = sm;
     if (md != null) style["--cms-grid-col-md"] = md;
     if (lg != null) style["--cms-grid-col-lg"] = lg;
+    if (rowSpan != null) style.gridRow = rowSpan;
+    else if (row != null) style.gridRow = row;
+    if (area != null) style.gridArea = area;
+    if (align != null) style.alignSelf = align;
+    if (justify != null) style.justifySelf = justify;
+    if (place != null) style.placeSelf = place;
     if (Object.keys(style).length) p.style = style;
 
     return _.div(p, ...renderSlotToArray(slots, "default", {}, children));
@@ -4236,11 +4424,17 @@
     UI.meta.GridCol = {
       signature: "UI.GridCol(...children) | UI.GridCol(props, ...children)",
       props: {
-        span: "number",
-        sm: "number",
-        md: "number",
-        lg: "number",
+        span: "number|string",
+        sm: "number|string",
+        md: "number|string",
+        lg: "number|string",
         auto: "boolean",
+        row: "number|string",
+        rowSpan: "number|string",
+        area: "string",
+        align: "string",
+        justify: "string",
+        place: "string",
         slots: "{ default? }",
         class: "string",
         style: "object"
@@ -4249,7 +4443,7 @@
         default: "Column content"
       },
       returns: "HTMLDivElement",
-      description: "Item per CSS Grid con span responsive e breakpoint sm/md/lg."
+      description: "Item per CSS Grid con span responsive, row span, area e self-alignment."
     };
   }
   // Esempio: CMSwift.ui.GridCol({ span: 6, sm: 12 }, "Colonna")
