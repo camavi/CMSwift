@@ -562,6 +562,40 @@ Stato:
 - http: primo step strutturale chiuso
 - platform: ancora in progress
 
+## Platform / Overlay: contratto iniziale
+
+Area:
+- `CMSwift.overlay.open`
+- `CMSwift.overlay.close`
+- `CMSwift.overlay.closeTop`
+
+### Cosa supporta ora
+
+- root overlay condivisa in `document.body`
+- stack di overlay con z-index incrementale
+- backdrop opzionale
+- chiusura via outside click, backdrop click ed `Escape`
+- focus iniziale e trap focus opzionale
+- positioning base per overlay ancorati
+- lock scroll opzionale
+
+### Correzione fatta in questo step
+
+Cleanup:
+- l'entry salvata nello stack non viene piu clonata prima di completare `_cleanup` e `_positionCleanup`
+- `close(...)` legge ora lo stesso oggetto mutato durante `open(...)`
+- questo rende affidabile la rimozione dei listener globali `mousedown`, `keydown`, `resize`, `scroll`
+
+### Limiti attuali del blocco overlay
+
+- il modulo non ha ancora una demo browser dedicata
+- manca restore focus verso l'elemento attivo prima dell'apertura
+- il positioning ancorato e ancora minimale
+
+Stato:
+- overlay: primo step strutturale chiuso
+- platform: ancora in progress
+
 Fase 5: Meta e modularita
 - mantenere `CMSwift.meta` corto e strutturato
 - usare questo file come documento esteso
@@ -593,3 +627,4 @@ Campi consigliati per ogni modulo:
 - corretto `store.signal(...)` per scope `storage/prefix`, cleanup completo e cache/watcher namespaced
 - corretto il blocco `router` per unmount affidabile, tracing e stato `404`
 - corretto il blocco `http` per bridge auth e API pubblica `request/state`
+- corretto il blocco `overlay` per cleanup reale dei listener e dell'entry stack

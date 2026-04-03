@@ -410,7 +410,12 @@
         isOpen: true,
         anchorEl: opts.anchorEl || null,
         placement: opts.placement || "bottom-start",
-        onClose: typeof opts.onClose === "function" ? opts.onClose : null
+        onClose: typeof opts.onClose === "function" ? opts.onClose : null,
+        overlay: null,
+        panel: null,
+        backdrop: null,
+        _positionCleanup: null,
+        _cleanup: null
       };
 
       const overlay = document.createElement("div");
@@ -438,7 +443,10 @@
       host.appendChild(overlay);
 
       // stack bookkeeping
-      stack.set(id, { ...entry, overlay, panel, backdrop });
+      entry.overlay = overlay;
+      entry.panel = panel;
+      entry.backdrop = backdrop;
+      stack.set(id, entry);
 
       // scroll lock + focus
       if (opts.lockScroll) lockScroll();
