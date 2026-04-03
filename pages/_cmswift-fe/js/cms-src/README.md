@@ -7,6 +7,7 @@ Manifest:
 
 Ordine di build attuale:
 - `00-bootstrap.js`
+- `09-overlay-shared.js`
 - `10-overlay.js`
 - `15-dom-props.js`
 - `16-renderer-shared.js`
@@ -19,12 +20,15 @@ Ordine di build attuale:
 - `32-lifecycle.js`
 - `33-debug-perf.js`
 - `34-rod-devtools.js`
+- `39-store-shared.js`
 - `40-store-core.js`
 - `41-store-extensions.js`
 - `42-plugins.js`
 - `43-auth.js`
+- `43a-http-shared.js`
 - `44-http.js`
 - `45-route-hooks.js`
+- `49-router-shared.js`
 - `50-ui-meta.js`
 - `51-can.js`
 - `52-router.js`

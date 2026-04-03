@@ -85,9 +85,9 @@
       platform: {
         description: "Moduli applicativi nel core: overlay, store, auth, http, router, UI meta.",
         entrypoints: ["CMSwift.overlay", "CMSwift.store", "CMSwift.plugins.auth", "CMSwift.http", "CMSwift.router", "CMSwift.ui.meta"],
-        status: "milestone-1-closed",
+        status: "milestone-2-in-progress",
         knownLimits: [
-          "Il file e molto concentrato e va reso piu modulare.",
+          "Il secondo giro e appena partito: store ha helper interni estratti, ma gli altri moduli platform vanno ancora trattati con lo stesso metodo.",
           "Esiste una demo browser aggregata del blocco platform, ma non ancora demo separate per ogni modulo.",
           "Mancano configurazione pubblica piu coerente e confini piu netti tra auth, http e router.",
           "Il registry UI meta non ha ancora validazione formale del suo shape."

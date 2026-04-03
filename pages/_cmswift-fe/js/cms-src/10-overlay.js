@@ -2,30 +2,15 @@
     let seq = 0;
     const stack = new Map(); // id -> entry
     let root = null;
-    const ensureRoot = () => {
-      if (root && root.isConnected) return root;
-      let el = document.getElementById("cms-overlay-root");
-      if (!el && document?.body) {
-        el = document.createElement("div");
-        el.id = "cms-overlay-root";
-        el.className = "cms-overlay-root";
-        document.body.appendChild(el);
-      }
-      if (!document.body && !el) {
-        CMSwift.ready(() => {
-          let readyEl = document.getElementById("cms-overlay-root");
-          if (!readyEl) {
-            readyEl = document.createElement("div");
-            readyEl.id = "cms-overlay-root";
-            readyEl.className = "cms-overlay-root";
-            document.body.appendChild(readyEl);
-          }
-          root = readyEl;
-        });
-      }
-      root = el;
-      return root;
-    };
+    const {
+      ensureRoot: ensureOverlayRoot,
+      focusFirst,
+      trapFocus,
+      applyAnchoredPosition
+    } = CMSwift._overlayShared;
+    const ensureRoot = () => ensureOverlayRoot(() => root, (nextRoot) => {
+      root = nextRoot;
+    });
 
     let scrollLockCount = 0;
     const lockScroll = () => {
@@ -45,44 +30,6 @@
       let top = null;
       for (const e of stack.values()) top = e; // insertion order
       return top;
-    };
-
-    const focusFirst = (container) => {
-      const sel = [
-        "button:not([disabled])",
-        "[href]",
-        "input:not([disabled])",
-        "select:not([disabled])",
-        "textarea:not([disabled])",
-        "[tabindex]:not([tabindex='-1'])"
-      ].join(",");
-      const node = container.querySelector(sel);
-      node?.focus?.();
-    };
-
-    const trapFocus = (e, container) => {
-      if (e.key !== "Tab") return;
-      const sel = [
-        "button:not([disabled])",
-        "[href]",
-        "input:not([disabled])",
-        "select:not([disabled])",
-        "textarea:not([disabled])",
-        "[tabindex]:not([tabindex='-1'])"
-      ].join(",");
-      const nodes = Array.from(container.querySelectorAll(sel)).filter(n => n.offsetParent !== null);
-      if (!nodes.length) return;
-      const first = nodes[0];
-      const last = nodes[nodes.length - 1];
-      const active = document.activeElement;
-
-      if (e.shiftKey && active === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && active === last) {
-        e.preventDefault();
-        first.focus();
-      }
     };
 
     const open = (content, opts = {}) => {
@@ -138,21 +85,7 @@
 
       // positioning (for menus/tooltips)
       const position = () => {
-        if (!opts.anchorEl) return;
-        const a = opts.anchorEl;
-        const r = a.getBoundingClientRect();
-        const pr = panel.getBoundingClientRect();
-
-        // naive placement (good enough, you can improve later)
-        let top = r.bottom + (opts.offsetY ?? 8);
-        let left = r.left + (opts.offsetX ?? 0);
-
-        if (opts.placement?.startsWith("top")) top = r.top - pr.height - (opts.offsetY ?? 8);
-        if (opts.placement?.includes("end")) left = r.right - pr.width;
-
-        panel.style.position = "fixed";
-        panel.style.top = `${Math.max(8, Math.min(top, window.innerHeight - pr.height - 8))}px`;
-        panel.style.left = `${Math.max(8, Math.min(left, window.innerWidth - pr.width - 8))}px`;
+        applyAnchoredPosition(panel, opts);
       };
 
       if (opts.anchorEl) {

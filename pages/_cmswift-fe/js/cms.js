@@ -85,9 +85,9 @@
       platform: {
         description: "Moduli applicativi nel core: overlay, store, auth, http, router, UI meta.",
         entrypoints: ["CMSwift.overlay", "CMSwift.store", "CMSwift.plugins.auth", "CMSwift.http", "CMSwift.router", "CMSwift.ui.meta"],
-        status: "milestone-1-closed",
+        status: "milestone-2-in-progress",
         knownLimits: [
-          "Il file e molto concentrato e va reso piu modulare.",
+          "Il secondo giro e appena partito: store ha helper interni estratti, ma gli altri moduli platform vanno ancora trattati con lo stesso metodo.",
           "Esiste una demo browser aggregata del blocco platform, ma non ancora demo separate per ogni modulo.",
           "Mancano configurazione pubblica piu coerente e confini piu netti tra auth, http e router.",
           "Il registry UI meta non ha ancora validazione formale del suo shape."
@@ -387,12 +387,23 @@
 
     return { signal, effect, computed, untracked, batch };
   })();
-  CMSwift.overlay = (() => {
-    let seq = 0;
-    const stack = new Map(); // id -> entry
-    let root = null;
-    const ensureRoot = () => {
-      if (root && root.isConnected) return root;
+  // ===============================
+  // Overlay shared helpers
+  // ===============================
+  CMSwift._overlayShared = (() => {
+    const focusSelector = [
+      "button:not([disabled])",
+      "[href]",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      "[tabindex]:not([tabindex='-1'])"
+    ].join(",");
+
+    function ensureRoot(getRoot, setRoot) {
+      const currentRoot = getRoot();
+      if (currentRoot && currentRoot.isConnected) return currentRoot;
+
       let el = document.getElementById("cms-overlay-root");
       if (!el && document?.body) {
         el = document.createElement("div");
@@ -400,6 +411,7 @@
         el.className = "cms-overlay-root";
         document.body.appendChild(el);
       }
+
       if (!document.body && !el) {
         CMSwift.ready(() => {
           let readyEl = document.getElementById("cms-overlay-root");
@@ -409,12 +421,74 @@
             readyEl.className = "cms-overlay-root";
             document.body.appendChild(readyEl);
           }
-          root = readyEl;
+          setRoot(readyEl);
         });
       }
-      root = el;
-      return root;
+
+      setRoot(el);
+      return el;
+    }
+
+    function focusFirst(container) {
+      const node = container.querySelector(focusSelector);
+      node?.focus?.();
+    }
+
+    function trapFocus(event, container) {
+      if (event.key !== "Tab") return;
+      const nodes = Array.from(container.querySelectorAll(focusSelector)).filter((node) => node.offsetParent !== null);
+      if (!nodes.length) return;
+
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    function applyAnchoredPosition(panel, opts) {
+      if (!opts.anchorEl) return;
+
+      const anchorRect = opts.anchorEl.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+
+      let top = anchorRect.bottom + (opts.offsetY ?? 8);
+      let left = anchorRect.left + (opts.offsetX ?? 0);
+
+      if (opts.placement?.startsWith("top")) top = anchorRect.top - panelRect.height - (opts.offsetY ?? 8);
+      if (opts.placement?.includes("end")) left = anchorRect.right - panelRect.width;
+
+      panel.style.position = "fixed";
+      panel.style.top = `${Math.max(8, Math.min(top, window.innerHeight - panelRect.height - 8))}px`;
+      panel.style.left = `${Math.max(8, Math.min(left, window.innerWidth - panelRect.width - 8))}px`;
+    }
+
+    return {
+      ensureRoot,
+      focusFirst,
+      trapFocus,
+      applyAnchoredPosition
     };
+  })();
+  CMSwift.overlay = (() => {
+    let seq = 0;
+    const stack = new Map(); // id -> entry
+    let root = null;
+    const {
+      ensureRoot: ensureOverlayRoot,
+      focusFirst,
+      trapFocus,
+      applyAnchoredPosition
+    } = CMSwift._overlayShared;
+    const ensureRoot = () => ensureOverlayRoot(() => root, (nextRoot) => {
+      root = nextRoot;
+    });
 
     let scrollLockCount = 0;
     const lockScroll = () => {
@@ -434,44 +508,6 @@
       let top = null;
       for (const e of stack.values()) top = e; // insertion order
       return top;
-    };
-
-    const focusFirst = (container) => {
-      const sel = [
-        "button:not([disabled])",
-        "[href]",
-        "input:not([disabled])",
-        "select:not([disabled])",
-        "textarea:not([disabled])",
-        "[tabindex]:not([tabindex='-1'])"
-      ].join(",");
-      const node = container.querySelector(sel);
-      node?.focus?.();
-    };
-
-    const trapFocus = (e, container) => {
-      if (e.key !== "Tab") return;
-      const sel = [
-        "button:not([disabled])",
-        "[href]",
-        "input:not([disabled])",
-        "select:not([disabled])",
-        "textarea:not([disabled])",
-        "[tabindex]:not([tabindex='-1'])"
-      ].join(",");
-      const nodes = Array.from(container.querySelectorAll(sel)).filter(n => n.offsetParent !== null);
-      if (!nodes.length) return;
-      const first = nodes[0];
-      const last = nodes[nodes.length - 1];
-      const active = document.activeElement;
-
-      if (e.shiftKey && active === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && active === last) {
-        e.preventDefault();
-        first.focus();
-      }
     };
 
     const open = (content, opts = {}) => {
@@ -527,21 +563,7 @@
 
       // positioning (for menus/tooltips)
       const position = () => {
-        if (!opts.anchorEl) return;
-        const a = opts.anchorEl;
-        const r = a.getBoundingClientRect();
-        const pr = panel.getBoundingClientRect();
-
-        // naive placement (good enough, you can improve later)
-        let top = r.bottom + (opts.offsetY ?? 8);
-        let left = r.left + (opts.offsetX ?? 0);
-
-        if (opts.placement?.startsWith("top")) top = r.top - pr.height - (opts.offsetY ?? 8);
-        if (opts.placement?.includes("end")) left = r.right - pr.width;
-
-        panel.style.position = "fixed";
-        panel.style.top = `${Math.max(8, Math.min(top, window.innerHeight - pr.height - 8))}px`;
-        panel.style.left = `${Math.max(8, Math.min(left, window.innerWidth - pr.width - 8))}px`;
+        applyAnchoredPosition(panel, opts);
       };
 
       if (opts.anchorEl) {
@@ -2477,6 +2499,66 @@
     return all.length;
   };
   // ===============================
+  // Store shared helpers
+  // ===============================
+  CMSwift._storeShared = (() => {
+    function scopeId(scope) {
+      return `${scope.storage}::${scope.prefix}`;
+    }
+
+    function createScopeTools(config, knownScopes) {
+      function getScope(opts = {}) {
+        const scope = {
+          storage: opts.storage ?? config.storage,
+          prefix: opts.prefix ?? config.prefix
+        };
+        knownScopes.set(scopeId(scope), scope);
+        return scope;
+      }
+
+      function getStorage(scope = null) {
+        const mode = typeof scope === "string" ? scope : (scope?.storage ?? config.storage);
+        return mode === "session" ? window.sessionStorage : window.localStorage;
+      }
+
+      function fullKey(key, scope = null) {
+        const resolved = scope || getScope();
+        return resolved.prefix + key;
+      }
+
+      function channelKey(key, scope = null) {
+        const resolved = scope || getScope();
+        return `${scopeId(resolved)}::${key}`;
+      }
+
+      return { getScope, getStorage, fullKey, channelKey };
+    }
+
+    function safeParse(str) {
+      try { return JSON.parse(str); } catch { return undefined; }
+    }
+
+    function safeStringify(value) {
+      try { return JSON.stringify(value); } catch { return undefined; }
+    }
+
+    function clearScopedMapEntries(scope, ...maps) {
+      const prefix = `${scope.storage}::${scope.prefix}::`;
+      for (const map of maps) {
+        for (const id of Array.from(map.keys())) {
+          if (id.startsWith(prefix)) map.delete(id);
+        }
+      }
+    }
+
+    return {
+      createScopeTools,
+      safeParse,
+      safeStringify,
+      clearScopedMapEntries
+    };
+  })();
+  // ===============================
   // CMSwift.store v1 (persisted reactive state)
   // ===============================
   CMSwift.store = (() => {
@@ -2492,38 +2574,18 @@
     const pendingWrites = new Map();// channelKey -> { key, scope }
     const knownScopes = new Map();  // scopeId -> { storage, prefix }
     let writeQueued = false;
-
-    function getScope(opts = {}) {
-      const scope = {
-        storage: opts.storage ?? config.storage,
-        prefix: opts.prefix ?? config.prefix
-      };
-      knownScopes.set(`${scope.storage}::${scope.prefix}`, scope);
-      return scope;
-    }
-
-    function getStorage(scope = null) {
-      const mode = typeof scope === "string" ? scope : (scope?.storage ?? config.storage);
-      return mode === "session" ? window.sessionStorage : window.localStorage;
-    }
-
-    function fullKey(key, scope = null) {
-      const resolved = scope || getScope();
-      return resolved.prefix + key;
-    }
-
-    function channelKey(key, scope = null) {
-      const resolved = scope || getScope();
-      return `${resolved.storage}::${resolved.prefix}::${key}`;
-    }
-
-    function safeParse(str) {
-      try { return JSON.parse(str); } catch { return undefined; }
-    }
-
-    function safeStringify(v) {
-      try { return JSON.stringify(v); } catch { return undefined; }
-    }
+    const {
+      createScopeTools,
+      safeParse,
+      safeStringify,
+      clearScopedMapEntries
+    } = CMSwift._storeShared;
+    const {
+      getScope,
+      getStorage,
+      fullKey,
+      channelKey
+    } = createScopeTools(config, knownScopes);
 
     function emit(key, value, scope = null) {
       const resolved = scope || getScope();
@@ -2614,15 +2676,7 @@
       }
       for (const k of keys) st.removeItem(k);
 
-      for (const id of Array.from(mem.keys())) {
-        if (id.startsWith(`${scope.storage}::${scope.prefix}::`)) mem.delete(id);
-      }
-      for (const id of Array.from(pendingWrites.keys())) {
-        if (id.startsWith(`${scope.storage}::${scope.prefix}::`)) pendingWrites.delete(id);
-      }
-      for (const id of Array.from(watchers.keys())) {
-        if (id.startsWith(`${scope.storage}::${scope.prefix}::`)) watchers.delete(id);
-      }
+      clearScopedMapEntries(scope, mem, pendingWrites, watchers);
     }
 
     function watch(key, fn, scope = null) {
@@ -3366,93 +3420,252 @@
     }
   };
   // ===============================
+  // HTTP shared helpers
+  // ===============================
+  CMSwift._httpShared = (() => {
+    function createReactiveState(CMSwift) {
+      const reactive = CMSwift.reactive;
+      const [getInFlight, setInFlight] = reactive.signal(0);
+      const [getStatus, setStatus] = reactive.signal("idle");
+      const [getLastRequest, setLastRequest] = reactive.signal(null);
+      const [getLastResponse, setLastResponse] = reactive.signal(null);
+      const [getLastError, setLastError] = reactive.signal(null);
+      const [getLastDuration, setLastDuration] = reactive.signal(0);
+      const [getLastUpdated, setLastUpdated] = reactive.signal(0);
+      let lastStartId = 0;
+
+      function markStart(req) {
+        const id = ++lastStartId;
+        const ts = Date.now();
+        setInFlight(getInFlight() + 1);
+        setStatus("pending");
+        setLastError(null);
+        setLastResponse(null);
+        setLastRequest({
+          id,
+          url: req.url,
+          method: req.method,
+          meta: req.meta,
+          timeout: req.timeout,
+          retry: req.retry,
+          startedAt: ts
+        });
+        setLastUpdated(ts);
+        return id;
+      }
+
+      function markEnd(id, res, err, durationMs) {
+        const ts = Date.now();
+        setInFlight(Math.max(0, getInFlight() - 1));
+        if (id === lastStartId) {
+          if (err) {
+            setStatus("error");
+            setLastError(err);
+            setLastResponse(null);
+          } else if (res) {
+            setStatus("success");
+            setLastError(null);
+            setLastResponse({
+              id,
+              status: res.status,
+              ok: res.ok,
+              headers: res.headers,
+              url: res.url,
+              receivedAt: ts,
+              raw: res
+            });
+          } else {
+            setStatus("idle");
+            setLastError(null);
+            setLastResponse(null);
+          }
+          setLastDuration(Math.max(0, Number(durationMs || 0)));
+        }
+        setLastUpdated(ts);
+      }
+
+      const state = {
+        inFlight: getInFlight,
+        status: getStatus,
+        isLoading: CMSwift.store?.computed
+          ? CMSwift.store.computed(() => getInFlight() > 0)
+          : () => getInFlight() > 0,
+        lastRequest: getLastRequest,
+        lastResponse: getLastResponse,
+        lastError: getLastError,
+        lastDuration: getLastDuration,
+        lastUpdated: getLastUpdated,
+        reset() {
+          setInFlight(0);
+          setStatus("idle");
+          setLastRequest(null);
+          setLastResponse(null);
+          setLastError(null);
+          setLastDuration(0);
+          setLastUpdated(Date.now());
+        }
+      };
+
+      return { state, markStart, markEnd };
+    }
+
+    function joinURL(base, path) {
+      if (!base) return path;
+      if (/^https?:\/\//i.test(path)) return path;
+      const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base;
+      const normalizedPath = path.startsWith("/") ? path : "/" + path;
+      return normalizedBase + normalizedPath;
+    }
+
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    function isRetryable(err, res) {
+      if (err) return true;
+      if (!res) return false;
+      return res.status === 429 || (res.status >= 500 && res.status <= 599);
+    }
+
+    function makeAbort(timeoutMs, externalSignal) {
+      if (!timeoutMs && !externalSignal) return { signal: undefined, cancel: () => { } };
+
+      const controller = new AbortController();
+      const signal = controller.signal;
+
+      let timeoutId = null;
+      if (timeoutMs > 0) {
+        timeoutId = setTimeout(() => controller.abort(new Error("timeout")), timeoutMs);
+      }
+
+      const onAbort = () => controller.abort(externalSignal.reason || new Error("aborted"));
+      if (externalSignal) {
+        if (externalSignal.aborted) onAbort();
+        else externalSignal.addEventListener("abort", onAbort, { once: true });
+      }
+
+      const cancel = () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        if (externalSignal) externalSignal.removeEventListener?.("abort", onAbort);
+      };
+
+      return { signal, cancel };
+    }
+
+    function normalizeRequest(configHTTP, input, init = {}) {
+      const url = typeof input === "string" ? joinURL(configHTTP.baseURL, input) : input;
+      const method = (init.method || "GET").toUpperCase();
+      const headers = new Headers(configHTTP.headers);
+      if (init.headers) new Headers(init.headers).forEach((value, key) => headers.set(key, value));
+
+      return {
+        url,
+        method,
+        headers,
+        body: init.body,
+        credentials: init.credentials ?? configHTTP.credentials,
+        signal: init.signal,
+        timeout: init.timeout ?? configHTTP.timeout,
+        retry: init.retry ?? configHTTP.retry,
+        meta: init.meta || {}
+      };
+    }
+
+    async function runHooks(set, ...args) {
+      let current = args[0];
+      for (const fn of set) {
+        current = (await fn(current, ...args.slice(1))) ?? current;
+      }
+      return current;
+    }
+
+    function wrapResponse(res, req) {
+      return {
+        ok: res.ok,
+        status: res.status,
+        headers: res.headers,
+        raw: res,
+        req,
+
+        async json() {
+          let data = null;
+          let error = null;
+          try { data = await res.json(); } catch { data = null; }
+          if (!res.ok) error = data ?? { status: res.status };
+          return { data, error, ok: res.ok, status: res.status };
+        },
+
+        async jsonStrict() {
+          const { data, error } = await this.json();
+          if (error) {
+            const e = new Error(`HTTP error ${res.status} ${req?.method || ""} ${req?.url || ""}`.trim());
+            e.status = res.status;
+            e.data = data;
+            e.req = {
+              url: req?.url,
+              method: req?.method,
+              meta: req?.meta
+            };
+            throw e;
+          }
+          return { data, ok: true, status: res.status };
+        },
+
+        async text() {
+          let text = "";
+          try { text = await res.text(); } catch { }
+          return { text, ok: res.ok, status: res.status };
+        },
+
+        async textStrict() {
+          const out = await this.text();
+          if (!out.ok) {
+            const e = new Error("HTTP error " + res.status);
+            e.status = res.status;
+            e.text = out.text;
+            throw e;
+          }
+          return out;
+        }
+      };
+    }
+
+    function withJSON(request, method, url, body, init = {}) {
+      const headers = new Headers(init.headers || {});
+      if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+      return request(url, {
+        ...init,
+        method,
+        headers,
+        body: body == null ? undefined : JSON.stringify(body)
+      });
+    }
+
+    return {
+      createReactiveState,
+      joinURL,
+      sleep,
+      isRetryable,
+      makeAbort,
+      normalizeRequest,
+      runHooks,
+      wrapResponse,
+      withJSON
+    };
+  })();
+  // ===============================
   // HTTP (fetch wrapper)
   // ===============================
-  function createHttpReactiveState() {
-    const reactive = CMSwift.reactive;
-    const [getInFlight, setInFlight] = reactive.signal(0);
-    const [getStatus, setStatus] = reactive.signal("idle");
-    const [getLastRequest, setLastRequest] = reactive.signal(null);
-    const [getLastResponse, setLastResponse] = reactive.signal(null);
-    const [getLastError, setLastError] = reactive.signal(null);
-    const [getLastDuration, setLastDuration] = reactive.signal(0);
-    const [getLastUpdated, setLastUpdated] = reactive.signal(0);
-    let lastStartId = 0;
-
-    function markStart(req) {
-      const id = ++lastStartId;
-      const ts = Date.now();
-      setInFlight(getInFlight() + 1);
-      setStatus("pending");
-      setLastError(null);
-      setLastResponse(null);
-      setLastRequest({
-        id,
-        url: req.url,
-        method: req.method,
-        meta: req.meta,
-        timeout: req.timeout,
-        retry: req.retry,
-        startedAt: ts
-      });
-      setLastUpdated(ts);
-      return id;
-    }
-
-    function markEnd(id, res, err, durationMs) {
-      const ts = Date.now();
-      setInFlight(Math.max(0, getInFlight() - 1));
-      if (id === lastStartId) {
-        if (err) {
-          setStatus("error");
-          setLastError(err);
-          setLastResponse(null);
-        } else if (res) {
-          setStatus("success");
-          setLastError(null);
-          setLastResponse({
-            id,
-            status: res.status,
-            ok: res.ok,
-            headers: res.headers,
-            url: res.url,
-            receivedAt: ts,
-            raw: res
-          });
-        } else {
-          setStatus("idle");
-          setLastError(null);
-          setLastResponse(null);
-        }
-        setLastDuration(Math.max(0, Number(durationMs || 0)));
-      }
-      setLastUpdated(ts);
-    }
-
-    const state = {
-      inFlight: getInFlight,
-      status: getStatus,
-      isLoading: CMSwift.store?.computed
-        ? CMSwift.store.computed(() => getInFlight() > 0)
-        : () => getInFlight() > 0,
-      lastRequest: getLastRequest,
-      lastResponse: getLastResponse,
-      lastError: getLastError,
-      lastDuration: getLastDuration,
-      lastUpdated: getLastUpdated,
-      reset() {
-        setInFlight(0);
-        setStatus("idle");
-        setLastRequest(null);
-        setLastResponse(null);
-        setLastError(null);
-        setLastDuration(0);
-        setLastUpdated(Date.now());
-      }
-    };
-
-    return { state, markStart, markEnd };
-  }
+  const {
+    createReactiveState: createHttpReactiveState,
+    sleep,
+    isRetryable,
+    makeAbort,
+    normalizeRequest,
+    runHooks,
+    wrapResponse,
+    withJSON
+  } = CMSwift._httpShared;
   const configHTTP = {
     baseURL: CMSwift_setting?.http?.baseURL || "",
     timeout: CMSwift_setting?.http?.timeout ?? 0, // ms, 0 = no timeout
@@ -3461,7 +3674,7 @@
     credentials: CMSwift_setting?.http?.credentials, // "include" etc (optional)
     debug: CMSwift_setting?.debug ?? false
   };
-  const httpState = createHttpReactiveState();
+  const httpState = createHttpReactiveState(CMSwift);
   const now = () => (typeof performance !== "undefined" && performance.now ? performance.now() : Date.now());
 
   const hooksHTTP = {
@@ -3469,81 +3682,6 @@
     afterResponse: new Set(),  // (res, req) => res
     onError: new Set()         // (err, req) => void
   };
-
-  function joinURL(base, path) {
-    if (!base) return path;
-    if (/^https?:\/\//i.test(path)) return path;
-    const b = base.endsWith("/") ? base.slice(0, -1) : base;
-    const p = path.startsWith("/") ? path : "/" + path;
-    return b + p;
-  }
-
-  function sleep(ms) {
-    return new Promise(r => setTimeout(r, ms));
-  }
-
-  function isRetryable(err, res) {
-    // retry per network error o 5xx o 429
-    if (err) return true;
-    if (!res) return false;
-    return res.status === 429 || (res.status >= 500 && res.status <= 599);
-  }
-
-  function makeAbort(timeoutMs, externalSignal) {
-    if (!timeoutMs && !externalSignal) return { signal: undefined, cancel: () => { } };
-
-    const controller = new AbortController();
-    const signal = controller.signal;
-
-    let t = null;
-    if (timeoutMs > 0) {
-      t = setTimeout(() => controller.abort(new Error("timeout")), timeoutMs);
-    }
-
-    // bridge external abort
-    const onAbort = () => controller.abort(externalSignal.reason || new Error("aborted"));
-    if (externalSignal) {
-      if (externalSignal.aborted) onAbort();
-      else externalSignal.addEventListener("abort", onAbort, { once: true });
-    }
-
-    const cancel = () => {
-      if (t) clearTimeout(t);
-      if (externalSignal) externalSignal.removeEventListener?.("abort", onAbort);
-    };
-
-    return { signal, cancel };
-  }
-
-  function normalizeRequest(input, init = {}) {
-    const url = typeof input === "string" ? joinURL(configHTTP.baseURL, input) : input;
-    const method = (init.method || "GET").toUpperCase();
-
-    const headers = new Headers(configHTTP.headers);
-    if (init.headers) new Headers(init.headers).forEach((v, k) => headers.set(k, v));
-
-    const req = {
-      url,
-      method,
-      headers,
-      body: init.body,
-      credentials: init.credentials ?? configHTTP.credentials,
-      signal: init.signal,
-      timeout: init.timeout ?? configHTTP.timeout,
-      retry: init.retry ?? configHTTP.retry,
-      meta: init.meta || {}
-    };
-
-    return req;
-  }
-
-  async function runHooks(set, ...args) {
-    let x = args[0];
-    for (const fn of set) {
-      x = (await fn(x, ...args.slice(1))) ?? x;
-    }
-    return x;
-  }
 
   async function coreFetch(req) {
     // Auth integration: se esiste auth.fetch usa quello
@@ -3561,7 +3699,7 @@
   }
 
   async function request(input, init = {}) {
-    let req = normalizeRequest(input, init);
+    let req = normalizeRequest(configHTTP, input, init);
 
     // hooksHTTP pre
     req = await runHooks(hooksHTTP.beforeRequest, req);
@@ -3645,87 +3783,21 @@
     return wrapResponse(lastRes, req);
   }
 
-  function wrapResponse(res, req) {
-    // wrapper comodo: res.jsonStrict(), res.textStrict()
-    return {
-      ok: res.ok,
-      status: res.status,
-      headers: res.headers,
-      raw: res,
-      req,
-
-      async json() {
-        // non lancia su !ok, ritorna {data, error}
-        let data = null;
-        let error = null;
-        try { data = await res.json(); } catch { data = null; }
-        if (!res.ok) error = data ?? { status: res.status };
-        return { data, error, ok: res.ok, status: res.status };
-      },
-
-      async jsonStrict() {
-        const { data, error } = await this.json();
-
-        if (error) {
-          const e = new Error(`HTTP error ${res.status} ${req?.method || ""} ${req?.url || ""}`.trim());
-          e.status = res.status;
-          e.data = data;
-          e.req = {
-            url: req?.url,
-            method: req?.method,
-            meta: req?.meta
-          };
-          throw e;
-        }
-
-        return { data, ok: true, status: res.status };
-      },
-
-      async text() {
-        let t = "";
-        try { t = await res.text(); } catch { }
-        return { text: t, ok: res.ok, status: res.status };
-      },
-
-      async textStrict() {
-        const out = await this.text();
-        if (!out.ok) {
-          const e = new Error("HTTP error " + res.status);
-          e.status = res.status;
-          e.text = out.text;
-          throw e;
-        }
-        return out;
-      }
-    };
-  }
-
   // shortcuts
-  function withJSON(method, url, body, init = {}) {
-    const headers = new Headers(init.headers || {});
-    if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
-    return request(url, {
-      ...init,
-      method,
-      headers,
-      body: body == null ? undefined : JSON.stringify(body)
-    });
-  }
-
   CMSwift.http = {};
   CMSwift.http.request = request;
   CMSwift.http.state = () => httpState.state;
   CMSwift.http.get = (url, init) => request(url, { ...init, method: "GET" });
   CMSwift.http.del = (url, init) => request(url, { ...init, method: "DELETE" });
-  CMSwift.http.post = (url, body, init) => withJSON("POST", url, body, init);
-  CMSwift.http.put = (url, body, init) => withJSON("PUT", url, body, init);
-  CMSwift.http.patch = (url, body, init) => withJSON("PATCH", url, body, init);
+  CMSwift.http.post = (url, body, init) => withJSON(request, "POST", url, body, init);
+  CMSwift.http.put = (url, body, init) => withJSON(request, "PUT", url, body, init);
+  CMSwift.http.patch = (url, body, init) => withJSON(request, "PATCH", url, body, init);
 
   CMSwift.http.getJSON = async (url, init) => (await request(url, { ...init, method: "GET" })).jsonStrict();
   CMSwift.http.delJSON = async (url, init) => (await request(url, { ...init, method: "DELETE" })).jsonStrict();
-  CMSwift.http.postJSON = async (url, body, init) => (await withJSON("POST", url, body, init)).jsonStrict();
-  CMSwift.http.putJSON = async (url, body, init) => (await withJSON("PUT", url, body, init)).jsonStrict();
-  CMSwift.http.patchJSON = async (url, body, init) => (await withJSON("PATCH", url, body, init)).jsonStrict();
+  CMSwift.http.postJSON = async (url, body, init) => (await withJSON(request, "POST", url, body, init)).jsonStrict();
+  CMSwift.http.putJSON = async (url, body, init) => (await withJSON(request, "PUT", url, body, init)).jsonStrict();
+  CMSwift.http.patchJSON = async (url, body, init) => (await withJSON(request, "PATCH", url, body, init)).jsonStrict();
 
   CMSwift.http.onBefore = function (fn) { hooksHTTP.beforeRequest.add(fn); return () => hooksHTTP.beforeRequest.delete(fn); };
   CMSwift.http.onAfter = function (fn) { hooksHTTP.afterResponse.add(fn); return () => hooksHTTP.afterResponse.delete(fn); };
@@ -3789,6 +3861,105 @@
   // ===============================
   // Permission-based rendering helpers
   // ===============================
+  // ===============================
+  // Router shared helpers
+  // ===============================
+  CMSwift._routerShared = (() => {
+    function normalizePath(path) {
+      if (!path) return "/";
+      if (!path.startsWith("/")) path = "/" + path;
+      if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
+      return path;
+    }
+
+    function stripBase(path, base = "") {
+      if (base && path.startsWith(base)) {
+        const next = path.slice(base.length) || "/";
+        return normalizePath(next);
+      }
+      return normalizePath(path);
+    }
+
+    function compilePattern(pattern) {
+      pattern = normalizePath(pattern);
+      const keys = [];
+      const regexStr = pattern
+        .replace(/([.+*?=^!${}()[\]|/\\])/g, "\\$1")
+        .replace(/\\\/:([A-Za-z0-9_]+)/g, (_, key) => {
+          keys.push(key);
+          return "\\/([^\\/]+)";
+        });
+      return {
+        pattern,
+        regex: new RegExp("^" + regexStr + "$"),
+        keys
+      };
+    }
+
+    function parseQuery(search) {
+      const query = {};
+      const params = new URLSearchParams(search || "");
+      params.forEach((value, key) => {
+        if (query[key] === undefined) query[key] = value;
+        else if (Array.isArray(query[key])) query[key].push(value);
+        else query[key] = [query[key], value];
+      });
+      return query;
+    }
+
+    function flattenRoutes(routes) {
+      const all = [];
+      for (const route of routes) {
+        all.push({ ...route, _parent: null });
+        if (route.children && route.children.length) {
+          for (const child of route.children) {
+            all.push({ ...child, _parent: route });
+          }
+        }
+      }
+      all.sort((a, b) => b.path.length - a.path.length);
+      return all;
+    }
+
+    function matchRoute(pathname, routes) {
+      const path = normalizePath(pathname);
+      const all = flattenRoutes(routes);
+
+      for (const route of all) {
+        const match = route._compiled.regex.exec(path);
+        if (!match) continue;
+
+        const params = {};
+        route._compiled.keys.forEach((key, index) => {
+          params[key] = decodeURIComponent(match[index + 1]);
+        });
+
+        return { route, params, parent: route._parent || null };
+      }
+      return null;
+    }
+
+    function pushHistoryEntry(history, ctx, limit = 50) {
+      history.push({
+        at: Date.now(),
+        path: ctx.path,
+        params: ctx.params,
+        query: ctx.query,
+        hash: ctx.hash
+      });
+      if (history.length > limit) history.shift();
+    }
+
+    return {
+      normalizePath,
+      stripBase,
+      compilePattern,
+      parseQuery,
+      flattenRoutes,
+      matchRoute,
+      pushHistoryEntry
+    };
+  })();
   CMSwift.ui = CMSwift.ui || {};
   CMSwift.ui.meta = CMSwift.ui.meta || {};
 
@@ -4071,6 +4242,14 @@
     let _currentCtx = null;
     let _history = [];
     let _tracing = false;
+    const {
+      normalizePath,
+      stripBase: stripBasePath,
+      compilePattern,
+      parseQuery,
+      matchRoute,
+      pushHistoryEntry
+    } = CMSwift._routerShared;
 
     const meta = {
       setOutlet: { description: "imposta il contenitore del router" },
@@ -4149,76 +4328,8 @@
       mode = m || "history";
     }
 
-    function normalizePath(path) {
-      // garantisce leading slash e rimuove trailing slash (tranne root)
-      if (!path) return "/";
-      if (!path.startsWith("/")) path = "/" + path;
-      if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
-      return path;
-    }
-
     function stripBase(path) {
-      if (base && path.startsWith(base)) {
-        const p = path.slice(base.length) || "/";
-        return normalizePath(p);
-      }
-      return normalizePath(path);
-    }
-
-    function compilePattern(pattern) {
-      // "/users/:id" -> regex + keys
-      pattern = normalizePath(pattern);
-      const keys = [];
-      const regexStr = pattern
-        .replace(/([.+*?=^!${}()[\]|/\\])/g, "\\$1") // escape regex, preserve :params
-        .replace(/\\\/:([A-Za-z0-9_]+)/g, (_, k) => {
-          keys.push(k);
-          return "\\/([^\\/]+)";
-        });
-      const regex = new RegExp("^" + regexStr + "$");
-      return { pattern, regex, keys };
-    }
-
-    function parseQuery(search) {
-      const q = {};
-      const sp = new URLSearchParams(search || "");
-      sp.forEach((v, k) => {
-        if (q[k] === undefined) q[k] = v;
-        else if (Array.isArray(q[k])) q[k].push(v);
-        else q[k] = [q[k], v];
-      });
-      return q;
-    }
-
-    function flattenRoutes() {
-      const all = [];
-      for (const r of routes) {
-        all.push({ ...r, _parent: null });
-        if (r.children && r.children.length) {
-          for (const c of r.children) {
-            all.push({ ...c, _parent: r });
-          }
-        }
-      }
-      // ordina: più specifiche prima (path più lungo)
-      all.sort((a, b) => b.path.length - a.path.length);
-      return all;
-    }
-
-    function match(pathname) {
-      const path = normalizePath(pathname);
-      const all = flattenRoutes();
-
-      for (const r of all) {
-        const m = r._compiled.regex.exec(path);
-        if (!m) continue;
-
-        const params = {};
-        r._compiled.keys.forEach((k, i) => (params[k] = decodeURIComponent(m[i + 1])));
-
-        return { route: r, params, parent: r._parent || null };
-      }
-      return null;
+      return stripBasePath(path, base);
     }
 
     function isActive(path) {
@@ -4252,7 +4363,7 @@
       updateURL(url, replace);
 
       const pathname = stripBase(url.pathname);
-      const m = match(pathname);
+      const m = matchRoute(pathname, routes);
 
       const ctx = {
         path: pathname,
@@ -4290,14 +4401,7 @@
         }
         notifyRoute(ctx);
         _currentCtx = ctx;
-        _history.push({
-          at: Date.now(),
-          path: ctx.path,
-          params: ctx.params,
-          query: ctx.query,
-          hash: ctx.hash
-        });
-        if (_history.length > 50) _history.shift();
+        pushHistoryEntry(_history, ctx);
         return;
       }
 
@@ -4347,14 +4451,7 @@
       notifyRoute(ctx);
       // devtools state update
       _currentCtx = ctx;
-      _history.push({
-        at: Date.now(),
-        path: ctx.path,
-        params: ctx.params,
-        query: ctx.query,
-        hash: ctx.hash
-      });
-      if (_history.length > 50) _history.shift(); // cap
+      pushHistoryEntry(_history, ctx);
 
     }
 
@@ -4460,7 +4557,6 @@
     let _routeListeners = new Set();
 
     function notifyRoute(ctx) {
-      if (_history.length > 50) _history.shift(); // cap
       for (const fn of _routeListeners) {
         try { fn(ctx); } catch (e) { console.error("[router] listener error:", e); }
       }

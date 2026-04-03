@@ -18,7 +18,7 @@ Stato generale oggi:
 - reactive core: milestone 2 chiusa
 - rod: milestone 2 chiusa
 - lifecycle / mount / cleanup: milestone 2 chiusa
-- moduli platform: milestone 1 chiusa
+- moduli platform: milestone 2 in corso
 - test automatici core: prima base attiva con `node:test`
 
 1. Renderer DOM e bridge props
@@ -50,7 +50,7 @@ Stato generale oggi:
 - area: overlay, store, auth, http, router, `CMSwift.ui.meta`
 - motivo: sono utili, ma oggi vivono tutti nello stesso file con responsabilita molto ampie
 - obiettivo: modularita interna migliore, documentazione per modulo e confini piu chiari
-- stato: milestone 1 chiusa, primo giro documentato e corretto modulo per modulo
+- stato: milestone 2 aperta, con primo refactor interno partito da `store`
 
 ## Stato iniziale
 
@@ -503,13 +503,13 @@ Cleanup:
 
 ### Limiti attuali del blocco platform
 
-- manca ancora una suite di test automatica dedicata ai moduli platform
 - esiste una demo browser aggregata del blocco platform, ma non ancora demo separate per ogni modulo
-- `store` non ha ancora una suite di test automatica dedicata
+- `store` ha ora helper interni estratti, ma il secondo giro e ancora all'inizio
+- gli altri moduli platform non hanno ancora ricevuto lo stesso trattamento strutturale del `store`
 
 Stato:
-- platform: milestone 1 chiusa
-- store: primo modulo aperto e corretto a livello strutturale
+- platform: milestone 2 in corso
+- store: secondo giro aperto con helper interni condivisi per scope, chiavi e serializzazione
 
 ## Platform / Router: contratto iniziale
 
@@ -547,8 +547,8 @@ Stato route:
 - il supporto nested e ancora minimale e va blindato meglio nei casi complessi
 
 Stato:
-- router: primo step strutturale chiuso
-- platform: milestone 1 chiusa
+- router: secondo giro aperto con helper interni estratti per path, query, matching e history
+- platform: milestone 2 in corso
 
 ## Platform / HTTP: contratto iniziale
 
@@ -586,8 +586,8 @@ Auth bridge:
 - la semantica di retry e timeout va documentata meglio
 
 Stato:
-- http: primo step strutturale chiuso
-- platform: milestone 1 chiusa
+- http: secondo giro aperto con helper interni estratti per state, normalize request, retry/abort e response wrapper
+- platform: milestone 2 in corso
 
 ## Platform / Overlay: contratto iniziale
 
@@ -620,8 +620,8 @@ Cleanup:
 - il positioning ancorato e ancora minimale
 
 Stato:
-- overlay: primo step strutturale chiuso
-- platform: milestone 1 chiusa
+- overlay: secondo giro aperto con helper interni estratti per root, focus e positioning ancorato
+- platform: milestone 2 in corso
 
 ## Platform / Auth: contratto iniziale
 
@@ -792,6 +792,10 @@ Campi consigliati per ogni modulo:
 - chiuso formalmente il secondo giro del lifecycle con helper interni estratti e modulo pubblico alleggerito
 - aperto il secondo giro del reactive core con `batch(...)`, alias pubblico `_.batch` e test automatico dedicato
 - esteso il reactive core con flush opzionale `microtask` sul `batch(...)` e chiuso formalmente il secondo giro
+- aperto il secondo giro del blocco `platform` partendo da `store`, con helper interni estratti per scope, chiavi e serializzazione
+- continuato il secondo giro del blocco `platform` su `router`, con helper interni estratti per path, query, matching e history
+- continuato il secondo giro del blocco `platform` su `http`, con helper interni estratti per state, request normalize, retry/abort e response wrapper
+- continuato il secondo giro del blocco `platform` su `overlay`, con helper interni estratti per root, focus e positioning ancorato
 
 ## Test automatici del core
 

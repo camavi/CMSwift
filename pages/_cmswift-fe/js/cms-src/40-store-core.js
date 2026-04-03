@@ -14,38 +14,18 @@
     const pendingWrites = new Map();// channelKey -> { key, scope }
     const knownScopes = new Map();  // scopeId -> { storage, prefix }
     let writeQueued = false;
-
-    function getScope(opts = {}) {
-      const scope = {
-        storage: opts.storage ?? config.storage,
-        prefix: opts.prefix ?? config.prefix
-      };
-      knownScopes.set(`${scope.storage}::${scope.prefix}`, scope);
-      return scope;
-    }
-
-    function getStorage(scope = null) {
-      const mode = typeof scope === "string" ? scope : (scope?.storage ?? config.storage);
-      return mode === "session" ? window.sessionStorage : window.localStorage;
-    }
-
-    function fullKey(key, scope = null) {
-      const resolved = scope || getScope();
-      return resolved.prefix + key;
-    }
-
-    function channelKey(key, scope = null) {
-      const resolved = scope || getScope();
-      return `${resolved.storage}::${resolved.prefix}::${key}`;
-    }
-
-    function safeParse(str) {
-      try { return JSON.parse(str); } catch { return undefined; }
-    }
-
-    function safeStringify(v) {
-      try { return JSON.stringify(v); } catch { return undefined; }
-    }
+    const {
+      createScopeTools,
+      safeParse,
+      safeStringify,
+      clearScopedMapEntries
+    } = CMSwift._storeShared;
+    const {
+      getScope,
+      getStorage,
+      fullKey,
+      channelKey
+    } = createScopeTools(config, knownScopes);
 
     function emit(key, value, scope = null) {
       const resolved = scope || getScope();
@@ -136,15 +116,7 @@
       }
       for (const k of keys) st.removeItem(k);
 
-      for (const id of Array.from(mem.keys())) {
-        if (id.startsWith(`${scope.storage}::${scope.prefix}::`)) mem.delete(id);
-      }
-      for (const id of Array.from(pendingWrites.keys())) {
-        if (id.startsWith(`${scope.storage}::${scope.prefix}::`)) pendingWrites.delete(id);
-      }
-      for (const id of Array.from(watchers.keys())) {
-        if (id.startsWith(`${scope.storage}::${scope.prefix}::`)) watchers.delete(id);
-      }
+      clearScopedMapEntries(scope, mem, pendingWrites, watchers);
     }
 
     function watch(key, fn, scope = null) {

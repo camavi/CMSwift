@@ -11,6 +11,14 @@
     let _currentCtx = null;
     let _history = [];
     let _tracing = false;
+    const {
+      normalizePath,
+      stripBase: stripBasePath,
+      compilePattern,
+      parseQuery,
+      matchRoute,
+      pushHistoryEntry
+    } = CMSwift._routerShared;
 
     const meta = {
       setOutlet: { description: "imposta il contenitore del router" },
@@ -89,76 +97,8 @@
       mode = m || "history";
     }
 
-    function normalizePath(path) {
-      // garantisce leading slash e rimuove trailing slash (tranne root)
-      if (!path) return "/";
-      if (!path.startsWith("/")) path = "/" + path;
-      if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
-      return path;
-    }
-
     function stripBase(path) {
-      if (base && path.startsWith(base)) {
-        const p = path.slice(base.length) || "/";
-        return normalizePath(p);
-      }
-      return normalizePath(path);
-    }
-
-    function compilePattern(pattern) {
-      // "/users/:id" -> regex + keys
-      pattern = normalizePath(pattern);
-      const keys = [];
-      const regexStr = pattern
-        .replace(/([.+*?=^!${}()[\]|/\\])/g, "\\$1") // escape regex, preserve :params
-        .replace(/\\\/:([A-Za-z0-9_]+)/g, (_, k) => {
-          keys.push(k);
-          return "\\/([^\\/]+)";
-        });
-      const regex = new RegExp("^" + regexStr + "$");
-      return { pattern, regex, keys };
-    }
-
-    function parseQuery(search) {
-      const q = {};
-      const sp = new URLSearchParams(search || "");
-      sp.forEach((v, k) => {
-        if (q[k] === undefined) q[k] = v;
-        else if (Array.isArray(q[k])) q[k].push(v);
-        else q[k] = [q[k], v];
-      });
-      return q;
-    }
-
-    function flattenRoutes() {
-      const all = [];
-      for (const r of routes) {
-        all.push({ ...r, _parent: null });
-        if (r.children && r.children.length) {
-          for (const c of r.children) {
-            all.push({ ...c, _parent: r });
-          }
-        }
-      }
-      // ordina: più specifiche prima (path più lungo)
-      all.sort((a, b) => b.path.length - a.path.length);
-      return all;
-    }
-
-    function match(pathname) {
-      const path = normalizePath(pathname);
-      const all = flattenRoutes();
-
-      for (const r of all) {
-        const m = r._compiled.regex.exec(path);
-        if (!m) continue;
-
-        const params = {};
-        r._compiled.keys.forEach((k, i) => (params[k] = decodeURIComponent(m[i + 1])));
-
-        return { route: r, params, parent: r._parent || null };
-      }
-      return null;
+      return stripBasePath(path, base);
     }
 
     function isActive(path) {
@@ -192,7 +132,7 @@
       updateURL(url, replace);
 
       const pathname = stripBase(url.pathname);
-      const m = match(pathname);
+      const m = matchRoute(pathname, routes);
 
       const ctx = {
         path: pathname,
@@ -230,14 +170,7 @@
         }
         notifyRoute(ctx);
         _currentCtx = ctx;
-        _history.push({
-          at: Date.now(),
-          path: ctx.path,
-          params: ctx.params,
-          query: ctx.query,
-          hash: ctx.hash
-        });
-        if (_history.length > 50) _history.shift();
+        pushHistoryEntry(_history, ctx);
         return;
       }
 
@@ -287,14 +220,7 @@
       notifyRoute(ctx);
       // devtools state update
       _currentCtx = ctx;
-      _history.push({
-        at: Date.now(),
-        path: ctx.path,
-        params: ctx.params,
-        query: ctx.query,
-        hash: ctx.hash
-      });
-      if (_history.length > 50) _history.shift(); // cap
+      pushHistoryEntry(_history, ctx);
 
     }
 
@@ -400,7 +326,6 @@
     let _routeListeners = new Set();
 
     function notifyRoute(ctx) {
-      if (_history.length > 50) _history.shift(); // cap
       for (const fn of _routeListeners) {
         try { fn(ctx); } catch (e) { console.error("[router] listener error:", e); }
       }
