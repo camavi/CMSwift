@@ -473,11 +473,12 @@ Store scoping:
 Cleanup:
 - `store.signal(...)` dispone ora sia il watcher sia l'effect interno `signal -> store`
 - viene disposto anche il signal interno del core reattivo
+- i callback di `store.watch(...)` vengono eseguiti in `untracked`, cosi non agganciano per errore le dipendenze dell'effect chiamante
 
 ### Limiti attuali del blocco platform
 
-- il contratto di `overlay`, `router`, `http` e `auth` non e ancora formalizzato
-- mancano demo browser dedicate per i moduli platform
+- manca ancora una suite di test automatica dedicata ai moduli platform
+- esiste una demo browser aggregata del blocco platform, ma non ancora demo separate per ogni modulo
 - `store` non ha ancora una suite di test automatica dedicata
 
 Stato:
@@ -515,7 +516,7 @@ Stato route:
 
 ### Limiti attuali del blocco router
 
-- il router non ha ancora una demo browser dedicata
+- il router e coperto dalla demo browser aggregata del blocco platform, ma non ha ancora una demo separata
 - `start()` registra listener globali senza una semantica di dispose esplicita
 - il supporto nested e ancora minimale e va blindato meglio nei casi complessi
 
@@ -554,7 +555,7 @@ Auth bridge:
 
 ### Limiti attuali del blocco http
 
-- il modulo non ha ancora una demo browser dedicata
+- il modulo e coperto dalla demo browser aggregata del blocco platform, ma non ha ancora una demo separata
 - mancano metodi di configurazione pubblici per aggiornare `configHTTP`
 - la semantica di retry e timeout va documentata meglio
 
@@ -588,7 +589,7 @@ Cleanup:
 
 ### Limiti attuali del blocco overlay
 
-- il modulo non ha ancora una demo browser dedicata
+- il modulo e coperto dalla demo browser aggregata del blocco platform, ma non ha ancora una demo separata
 - manca restore focus verso l'elemento attivo prima dell'apertura
 - il positioning ancorato e ancora minimale
 
@@ -624,7 +625,7 @@ Devtools / stato:
 
 ### Limiti attuali del blocco auth
 
-- il modulo non ha ancora una demo browser dedicata
+- il modulo e coperto dalla demo browser aggregata del blocco platform, ma non ha ancora una demo separata
 - `loginAsync`, `logoutAsync` e `doRefresh()` usano ancora `fetch` diretto e non una superficie HTTP unificata del core
 - la semantica dei redirect auth dipende ancora da un solo `beforeEach` nel router
 
@@ -656,12 +657,26 @@ Doc viewer:
 ### Limiti attuali del blocco ui meta
 
 - il registry non ha ancora una validazione formale dello shape dei meta
-- manca una demo browser dedicata al viewer/documentation system
+- il viewer e coperto dalla demo browser aggregata del blocco platform, ma non ha ancora una demo separata
 - `docTable` resta accoppiato a componenti UI come `Card`, `Chip`, `TabPanel`
 
 Stato:
 - ui meta: primo step strutturale chiuso
 - platform: primo giro completato
+
+## Verifica browser blocco platform
+
+Pagina demo:
+- route: `/demo/component/cms-platform`
+- file: `pages/tutorial/cms-platform.cms.js`
+
+Checklist manuale:
+- `store`: count persistente, watcher e raw `sessionStorage` restano coerenti sullo scope `CMSPlatform:`
+- `router`: `path/query/hash` seguono `_.useRoute(ctx)` quando navighi con query e hash
+- `http`: hooks `onBefore/onAfter/onError` e `_.http.state()` reagiscono a request ok ed errore forzato
+- `overlay`: `open`, `closeTop` e stack size restano coerenti durante apertura/chiusura modal e anchored
+- `auth`: simulazione login/logout aggiorna `_.auth.isAuth()`, ruoli, permessi e `status()`
+- `ui.meta`: `_.docTable(...)` rende la documentazione per `Layout`, `Btn` e `Drawer`
 
 Fase 5: Meta e modularita
 - mantenere `CMSwift.meta` corto e strutturato
@@ -697,3 +712,4 @@ Campi consigliati per ogni modulo:
 - corretto il blocco `overlay` per cleanup reale dei listener e dell'entry stack
 - corretto il blocco `auth` per retry `401` non infinito e stato devtools completo
 - corretto il blocco `ui.meta` per robustezza del doc viewer e fallback senza `TabPanel`
+- aggiunta demo browser aggregata `cms-platform` per store, router, http, overlay, auth e ui.meta

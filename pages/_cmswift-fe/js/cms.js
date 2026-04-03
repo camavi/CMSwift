@@ -87,7 +87,7 @@
         status: "milestone-1-closed",
         knownLimits: [
           "Il file e molto concentrato e va reso piu modulare.",
-          "I moduli platform vanno ancora coperti con demo browser o test automatici dedicati.",
+          "Esiste una demo browser aggregata del blocco platform, ma non ancora demo separate per ogni modulo.",
           "Mancano configurazione pubblica piu coerente e confini piu netti tra auth, http e router.",
           "Il registry UI meta non ha ancora validazione formale del suo shape."
         ]
@@ -2473,7 +2473,13 @@
       const set = watchers.get(channelKey(key, resolved));
       if (!set) return;
       for (const fn of set) {
-        try { fn(value); } catch (e) { console.error("[store] watcher error:", e); }
+        try {
+          if (CMSwift.reactive?.untracked) {
+            CMSwift.reactive.untracked(() => fn(value));
+          } else {
+            fn(value);
+          }
+        } catch (e) { console.error("[store] watcher error:", e); }
       }
     }
 
@@ -3206,12 +3212,17 @@
           // Se hai accesso diretto a getAuth nel plugin, puoi agganciarlo qui.
           // Qui facciamo best-effort: cerchiamo store key "auth" o "user" non possiamo sapere.
           // Quindi: ci basiamo su auth.user() e (se esiste) auth._getState()
-          if (typeof auth._getState === "function") return auth._getState();
+          if (typeof auth._getState === "function") {
+            const state = auth._getState();
+            return state && typeof state === "object"
+              ? state
+              : { user: auth.user?.() ?? null };
+          }
           return { user: auth.user?.() ?? null };
         }
 
         function status() {
-          const s = getAuthState();
+          const s = getAuthState() || {};
           const user = s.user ?? auth.user?.();
           const name = user?.name || user?.email || user?.id || "anon";
           const ok = !!auth.isAuth?.();
@@ -3224,7 +3235,7 @@
         }
 
         function inspect(label = "auth") {
-          const s = getAuthState();
+          const s = getAuthState() || {};
           const user = s.user ?? auth.user?.();
 
           const roles = user?.roles || [];
