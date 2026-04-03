@@ -3812,6 +3812,12 @@
     const meta = CMSwift.ui.meta?.[name];
     if (!meta) return _.div({ class: "cms-muted" }, `Meta non trovata: ${name}`);
     const hasTabPanel = typeof _.TabPanel === "function";
+    const Card = typeof _.Card === "function"
+      ? _.Card
+      : (...children) => _.div({ class: "cms-doc-card" }, ...children);
+    const Chip = typeof _.Chip === "function"
+      ? _.Chip
+      : (_props, label) => _.span({ class: "cms-chip cms-chip-fallback" }, label);
 
     const formatValues = (values) => {
       if (!values) return "—";
@@ -3822,7 +3828,7 @@
     const renderMetaItem = (item) => _.div({ class: "cms-p-md" },
       _.p(
         _.h3("Name: " + item.name),
-        _.div(_.b("Type: "), item.type ? String(item.type).split("|").map((token) => _.Chip({ color: "secondary", dense: true }, token)) : "—")
+        _.div(_.b("Type: "), item.type ? String(item.type).split("|").map((token) => Chip({ color: "secondary", dense: true }, token)) : "—")
       ),
       _.p(_.b("Default: "), _.span(item.default == null ? "—" : String(item.default))),
       _.p(
@@ -3937,7 +3943,7 @@
       if (b.name === first) return 1;
       return a.name.localeCompare(b.name);
     })
-    return _.Card(
+    return Card(
       _.h3(`_.${name}`),
       meta.signature ? _.p({ class: "cms-muted" }, String(meta.signature).replaceAll("UI.", "_.")) : null,
       taps.length

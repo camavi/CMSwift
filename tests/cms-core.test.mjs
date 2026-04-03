@@ -4,6 +4,17 @@ import assert from "node:assert/strict";
 import { loadCMS } from "./helpers/load-cms.mjs";
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+const collectText = (node) => {
+  if (!node) return "";
+  if (node.nodeType === 3 || node.nodeType === 8) return String(node.textContent || "");
+  return (node.childNodes || []).map(collectText).join("");
+};
+const findNodes = (node, predicate, acc = []) => {
+  if (!node) return acc;
+  if (predicate(node)) acc.push(node);
+  for (const child of node.childNodes || []) findNodes(child, predicate, acc);
+  return acc;
+};
 
 test("reactive effect cleanup and dispose work", async () => {
   const CMS = await loadCMS();
@@ -490,15 +501,18 @@ test("auth plugin updates public state for login, role checks and logout", async
   const originalGroupCollapsed = console.groupCollapsed;
   const originalLog = console.log;
   const originalGroupEnd = console.groupEnd;
+  const originalWarn = console.warn;
   console.groupCollapsed = () => { };
   console.log = () => { };
   console.groupEnd = () => { };
+  console.warn = () => { };
   try {
     assert.equal(CMS.auth.inspect("test-auth").token.hasAccess, true);
   } finally {
     console.groupCollapsed = originalGroupCollapsed;
     console.log = originalLog;
     console.groupEnd = originalGroupEnd;
+    console.warn = originalWarn;
   }
 
   await CMS.auth.logoutAsync();
@@ -592,4 +606,95 @@ test("auth.fetch retries a 401 only once after refresh", async () => {
       "GET /private Bearer token-new"
     ]
   );
+});
+
+test("ui.meta docTable renders missing-meta fallback", async () => {
+  const CMS = await loadCMS();
+  const out = CMS.docTable("UnknownProbe");
+
+  assert.equal(out.tagName, "DIV");
+  assert.equal(out.getAttribute("class"), "cms-muted");
+  assert.equal(collectText(out), "Meta non trovata: UnknownProbe");
+});
+
+test("ui.meta docTable fallback works without TabPanel and without props", async () => {
+  const CMS = await loadCMS();
+  CMS.ui.meta.ProbeMeta = {
+    signature: "UI.ProbeMeta(opts)",
+    returns: "HTMLElement",
+    slots: {
+      default: {
+        type: "node",
+        description: "Main content"
+      }
+    },
+    events: {
+      ready: "Emitted when ready"
+    }
+  };
+
+  const out = CMS.docTable("ProbeMeta");
+  const text = collectText(out);
+  const headings = findNodes(out, (node) => node.tagName === "H4").map(collectText);
+
+  assert.equal(out.tagName, "DIV");
+  assert.equal(text.includes("_.ProbeMeta"), true);
+  assert.equal(text.includes("_.ProbeMeta(opts)"), true);
+  assert.equal(text.includes("Documentation"), true);
+  assert.equal(text.includes("Props"), false);
+  assert.equal(text.includes("Returns: HTMLElement"), true);
+  assert.equal(headings.includes("Documentation"), true);
+  assert.equal(headings.includes("Slots"), true);
+  assert.equal(headings.includes("Events"), true);
+});
+
+test("ui.meta docTable uses TabPanel when available", async () => {
+  const CMS = await loadCMS();
+  CMS.ui.meta.ProbeWithProps = {
+    props: {
+      tone: {
+        type: "string|number",
+        default: "soft",
+        values: ["soft", "loud"],
+        description: "Visual tone",
+        category: "general"
+      },
+      dense: {
+        type: "boolean",
+        default: false,
+        description: "Dense mode",
+        category: "layout"
+      }
+    },
+    events: [{ name: "change", description: "When value changes" }],
+    returns: "VNode"
+  };
+
+  const originalTabPanel = globalThis._.TabPanel;
+  globalThis._.TabPanel = (props = {}) => CMS.div({
+    "data-probe-tabpanel": props.orientation || "none",
+    "data-tab-count": String((props.tabs || []).length)
+  }, props.tabs?.flatMap((tab) => [CMS.span(tab.label), tab.content]));
+
+  try {
+    const out = CMS.docTable("ProbeWithProps");
+    const tabPanels = findNodes(out, (node) => node.getAttribute?.("data-probe-tabpanel"));
+    const text = collectText(out);
+    const horizontalPanel = tabPanels.find((node) => node.getAttribute("data-probe-tabpanel") === "horizontal");
+
+    const orientations = tabPanels.map((node) => node.getAttribute("data-probe-tabpanel"));
+    assert.equal(tabPanels.length, 4);
+    assert.equal(orientations.filter((value) => value === "horizontal").length, 1);
+    assert.equal(orientations.filter((value) => value === "vertical").length, 3);
+    assert.ok(horizontalPanel);
+    assert.equal(horizontalPanel.getAttribute("data-tab-count"), "3");
+    assert.equal(text.includes("Props"), true);
+    assert.equal(text.includes("general"), true);
+    assert.equal(text.includes("layout"), true);
+    assert.equal(text.includes("Events"), true);
+    assert.equal(text.includes("Returns: VNode"), true);
+  } finally {
+    if (originalTabPanel === undefined) delete globalThis._.TabPanel;
+    else globalThis._.TabPanel = originalTabPanel;
+  }
 });

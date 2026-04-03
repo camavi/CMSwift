@@ -716,6 +716,7 @@ Campi consigliati per ogni modulo:
 - aggiunta demo browser aggregata `cms-platform` per store, router, http, overlay, auth e ui.meta
 - aggiunta prima suite automatica `node:test` per `reactive` e `store`
 - estesa la suite automatica del core con copertura dedicata per `overlay` e `auth`
+- estesa la suite automatica del core con copertura dedicata per `ui.meta`
 
 ## Test automatici del core
 
@@ -737,12 +738,14 @@ Copertura iniziale:
 - `lifecycle`: `mount`, `component`, `ctx.onDispose`, cleanup su `clear/unmount`
 - `overlay`: stack, scroll lock, z-index/root, cleanup listener documento/window
 - `auth`: login/logout, ruoli/permessi, `status()/inspect()`, retry `401` una sola volta dopo refresh
+- `ui.meta`: `docTable(...)` su meta assente, fallback senza `TabPanel`, path con `TabPanel` disponibile
 
 Bug reali intercettati dai test:
 - `CMSwift.http.getJSON/delJSON/postJSON/putJSON/patchJSON` chiamavano `.jsonStrict()` sul `Promise` invece che sul response wrapper risolto
 - `CMSwift.router.compilePattern(...)` escapava anche `:param`, quindi i route params dinamici non venivano estratti
 - `normalizeClass(...)` non valutava `function` e `rod` dentro gli object-map delle classi
+- `CMSwift.docTable(...)` dipendeva ancora rigidamente da `_.Card` e `_.Chip`, quindi il fallback senza UI completa non era davvero robusto
 
 Limiti attuali:
 - il test harness usa un DOM fake minimale, non un browser reale
-- `ui.meta` non ha ancora test automatici dedicati
+- restano fuori soprattutto i casi avanzati/integrati, non piu i blocchi core del primo giro
