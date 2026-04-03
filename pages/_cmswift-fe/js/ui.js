@@ -613,6 +613,7 @@
     overlayClose: "Closes the overlay when the backdrop is clicked.",
     page: "Current page index (1-based unless documented otherwise).",
     pageSize: "Number of items per page.",
+    padding: "Padding applied to the component root element.",
     persistent: "Prevents closing via outside click or Escape.",
     placeholder: "Placeholder text for inputs.",
     placement: "Overlay placement relative to the target/anchor.",
@@ -622,6 +623,11 @@
     right: "Content or configuration for the right region.",
     rowKey: "Key or function used to derive unique row IDs.",
     rows: "Row data array for table-like components.",
+    margin: "Margin applied to the component root element.",
+    maxHeight: "Maximum height constraint (number interpreted as px or CSS length).",
+    maxWidth: "Maximum width constraint (number interpreted as px or CSS length).",
+    minHeight: "Minimum height constraint (number interpreted as px or CSS length).",
+    minWidth: "Minimum width constraint (number interpreted as px or CSS length).",
     radius: "Border radius token or CSS length applied to the component.",
     borderRadius: "Border radius token or CSS length applied to the component.",
     separator: "Separator string/node between items.",
@@ -726,6 +732,14 @@
   const META_PROP_VALUES = {
     size: ["number", "CSS units", ...DEFAULT_SIZE],
     color: DEFAULT_COLOR,
+    padding: ["number", "CSS units", ...DEFAULT_SIZE],
+    margin: ["number", "CSS units", ...DEFAULT_SIZE],
+    width: ["number", "CSS units", ...DEFAULT_SIZE],
+    minWidth: ["number", "CSS units", ...DEFAULT_SIZE],
+    maxWidth: ["number", "CSS units", ...DEFAULT_SIZE],
+    height: ["number", "CSS units", ...DEFAULT_SIZE],
+    minHeight: ["number", "CSS units", ...DEFAULT_SIZE],
+    maxHeight: ["number", "CSS units", ...DEFAULT_SIZE],
     iconAlign: ["left", "right", "before", "after"],
     align: ["left", "center", "right"],
     justify: ["start", "center", "end", "space-between", "space-around", "space-evenly"],
@@ -748,6 +762,14 @@
     shadow: "style",
     borderRadius: "style",
     radius: "style",
+    padding: "layout",
+    margin: "layout",
+    width: "layout",
+    minWidth: "layout",
+    maxWidth: "layout",
+    height: "layout",
+    minHeight: "layout",
+    maxHeight: "layout",
     dense: "layout",
     flat: "style",
     elevated: "style",
@@ -830,6 +852,14 @@
       color: meta.props.color || "string",
       outline: meta.props.outline || "boolean",
       clickable: meta.props.clickable || "boolean",
+      padding: meta.props.padding || "string|number",
+      margin: meta.props.margin || "string|number",
+      width: meta.props.width || "string|number",
+      minWidth: meta.props.minWidth || "string|number",
+      maxWidth: meta.props.maxWidth || "string|number",
+      height: meta.props.height || "string|number",
+      minHeight: meta.props.minHeight || "string|number",
+      maxHeight: meta.props.maxHeight || "string|number",
       radius: meta.props.radius || "string|number",
       borderRadius: meta.props.borderRadius || "string|number",
       shadow: meta.props.shadow || "string|boolean",
@@ -889,6 +919,41 @@
     }
     return out.length ? out : null;
   }
+  const STYLE_PROP_TOKEN_MAP = {
+    padding: "p",
+    paddingTop: "p",
+    paddingRight: "p",
+    paddingBottom: "p",
+    paddingLeft: "p",
+    paddingInline: "p",
+    paddingInlineStart: "p",
+    paddingInlineEnd: "p",
+    paddingBlock: "p",
+    paddingBlockStart: "p",
+    paddingBlockEnd: "p",
+    margin: "m",
+    marginTop: "m",
+    marginRight: "m",
+    marginBottom: "m",
+    marginLeft: "m",
+    marginInline: "m",
+    marginInlineStart: "m",
+    marginInlineEnd: "m",
+    marginBlock: "m",
+    marginBlockStart: "m",
+    marginBlockEnd: "m",
+    width: "w",
+    minWidth: "w",
+    maxWidth: "w",
+    height: "h",
+    minHeight: "h",
+    maxHeight: "h"
+  };
+  const camelToCssProperty = (name) => name.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
+  const applyStyleProp = (obj, value, name, tokenName) => {
+    if (value == null || value === false || value === "") return;
+    obj.style.setProperty(camelToCssProperty(name), unitCover(value, tokenName));
+  };
   function setPropertyProps(obj, props) {
     if (props.size) {
       if (typeof props.size === "number") {
@@ -897,6 +962,10 @@
         obj.style.setProperty("--cms-font-size", `var(--cms-font-size-${props.size})`);
       }
     }
+
+    Object.entries(STYLE_PROP_TOKEN_MAP).forEach(([name, tokenName]) => {
+      applyStyleProp(obj, props[name], name, tokenName);
+    });
 
     // gradient
     if (props.gradient) {

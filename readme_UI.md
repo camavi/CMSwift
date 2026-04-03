@@ -31,7 +31,7 @@ Dove il runtime espone componenti senza meta nativo (`InputRaw`), ho aggiunto un
 
 In dev mode i blocchi `UI.meta.*` vengono normalizzati automaticamente. Un AI deve assumere che il meta effettivo a runtime contenga anche queste informazioni condivise:
 
-- Props comuni aggiunti se mancanti: `children`, `size`, `color`, `outline`, `clickable`, `radius`, `borderRadius`, `shadow`, `class`, `style`.
+- Props comuni aggiunti se mancanti: `children`, `size`, `color`, `outline`, `clickable`, `padding`, `margin`, `width`, `minWidth`, `maxWidth`, `height`, `minHeight`, `maxHeight`, `radius`, `borderRadius`, `shadow`, `class`, `style`.
 - Se esiste `icon` ma non `iconRight`, il runtime genera anche `iconRight` nel meta normalizzato.
 - Ogni prop/slot riceve campi normalizzati come `type`, `description`, `default`, `values`, `category`.
 - Default comuni: `dense = false`, `disabled = false`, `readonly = false`, `outline = false`, `clickable = false`, `flat = false`, `elevated = false`.
