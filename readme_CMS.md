@@ -14,7 +14,7 @@ Regola di aggiornamento:
 ## Priorita attuali
 
 Stato generale oggi:
-- renderer: milestone 1 chiusa
+- renderer: milestone 2 chiusa
 - reactive core: milestone 1 chiusa
 - rod: milestone 1 chiusa
 - lifecycle / mount / cleanup: milestone 1 chiusa
@@ -26,7 +26,7 @@ Stato generale oggi:
 - area: `createElement`, `setProp`, `bindProp`, gestione `style`, attributi, eventi, children
 - motivo: ogni bug qui impatta tutto il framework
 - obiettivo: rendere prevedibile la traduzione `props -> DOM` e coprire gli edge case con test
-- stato: milestone 1 chiusa, da consolidare con test automatici
+- stato: milestone 2 chiusa, con refactor interno del renderer e copertura automatica del primo giro
 
 2. Reactive core
 - area: `CMSwift.reactive.signal` e `CMSwift.reactive.effect`
@@ -72,7 +72,8 @@ Fase 1: Renderer
 
 Stato:
 - milestone 1 completata a livello funzionale
-- resta da aggiungere copertura test automatica
+- milestone 2 chiusa sul piano strutturale: bridge DOM condiviso, helper estratti e parsing finale separato
+- i prossimi passi sul renderer non sono piu di base ma di affinamento avanzato
 
 ## Renderer: contratto attuale
 
@@ -684,6 +685,44 @@ Fase 5: Meta e modularita
 - usare questo file come documento esteso
 - valutare in seguito una separazione del core in moduli interni
 
+## Sorgenti Core
+
+Da adesso il core non va piu mantenuto solo dentro `pages/_cmswift-fe/js/cms.js`.
+
+Sorgente interno:
+- `pages/_cmswift-fe/js/cms-src/00-bootstrap.js`
+- `pages/_cmswift-fe/js/cms-src/10-overlay.js`
+- `pages/_cmswift-fe/js/cms-src/15-dom-props.js`
+- `pages/_cmswift-fe/js/cms-src/16-renderer-shared.js`
+- `pages/_cmswift-fe/js/cms-src/17-renderer-children.js`
+- `pages/_cmswift-fe/js/cms-src/18-renderer-args.js`
+- `pages/_cmswift-fe/js/cms-src/20-renderer.js`
+- `pages/_cmswift-fe/js/cms-src/30-rod-core.js`
+- `pages/_cmswift-fe/js/cms-src/31-rod-model.js`
+- `pages/_cmswift-fe/js/cms-src/32-lifecycle-helpers.js`
+- `pages/_cmswift-fe/js/cms-src/32-lifecycle.js`
+- `pages/_cmswift-fe/js/cms-src/33-debug-perf.js`
+- `pages/_cmswift-fe/js/cms-src/34-rod-devtools.js`
+- `pages/_cmswift-fe/js/cms-src/40-store-core.js`
+- `pages/_cmswift-fe/js/cms-src/41-store-extensions.js`
+- `pages/_cmswift-fe/js/cms-src/42-plugins.js`
+- `pages/_cmswift-fe/js/cms-src/43-auth.js`
+- `pages/_cmswift-fe/js/cms-src/44-http.js`
+- `pages/_cmswift-fe/js/cms-src/45-route-hooks.js`
+- `pages/_cmswift-fe/js/cms-src/50-ui-meta.js`
+- `pages/_cmswift-fe/js/cms-src/51-can.js`
+- `pages/_cmswift-fe/js/cms-src/52-router.js`
+- `pages/_cmswift-fe/js/cms-src/53-footer.js`
+- `pages/_cmswift-fe/js/cms-src/modules.json`
+
+Build:
+- `npm run build:cms`
+
+Regola operativa:
+- modificare i file in `cms-src/`
+- rigenerare `cms.js`
+- verificare con `npm test`
+
 ## Convenzione Meta
 
 `CMSwift.meta` dentro `cms.js` deve restare:
@@ -717,6 +756,14 @@ Campi consigliati per ogni modulo:
 - aggiunta prima suite automatica `node:test` per `reactive` e `store`
 - estesa la suite automatica del core con copertura dedicata per `overlay` e `auth`
 - estesa la suite automatica del core con copertura dedicata per `ui.meta`
+- separato il core in moduli interni `cms-src/*` con build dedicata `npm run build:cms`
+- rifinita la separazione dei moduli `cms-src/*` con granularita piu stretta e manifest `modules.json`
+- iniziato il secondo giro di pulizia interna con un bridge DOM condiviso tra `renderer` e `rod`
+- esteso il bridge DOM condiviso anche ai key speciali del `rod`: `auto`, `attr:`, `style.*` e nested path
+- alleggerito il `renderer` estraendo helper condivise per classi, eventi e interpolazioni
+- separata anche la gestione dei dynamic children dal body di `createElement(...)`
+- separato anche il loop finale di parsing `args/props/children` dal body di `createElement(...)`
+- iniziato il secondo giro del lifecycle con helper interni estratti per mount, cleanup e component dispose
 
 ## Test automatici del core
 
@@ -739,6 +786,12 @@ Copertura iniziale:
 - `overlay`: stack, scroll lock, z-index/root, cleanup listener documento/window
 - `auth`: login/logout, ruoli/permessi, `status()/inspect()`, retry `401` una sola volta dopo refresh
 - `ui.meta`: `docTable(...)` su meta assente, fallback senza `TabPanel`, path con `TabPanel` disponibile
+- `rod`: semantica base condivisa con il renderer per `class`, CSS custom properties e boolean props
+- `rod`: semantica condivisa anche per `auto`, `attr:`, `style.*` e assegnazione su path annidati
+- `renderer`: helper di classi, eventi e interpolazioni separati dal body di `createElement(...)`
+- `renderer`: helper dei dynamic children separati dal body di `createElement(...)`
+- `renderer`: parsing finale `args/props/children` separato dal body di `createElement(...)`
+- `lifecycle`: helper di mount/cleanup/component dispose estratti dal modulo pubblico
 
 Bug reali intercettati dai test:
 - `CMSwift.http.getJSON/delJSON/postJSON/putJSON/patchJSON` chiamavano `.jsonStrict()` sul `Promise` invece che sul response wrapper risolto

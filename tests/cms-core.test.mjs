@@ -347,6 +347,68 @@ test("renderer supports dynamic children and SVG text nodes", async () => {
   assert.equal(textNode.getAttribute("aria-label"), "probe");
 });
 
+test("rod binding shares renderer DOM prop semantics for class style and boolean props", async () => {
+  const CMS = await loadCMS();
+  const host = document.createElement("div");
+  document.body.appendChild(host);
+  const state = _.rod("active");
+  const width = _.rod("12px");
+  const disabled = _.rod(false);
+
+  CMS.rodBind(host, state, { key: "class" });
+  CMS.rodBind(host, width, { key: "style.--cms-probe" });
+  CMS.rodBind(host, disabled, { key: "disabled" });
+
+  assert.equal(host.getAttribute("class"), "active");
+  assert.equal(host.style.getPropertyValue("--cms-probe"), "12px");
+  assert.equal(host.disabled, false);
+
+  state.value = "";
+  width.value = null;
+  disabled.value = true;
+  await new Promise((resolve) => queueMicrotask(resolve));
+
+  assert.equal(host.getAttribute("class"), null);
+  assert.equal(host.style.getPropertyValue("--cms-probe"), "");
+  assert.equal(host.disabled, true);
+});
+
+test("rod binding supports auto attr style paths and nested property targets", async () => {
+  const CMS = await loadCMS();
+  const input = document.createElement("input");
+  const panel = document.createElement("div");
+  panel.dataset = {};
+  panel.foo = { bar: 0 };
+  document.body.appendChild(input);
+  document.body.appendChild(panel);
+
+  const autoValue = _.rod("12");
+  const ariaLabel = _.rod("probe");
+  const opacity = _.rod("0.5");
+  const nested = _.rod(7);
+
+  CMS.rodBind(input, autoValue, { key: "auto" });
+  CMS.rodBind(panel, ariaLabel, { key: "attr:aria-label" });
+  CMS.rodBind(panel, opacity, { key: "style.opacity" });
+  CMS.rodBind(panel, nested, { key: "foo.bar" });
+
+  assert.equal(input.value, "12");
+  assert.equal(panel.getAttribute("aria-label"), "probe");
+  assert.equal(panel.style.opacity, "0.5");
+  assert.equal(panel.foo.bar, 7);
+
+  autoValue.value = "18";
+  ariaLabel.value = null;
+  opacity.value = "";
+  nested.value = 11;
+  await new Promise((resolve) => queueMicrotask(resolve));
+
+  assert.equal(input.value, "18");
+  assert.equal(panel.getAttribute("aria-label"), null);
+  assert.equal(panel.style.opacity, "");
+  assert.equal(panel.foo.bar, 11);
+});
+
 test("mount and component cleanup run on unmount and clear", async () => {
   const CMS = await loadCMS();
   const root = document.createElement("div");
@@ -379,6 +441,31 @@ test("mount and component cleanup run on unmount and clear", async () => {
 
   unmountFirst();
   assert.equal(componentDisposals, 1);
+});
+
+test("component dispose runs user dispose and ctx.onDispose once", async () => {
+  const CMS = await loadCMS();
+  let userDisposals = 0;
+  let ctxDisposals = 0;
+
+  const Probe = CMS.component((_props, ctx) => {
+    ctx.onDispose(() => {
+      ctxDisposals += 1;
+    });
+    return {
+      node: document.createTextNode("probe"),
+      dispose: () => {
+        userDisposals += 1;
+      }
+    };
+  });
+
+  const instance = Probe();
+  instance.dispose();
+  instance.dispose();
+
+  assert.equal(userDisposals, 1);
+  assert.equal(ctxDisposals, 1);
 });
 
 test("overlay keeps stack, scroll lock and listener cleanup coherent", async () => {

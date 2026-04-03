@@ -46,11 +46,11 @@
       render: {
         description: "Bridge props -> DOM per hyperscript _, attributi, class, style, eventi e children reattivi.",
         entrypoints: ["createElement", "setProp", "bindProp"],
-        status: "milestone-1-closed",
+        status: "milestone-2-closed",
         knownLimits: [
-          "Mancano test sistematici sugli edge case del renderer.",
-          "Le regole su attributi DOM/property/eventi vanno rese piu esplicite e coperte.",
-          "Gli eventi non hanno ancora delegation o composizione/diff avanzato di listener multipli."
+          "createElement resta ancora un punto centrale da tenere sotto controllo, anche se ora e molto piu spezzato internamente.",
+          "Gli eventi non hanno ancora delegation o composizione/diff avanzato di listener multipli.",
+          "Restano da esplorare edge case avanzati del renderer oltre al primo giro gia coperto dai test."
         ]
       },
       reactive: {
@@ -314,7 +314,6 @@
 
     return { signal, effect, computed, untracked };
   })();
-
   CMSwift.overlay = (() => {
     let seq = 0;
     const stack = new Map(); // id -> entry
@@ -551,39 +550,202 @@
 
     return { open, close, closeTop, root, _stack: stack };
   })();
-
   /* ===============================
-     _h hyperscript (usa CMSwift.reactive.effect)
+     Shared DOM prop bridge
      =============================== */
 
-  const SVG_NS = "http://www.w3.org/2000/svg";
-  const SVG_TAGS = new Set([
-    "svg",
-    "g",
-    "path",
-    "circle",
-    "ellipse",
-    "line",
-    "rect",
-    "polygon",
-    "polyline",
-    "text",
-    "tspan",
-    "defs",
-    "linearGradient",
-    "radialGradient",
-    "stop",
-    "use",
-    "symbol",
-    "clipPath",
-    "mask",
-    "pattern",
-    "filter",
-    "feGaussianBlur",
-    "feOffset",
-    "feBlend",
-    "feColorMatrix"
-  ]);
+  function createDomPropBridge(el, options = {}) {
+    const {
+      isSVG = false,
+      normalizeClass: normalizeClassValue = (value) => String(value ?? ""),
+      isContentProp: isContent = () => false,
+      autoValueTags = new Set(["INPUT", "TEXTAREA", "SELECT"])
+    } = options;
+
+    function isBooleanDomProp(name) {
+      if (isSVG || !(name in el)) return false;
+      try {
+        return typeof el[name] === "boolean";
+      } catch {
+        return false;
+      }
+    }
+
+    function isAttributeOnlyProp(name) {
+      return isSVG || name.startsWith("data-") || name.startsWith("aria-") || !(name in el);
+    }
+
+    function setAttributeValue(name, value) {
+      if (value == null || value === false) {
+        el.removeAttribute(name);
+        return;
+      }
+      if (value === true && !isSVG && !name.startsWith("aria-") && !name.startsWith("data-")) {
+        el.setAttribute(name, "");
+        return;
+      }
+      el.setAttribute(name, String(value));
+    }
+
+    function setStyleEntry(name, value) {
+      if (name == null) return;
+      const styleName = String(name);
+      const isCssProperty = styleName.startsWith("--") || styleName.includes("-");
+      if (value == null || value === false || value === "") {
+        if (isCssProperty) el.style.removeProperty(styleName);
+        else el.style[styleName] = "";
+        return;
+      }
+      if (isCssProperty) {
+        el.style.setProperty(styleName, String(value));
+        return;
+      }
+      el.style[styleName] = value;
+    }
+
+    function setClassValue(value) {
+      const normalized = normalizeClassValue(value);
+      if (normalized == null || normalized === false || normalized === "") {
+        el.removeAttribute("class");
+        return;
+      }
+      el.setAttribute("class", String(normalized));
+    }
+
+    function setBooleanProp(name, value) {
+      const next = !!value;
+      el[name] = next;
+      if (next) el.setAttribute(name, "");
+      else el.removeAttribute(name);
+    }
+
+    function removeProp(name) {
+      if (isContent(name)) {
+        el[name] = "";
+        return;
+      }
+      if (name === "class") {
+        el.removeAttribute("class");
+        return;
+      }
+      if (name === "style") {
+        el.removeAttribute("style");
+        return;
+      }
+      if (isBooleanDomProp(name)) {
+        try { el[name] = false; } catch { }
+        el.removeAttribute(name);
+        return;
+      }
+      el.removeAttribute(name);
+      if (!isAttributeOnlyProp(name)) {
+        try {
+          if (typeof el[name] === "string") el[name] = "";
+        } catch { }
+      }
+    }
+
+    function applyStyleObject(styleObj) {
+      if (!styleObj || typeof styleObj !== "object") return;
+      Object.entries(styleObj).forEach(([styleName, styleValue]) => {
+        setStyleEntry(styleName, styleValue);
+      });
+    }
+
+    function setProp(name, value) {
+      if (isContent(name)) {
+        el[name] = value ?? "";
+        return;
+      }
+      if (name === "class") {
+        setClassValue(value);
+        return;
+      }
+      if (name === "style") {
+        if (value == null || value === false) {
+          removeProp(name);
+          return;
+        }
+        if (typeof value === "object") {
+          applyStyleObject(value);
+          return;
+        }
+      }
+      if (isBooleanDomProp(name)) {
+        setBooleanProp(name, value);
+        return;
+      }
+      if (value == null || value === false) {
+        removeProp(name);
+        return;
+      }
+      if (isAttributeOnlyProp(name)) {
+        setAttributeValue(name, value);
+        return;
+      }
+      el[name] = value;
+    }
+
+    function setPathValue(path, value) {
+      const parts = String(path).split(".");
+      let obj = el;
+      for (let i = 0; i < parts.length - 1; i++) {
+        obj = obj?.[parts[i]];
+        if (!obj) return;
+      }
+      obj[parts[parts.length - 1]] = value;
+    }
+
+    function applyBindingValue(name, value) {
+      if (!name || name === "auto") {
+        if (autoValueTags.has(el.tagName)) {
+          setProp("value", value);
+        } else {
+          el.textContent = value ?? "";
+        }
+        return;
+      }
+
+      if (name.startsWith("attr:")) {
+        setAttributeValue(name.slice(5), value);
+        return;
+      }
+
+      if (name.startsWith("@")) {
+        setAttributeValue(name.slice(1), value);
+        return;
+      }
+
+      if (name.startsWith("style.")) {
+        setStyleEntry(name.slice(6), value);
+        return;
+      }
+
+      if (name.includes(".")) {
+        setPathValue(name, value);
+        return;
+      }
+
+      setProp(name, value);
+    }
+
+    return {
+      isBooleanDomProp,
+      isAttributeOnlyProp,
+      setAttributeValue,
+      setStyleEntry,
+      setClassValue,
+      setBooleanProp,
+      removeProp,
+      applyStyleObject,
+      setProp,
+      setPathValue,
+      applyBindingValue
+    };
+  }
+  /* ===============================
+     Renderer shared helpers
+     =============================== */
 
   function normalizeClass(v) {
     const tokens = [];
@@ -689,353 +851,152 @@
     return out;
   }
 
-  function isContentProp(key) {
-    return key === "innerHTML" || key === "innerText" || key === "textContent" || key === "value";
+  function getEventName(key) {
+    if (key.startsWith("on:")) return key.slice(3);
+    const raw = key.slice(2);
+    if (!raw) return "";
+    if (raw === "DoubleClick") return "dblclick";
+    return raw.toLowerCase();
   }
 
-  function createElement(tag, ...args) {
-    const isSVG = SVG_TAGS.has(tag);
-    const el = tag === "text" && !isSVG
-      ? document.createTextNode("")
-      : isSVG
-        ? document.createElementNS(SVG_NS, tag)
-        : document.createElement(tag);
-
-    const isRod = (v) => !!v && v.type === "rod";
-    const interpolationCursor = createRodInterpolationCursor();
-
-    function isBooleanDomProp(name) {
-      if (isSVG || !(name in el)) return false;
-      try {
-        return typeof el[name] === "boolean";
-      } catch {
-        return false;
-      }
+  function normalizeEventOptions(options) {
+    if (options == null || options === false) return false;
+    if (options === true) return { capture: true };
+    if (typeof options === "boolean") return options;
+    if (typeof options === "object") {
+      return {
+        capture: !!options.capture,
+        passive: !!options.passive,
+        once: !!options.once
+      };
     }
+    return false;
+  }
 
-    function isAttributeOnlyProp(name) {
-      return isSVG || name.startsWith("data-") || name.startsWith("aria-") || !(name in el);
-    }
+  function eventOptionsEqual(a, b) {
+    const left = normalizeEventOptions(a);
+    const right = normalizeEventOptions(b);
+    if (typeof left === "boolean" || typeof right === "boolean") return left === right;
+    return !!left && !!right
+      && left.capture === right.capture
+      && left.passive === right.passive
+      && left.once === right.once;
+  }
 
-    function getEventName(key) {
-      if (key.startsWith("on:")) return key.slice(3);
-      const raw = key.slice(2);
-      if (!raw) return "";
-      if (raw === "DoubleClick") return "dblclick";
-      return raw.toLowerCase();
-    }
+  function hasDynamicEventValue(value, isRod) {
+    if (isRod(value)) return true;
+    if (!value || typeof value !== "object" || Array.isArray(value) || value.nodeType) return false;
+    return isRod(value.handler)
+      || isRod(value.listener)
+      || isRod(value.fn)
+      || isRod(value.options)
+      || typeof value.options === "function";
+  }
 
-    function normalizeEventOptions(options) {
-      if (options == null || options === false) return false;
-      if (options === true) return { capture: true };
-      if (typeof options === "boolean") return options;
-      if (typeof options === "object") {
-        return {
-          capture: !!options.capture,
-          passive: !!options.passive,
-          once: !!options.once
-        };
-      }
-      return false;
-    }
-
-    function eventOptionsEqual(a, b) {
-      const left = normalizeEventOptions(a);
-      const right = normalizeEventOptions(b);
-      if (typeof left === "boolean" || typeof right === "boolean") return left === right;
-      return !!left && !!right
-        && left.capture === right.capture
-        && left.passive === right.passive
-        && left.once === right.once;
-    }
-
-    function hasDynamicEventValue(value) {
-      if (isRod(value)) return true;
-      if (!value || typeof value !== "object" || Array.isArray(value) || value.nodeType) return false;
-      return isRod(value.handler)
-        || isRod(value.listener)
-        || isRod(value.fn)
-        || isRod(value.options)
-        || typeof value.options === "function";
-    }
-
-    function normalizeEventValue(value) {
-      if (value == null || value === false) {
-        return { handler: null, options: false };
-      }
-      if (typeof value === "function") {
-        return { handler: value, options: false };
-      }
-      if (isRod(value)) {
-        return normalizeEventValue(value.value);
-      }
-      if (typeof value === "object" && !Array.isArray(value) && !value.nodeType) {
-        let handler = value.handler ?? value.listener ?? value.fn ?? null;
-        let options = value.options ?? false;
-        if (isRod(handler)) handler = handler.value;
-        if (isRod(options)) options = options.value;
-        if (typeof options === "function") options = options();
-        return {
-          handler: typeof handler === "function" ? handler : null,
-          options: normalizeEventOptions(options)
-        };
-      }
+  function normalizeEventValue(value, isRod) {
+    if (value == null || value === false) {
       return { handler: null, options: false };
     }
-
-    function bindEventProp(key, value) {
-      const eventName = getEventName(key);
-      if (!eventName) return;
-
-      const state = {
-        attached: false,
-        handler: null,
-        options: false
+    if (typeof value === "function") {
+      return { handler: value, options: false };
+    }
+    if (isRod(value)) {
+      return normalizeEventValue(value.value, isRod);
+    }
+    if (typeof value === "object" && !Array.isArray(value) && !value.nodeType) {
+      let handler = value.handler ?? value.listener ?? value.fn ?? null;
+      let options = value.options ?? false;
+      if (isRod(handler)) handler = handler.value;
+      if (isRod(options)) options = options.value;
+      if (typeof options === "function") options = options();
+      return {
+        handler: typeof handler === "function" ? handler : null,
+        options: normalizeEventOptions(options)
       };
+    }
+    return { handler: null, options: false };
+  }
 
-      const dispatch = (event) => {
-        if (typeof state.handler === "function") {
-          const result = state.handler.call(el, event);
-          if (state.options && typeof state.options === "object" && state.options.once) {
-            state.attached = false;
-            state.handler = null;
-          }
-          return result;
+  function bindEventProp(el, key, value, isRod) {
+    const eventName = getEventName(key);
+    if (!eventName) return;
+
+    const state = {
+      attached: false,
+      handler: null,
+      options: false
+    };
+
+    const dispatch = (event) => {
+      if (typeof state.handler === "function") {
+        const result = state.handler.call(el, event);
+        if (state.options && typeof state.options === "object" && state.options.once) {
+          state.attached = false;
+          state.handler = null;
         }
-      };
+        return result;
+      }
+    };
 
-      const detach = () => {
+    const detach = () => {
+      if (state.attached) {
+        el.removeEventListener(eventName, dispatch, state.options);
+        state.attached = false;
+      }
+      state.handler = null;
+    };
+
+    const apply = (nextValue) => {
+      const next = normalizeEventValue(nextValue, isRod);
+      const nextHandler = typeof next.handler === "function" ? next.handler : null;
+      const nextOptions = next.options;
+      const optionsChanged = !eventOptionsEqual(state.options, nextOptions);
+
+      if (!nextHandler) {
+        detach();
+        state.options = nextOptions;
+        return;
+      }
+
+      state.handler = nextHandler;
+
+      if (!state.attached || optionsChanged) {
         if (state.attached) {
           el.removeEventListener(eventName, dispatch, state.options);
-          state.attached = false;
         }
-        state.handler = null;
-      };
-
-      const apply = (nextValue) => {
-        const next = normalizeEventValue(nextValue);
-        const nextHandler = typeof next.handler === "function" ? next.handler : null;
-        const nextOptions = next.options;
-        const optionsChanged = !eventOptionsEqual(state.options, nextOptions);
-
-        if (!nextHandler) {
-          detach();
-          state.options = nextOptions;
-          return;
-        }
-
-        state.handler = nextHandler;
-
-        if (!state.attached || optionsChanged) {
-          if (state.attached) {
-            el.removeEventListener(eventName, dispatch, state.options);
-          }
-          el.addEventListener(eventName, dispatch, nextOptions);
-          state.attached = true;
-          state.options = nextOptions;
-        }
-      };
-
-      CMSwift._registerCleanup(el, detach);
-
-      if (isRod(value)) {
-        CMSwift.reactive.effect(() => {
-          apply(value.value);
-        });
-        return;
+        el.addEventListener(eventName, dispatch, nextOptions);
+        state.attached = true;
+        state.options = nextOptions;
       }
+    };
 
-      if (hasDynamicEventValue(value)) {
-        CMSwift.reactive.effect(() => {
-          apply(value);
-        });
-        return;
-      }
+    CMSwift._registerCleanup(el, detach);
 
-      apply(value);
-    }
-
-    function removeProp(key) {
-      if (isContentProp(key)) {
-        el[key] = "";
-        return;
-      }
-      if (key === "class") {
-        el.removeAttribute("class");
-        return;
-      }
-      if (key === "style") {
-        el.removeAttribute("style");
-        return;
-      }
-      if (isBooleanDomProp(key)) {
-        try { el[key] = false; } catch { }
-        el.removeAttribute(key);
-        return;
-      }
-      el.removeAttribute(key);
-      if (!isAttributeOnlyProp(key)) {
-        try {
-          if (typeof el[key] === "string") el[key] = "";
-        } catch { }
-      }
-    }
-
-    function setClassValue(value) {
-      const normalized = normalizeClass(value);
-      if (normalized == null || normalized === false || normalized === "") {
-        el.removeAttribute("class");
-        return;
-      }
-      el.setAttribute("class", String(normalized));
-    }
-
-    function setBooleanProp(key, value) {
-      const next = !!value;
-      el[key] = next;
-      if (next) el.setAttribute(key, "");
-      else el.removeAttribute(key);
-    }
-
-    function setAttributeValue(key, value) {
-      if (value == null || value === false) {
-        el.removeAttribute(key);
-        return;
-      }
-      if (value === true && !isSVG && !key.startsWith("aria-") && !key.startsWith("data-")) {
-        el.setAttribute(key, "");
-        return;
-      }
-      el.setAttribute(key, String(value));
-    }
-
-    function setStyleEntry(name, value) {
-      if (name == null) return;
-      const styleName = String(name);
-      const isCssProperty = styleName.startsWith("--") || styleName.includes("-");
-      if (value == null || value === false || value === "") {
-        if (isCssProperty) el.style.removeProperty(styleName);
-        else el.style[styleName] = "";
-        return;
-      }
-      if (isCssProperty) {
-        el.style.setProperty(styleName, String(value));
-        return;
-      }
-      el.style[styleName] = value;
-    }
-
-    function applyStyleObject(styleObj) {
-      if (!styleObj || typeof styleObj !== "object") return;
-      Object.entries(styleObj).forEach(([styleName, styleValue]) => {
-        if (typeof styleValue === "function") {
-          setStyleEntry(styleName, styleValue());
-          return;
-        }
-        if (isRod(styleValue)) {
-          setStyleEntry(styleName, styleValue.value);
-          return;
-        }
-        setStyleEntry(styleName, styleValue);
+    if (isRod(value)) {
+      CMSwift.reactive.effect(() => {
+        apply(value.value);
       });
+      return;
     }
 
-    function setProp(key, value) {
-      if (isContentProp(key)) {
-        el[key] = value ?? "";
-        return;
-      }
-      if (key === "class") {
-        setClassValue(value);
-        return;
-      }
-      if (key === "style") {
-        if (value == null || value === false) {
-          removeProp(key);
-          return;
-        }
-        if (typeof value === "object") {
-          applyStyleObject(value);
-          return;
-        }
-      }
-      if (isBooleanDomProp(key)) {
-        setBooleanProp(key, value);
-        return;
-      }
-      if (value == null || value === false) {
-        removeProp(key);
-        return;
-      }
-      if (isAttributeOnlyProp(key)) {
-        setAttributeValue(key, value);
-        return;
-      }
-      el[key] = value;
+    if (hasDynamicEventValue(value, isRod)) {
+      CMSwift.reactive.effect(() => {
+        apply(value);
+      });
+      return;
     }
 
-    function bindProp(key, value) {
-      if (isEventProp(key)) {
-        bindEventProp(key, value);
-        return;
-      }
-      if (key === "class") {
-        if (hasDynamicClassValue(value)) {
-          CMSwift.reactive.effect(() => {
-            setClassValue(normalizeClass(value));
-          });
-          return;
-        }
-        setClassValue(normalizeClass(value));
-        return;
-      }
-      if (key === "style" && value && typeof value === "object") {
-        Object.entries(value).forEach(([styleName, styleValue]) => {
-          if (typeof styleValue === "function") {
-            CMSwift.reactive.effect(() => {
-              setStyleEntry(styleName, styleValue());
-            });
-            return;
-          }
-          if (isRod(styleValue)) {
-            CMSwift.reactive.effect(() => {
-              setStyleEntry(styleName, styleValue.value);
-            });
-            return;
-          }
-          setStyleEntry(styleName, styleValue);
-        });
-        return;
-      }
-      if (typeof value === "function") {
-        CMSwift.reactive.effect(() => {
-          setProp(key, value());
-        });
-        return;
-      }
-      if (key === "value" && isRod(value) && tag === "input") {
-        CMSwift.reactive.effect(() => {
-          const next = value.value ?? "";
-          if (el.value !== String(next)) setProp("value", next);
-        });
-        el.addEventListener("input", () => {
-          const next = el.value;
-          if (value.value !== next) value.value = next;
-        });
-        return;
-      }
-      if (isContentProp(key) && isRod(value)) {
-        CMSwift.reactive.effect(() => {
-          setProp(key, value.value);
-        });
-        return;
-      }
-      if (isRod(value)) {
-        CMSwift.rodBind(el, value, { key });
-        return;
-      }
-      setProp(key, value);
-    }
+    apply(value);
+  }
+  /* ===============================
+     Renderer child helpers
+     =============================== */
+
+  function createRendererChildHelpers(el, options = {}) {
+    const {
+      isRod = () => false,
+      interpolationCursor = null
+    } = options;
 
     function appendRodText(rod) {
       const t = document.createTextNode("");
@@ -1141,6 +1102,29 @@
       }
     }
 
+    return {
+      appendRodText,
+      appendInterpolatedText,
+      appendDynamicChild,
+      appendChildValue
+    };
+  }
+  /* ===============================
+     Renderer args parser
+     =============================== */
+
+  function applyRendererArgs(args, options = {}) {
+    const {
+      el,
+      isRod = () => false,
+      interpolationCursor = null,
+      appendChildValue = () => { },
+      appendRodText = () => { },
+      appendInterpolatedText = () => { },
+      appendDynamicChild = () => { },
+      bindProp = () => { }
+    } = options;
+
     for (const arg of args) {
       if (arg == null) continue;
 
@@ -1197,6 +1181,142 @@
         }
       }
     }
+  }
+  /* ===============================
+     _h hyperscript (usa CMSwift.reactive.effect)
+     =============================== */
+
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const SVG_TAGS = new Set([
+    "svg",
+    "g",
+    "path",
+    "circle",
+    "ellipse",
+    "line",
+    "rect",
+    "polygon",
+    "polyline",
+    "text",
+    "tspan",
+    "defs",
+    "linearGradient",
+    "radialGradient",
+    "stop",
+    "use",
+    "symbol",
+    "clipPath",
+    "mask",
+    "pattern",
+    "filter",
+    "feGaussianBlur",
+    "feOffset",
+    "feBlend",
+    "feColorMatrix"
+  ]);
+
+  function isContentProp(key) {
+    return key === "innerHTML" || key === "innerText" || key === "textContent" || key === "value";
+  }
+
+  function createElement(tag, ...args) {
+    const isSVG = SVG_TAGS.has(tag);
+    const el = tag === "text" && !isSVG
+      ? document.createTextNode("")
+      : isSVG
+        ? document.createElementNS(SVG_NS, tag)
+        : document.createElement(tag);
+
+    const isRod = (v) => !!v && v.type === "rod";
+    const interpolationCursor = createRodInterpolationCursor();
+    const childHelpers = createRendererChildHelpers(el, { isRod, interpolationCursor });
+    const {
+      appendRodText,
+      appendInterpolatedText,
+      appendDynamicChild,
+      appendChildValue
+    } = childHelpers;
+    const domBridge = createDomPropBridge(el, { isSVG, normalizeClass, isContentProp });
+    const {
+      isBooleanDomProp,
+      setStyleEntry,
+      setProp,
+      setClassValue
+    } = domBridge;
+
+    function bindProp(key, value) {
+      if (isEventProp(key)) {
+        bindEventProp(el, key, value, isRod);
+        return;
+      }
+      if (key === "class") {
+        if (hasDynamicClassValue(value)) {
+          CMSwift.reactive.effect(() => {
+            setClassValue(normalizeClass(value));
+          });
+          return;
+        }
+        setClassValue(normalizeClass(value));
+        return;
+      }
+      if (key === "style" && value && typeof value === "object") {
+        Object.entries(value).forEach(([styleName, styleValue]) => {
+          if (typeof styleValue === "function") {
+            CMSwift.reactive.effect(() => {
+              setStyleEntry(styleName, styleValue());
+            });
+            return;
+          }
+          if (isRod(styleValue)) {
+            CMSwift.reactive.effect(() => {
+              setStyleEntry(styleName, styleValue.value);
+            });
+            return;
+          }
+          setStyleEntry(styleName, styleValue);
+        });
+        return;
+      }
+      if (typeof value === "function") {
+        CMSwift.reactive.effect(() => {
+          setProp(key, value());
+        });
+        return;
+      }
+      if (key === "value" && isRod(value) && tag === "input") {
+        CMSwift.reactive.effect(() => {
+          const next = value.value ?? "";
+          if (el.value !== String(next)) setProp("value", next);
+        });
+        el.addEventListener("input", () => {
+          const next = el.value;
+          if (value.value !== next) value.value = next;
+        });
+        return;
+      }
+      if (isContentProp(key) && isRod(value)) {
+        CMSwift.reactive.effect(() => {
+          setProp(key, value.value);
+        });
+        return;
+      }
+      if (isRod(value)) {
+        CMSwift.rodBind(el, value, { key });
+        return;
+      }
+      setProp(key, value);
+    }
+
+    applyRendererArgs(args, {
+      el,
+      isRod,
+      interpolationCursor,
+      appendChildValue,
+      appendRodText,
+      appendInterpolatedText,
+      appendDynamicChild,
+      bindProp
+    });
 
     return el;
   }
@@ -1422,7 +1542,6 @@
 
     return parent; // fragment con anchor
   };
-
   /* ===============================
      ROD v3 PRO (batch + bindings + dispose hooks + key mapping)
      =============================== */
@@ -1459,136 +1578,12 @@
       return;
     }
 
-    const isSvgEl = el.namespaceURI === SVG_NS;
-
-    const isBooleanDomProp = (name) => {
-      if (isSvgEl || !(name in el)) return false;
-      try {
-        return typeof el[name] === "boolean";
-      } catch {
-        return false;
-      }
-    };
-
-    const isAttributeOnlyProp = (name) => isSvgEl || name.startsWith("data-") || name.startsWith("aria-") || !(name in el);
-
-    const setAttributeValue = (name, next) => {
-      if (next == null || next === false) {
-        el.removeAttribute(name);
-        return;
-      }
-      if (next === true && !isSvgEl && !name.startsWith("aria-") && !name.startsWith("data-")) {
-        el.setAttribute(name, "");
-        return;
-      }
-      el.setAttribute(name, String(next));
-    };
-
-    const setStyleValue = (name, next) => {
-      const styleName = String(name);
-      const isCssProperty = styleName.startsWith("--") || styleName.includes("-");
-      if (next == null || next === false || next === "") {
-        if (isCssProperty) el.style.removeProperty(styleName);
-        else el.style[styleName] = "";
-        return;
-      }
-      if (isCssProperty) {
-        el.style.setProperty(styleName, String(next));
-        return;
-      }
-      el.style[styleName] = next;
-    };
-
-    const removeProp = (name) => {
-      if (isContentProp(name)) {
-        el[name] = "";
-        return;
-      }
-      if (name === "class") {
-        el.removeAttribute("class");
-        return;
-      }
-      if (isBooleanDomProp(name)) {
-        try { el[name] = false; } catch { }
-        el.removeAttribute(name);
-        return;
-      }
-      el.removeAttribute(name);
-      if (!isAttributeOnlyProp(name)) {
-        try {
-          if (typeof el[name] === "string") el[name] = "";
-        } catch { }
-      }
-    };
-
-    if (isContentProp(key)) {
-      el[key] = value ?? "";
-      return;
-    }
-
-    if (key === "class") {
-      const normalized = normalizeClass(value);
-      if (!normalized) el.removeAttribute("class");
-      else el.setAttribute("class", normalized);
-      return;
-    }
-
-    if (!key || key === "auto") {
-      const tag = el.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") el.value = value ?? "";
-      else el.textContent = value ?? "";
-      return;
-    }
-
-    if (key === "value") {
-      el.value = value ?? "";
-      return;
-    }
-
-    if (key.startsWith("attr:")) {
-      setAttributeValue(key.slice(5), value);
-      return;
-    }
-    if (key.startsWith("@")) {
-      setAttributeValue(key.slice(1), value);
-      return;
-    }
-
-    if (key.startsWith("style.")) {
-      setStyleValue(key.slice(6), value);
-      return;
-    }
-
-    if (key.includes(".")) {
-      const parts = key.split(".");
-      let obj = el;
-      for (let i = 0; i < parts.length - 1; i++) {
-        obj = obj?.[parts[i]];
-        if (!obj) return;
-      }
-      obj[parts[parts.length - 1]] = value;
-      return;
-    }
-
-    if (isBooleanDomProp(key)) {
-      const next = !!value;
-      el[key] = next;
-      if (next) el.setAttribute(key, "");
-      else el.removeAttribute(key);
-      return;
-    }
-
-    if (value == null || value === false) {
-      removeProp(key);
-      return;
-    }
-
-    if (key in el) {
-      el[key] = value;
-      return;
-    }
-
-    setAttributeValue(key, value);
+    const domBridge = createDomPropBridge(el, {
+      isSVG: el.namespaceURI === SVG_NS,
+      normalizeClass,
+      isContentProp
+    });
+    domBridge.applyBindingValue(key, value);
   }
 
   function rodCreateComponent(initialValue) {
@@ -1817,7 +1812,6 @@
 
     return r;
   };
-
   // ===============================
   // Two-way binding: input <-> rod
   // ===============================
@@ -1975,7 +1969,90 @@
     const r = CMSwift.rodFromSignal(get, set);
     return CMSwift.rodModel(inputEl, r, opts);
   };
+  // ===============================
+  // Lifecycle helpers
+  // ===============================
 
+  function cleanupNodeTree(node) {
+    if (!node) return;
+
+    const disposers = CMSwift._cleanupRegistry.get(node);
+    if (disposers) {
+      for (const d of disposers) {
+        try { d(); } catch (e) { console.error("[cleanup] error:", e); }
+      }
+      CMSwift._cleanupRegistry.delete(node);
+    }
+
+    if (node.childNodes && node.childNodes.length) {
+      for (const child of node.childNodes) {
+        cleanupNodeTree(child);
+      }
+    }
+  }
+
+  function toMountTargets(target) {
+    const toEl = (t) => (typeof t === "string" ? CMSwift.dom.q(t) : t);
+    return Array.isArray(target) ? target.map(toEl).filter(Boolean) : [toEl(target)].filter(Boolean);
+  }
+
+  function normalizeMountContent(content) {
+    const nodes = [];
+    const disposers = [];
+
+    const add = (value) => {
+      if (value == null) return;
+
+      if (typeof value === "function") {
+        add(value());
+        return;
+      }
+
+      if (value && typeof value === "object" && "node" in value) {
+        if (typeof value.dispose === "function") disposers.push(value.dispose);
+        add(value.node);
+        return;
+      }
+
+      if (Array.isArray(value)) {
+        for (const item of value) add(item);
+        return;
+      }
+
+      if (typeof value === "string" || typeof value === "number") {
+        nodes.push(document.createTextNode(String(value)));
+        return;
+      }
+
+      if (value.nodeType) {
+        nodes.push(value);
+        return;
+      }
+
+      console.warn("[CMSwift.mount] contenuto non supportato:", value);
+    };
+
+    add(content);
+    return { nodes, disposers };
+  }
+
+  function createOnceDisposer(disposers = [], label = "[CMSwift.mount] dispose error:") {
+    let done = false;
+    return () => {
+      if (done) return;
+      done = true;
+      for (const d of disposers) {
+        try { d(); } catch (e) { console.error(label, e); }
+      }
+    };
+  }
+
+  function createComponentDisposer(disposers = [], userDispose = null) {
+    return createOnceDisposer([
+      ...(userDispose ? [userDispose] : []),
+      ...disposers
+    ], "[component] dispose error:");
+  }
   // ===============================
   // CMSwift.mount (Node | array | string | function)
   // ===============================
@@ -1988,9 +2065,7 @@
   // - function -> { node, dispose }  (component instance)
   // ===============================
   CMSwift.mount = function (target, content, opts = {}) {
-
-    const toEl = (t) => (typeof t === "string" ? CMSwift.dom.q(t) : t);
-    const targets = Array.isArray(target) ? target.map(toEl).filter(Boolean) : [toEl(target)].filter(Boolean);
+    const targets = toMountTargets(target);
 
     const clear = opts.clear ?? true;
     const isMulti = targets.length > 1;
@@ -2000,64 +2075,7 @@
       return () => { };
     }
 
-    // helper: normalizza output in { nodes[], disposers[] }
-    const normalize = (x) => {
-      const nodes = [];
-      const disposers = [];
-
-      const add = (v) => {
-        if (v == null) return;
-
-        // component function / factory
-        if (typeof v === "function") {
-          add(v());
-          return;
-        }
-
-        // { node, dispose }
-        if (v && typeof v === "object" && "node" in v) {
-          if (typeof v.dispose === "function") disposers.push(v.dispose);
-          add(v.node);
-          return;
-        }
-
-        // array / nested
-        if (Array.isArray(v)) {
-          for (const item of v) add(item);
-          return;
-        }
-
-        // string/number
-        if (typeof v === "string" || typeof v === "number") {
-          nodes.push(document.createTextNode(String(v)));
-          return;
-        }
-
-        // DOM Node
-        if (v.nodeType) {
-          nodes.push(v);
-          return;
-        }
-
-        console.warn("[CMSwift.mount] contenuto non supportato:", v);
-      };
-
-      add(x);
-      return { nodes, disposers };
-    };
-
     const mounted = []; // [{ root, nodes, disposers }]
-
-    const createOnceDisposer = (disposers = []) => {
-      let done = false;
-      return () => {
-        if (done) return;
-        done = true;
-        for (const d of disposers) {
-          try { d(); } catch (e) { console.error("[CMSwift.mount] dispose error:", e); }
-        }
-      };
-    };
 
     for (const root of targets) {
       if (clear) {
@@ -2069,7 +2087,7 @@
 
       // per multi-target: se non passi una function, cloneremo i nodi (ma NON possiamo clonare cleanup)
       // quindi: consigliamo content come function quando mounti su più target.
-      const { nodes: rawNodes, disposers } = normalize(content);
+      const { nodes: rawNodes, disposers } = normalizeMountContent(content);
 
       let nodes = rawNodes;
 
@@ -2110,53 +2128,6 @@
   };
 
   // ===============================
-  // Rod DevTools micro
-  // ===============================
-  CMSwift.rod = CMSwift.rod || {};
-
-  CMSwift.rod.inspect = function (r, label = "rod") {
-    if (!r || r.type !== "rod") {
-      console.warn("[CMSwift.rod.inspect] non è un rod:", r);
-      return null;
-    }
-
-    const bindings = typeof r.bindings === "function" ? r.bindings() : [];
-    const info = {
-      label,
-      value: r.value,
-      bindingsCount: bindings.length,
-      bindings: bindings.map(b => ({
-        key: b.key,
-        // per non stampare l'intero elemento enorme, riassunto:
-        el: b.el?.nodeType === 3 ? "#text" : b.el?.tagName,
-        id: b.el?.id || null,
-        className: b.el?.className || null,
-        isConnected: b.el?.nodeType === 3 ? !!b.el.parentNode : (b.el?.isConnected ?? null)
-      })),
-      actionsCount: Array.isArray(r._actions) ? r._actions.length : null,
-      disposed: !!r._disposed
-    };
-
-    // stampa carina
-    if (CMSwift.config.debug) {
-      console.groupCollapsed(`[CMSwift.rod.inspect] ${label}`);
-      console.log(info);
-      console.groupEnd();
-    } else {
-      console.log(info);
-    }
-
-    return info;
-  };
-
-  CMSwift.rod.inspectAll = function () {
-    const all = CMSwift.rod._all ? Array.from(CMSwift.rod._all) : [];
-    all.forEach((r, i) => CMSwift.rod.inspect(r, `rod#${i + 1}`));
-    return all.length;
-  };
-
-
-  // ===============================
   // CMSwift.component (istanza con cleanup)
   // ===============================
   CMSwift.component = function (renderFn) {
@@ -2178,27 +2149,15 @@
       // - Node / array / string/number
       // - { node, dispose }
       if (out && typeof out === "object" && "node" in out) {
-        const userDispose = typeof out.dispose === "function" ? out.dispose : null;
         return {
           node: out.node,
-          dispose: () => {
-            if (userDispose) {
-              try { userDispose(); } catch (e) { console.error("[component] dispose error:", e); }
-            }
-            for (const fn of disposers) {
-              try { fn(); } catch (e) { console.error("[component] onDispose error:", e); }
-            }
-          }
+          dispose: createComponentDisposer(disposers, typeof out.dispose === "function" ? out.dispose : null)
         };
       }
 
       return {
         node: out,
-        dispose: () => {
-          for (const fn of disposers) {
-            try { fn(); } catch (e) { console.error("[component] onDispose error:", e); }
-          }
-        }
+        dispose: createComponentDisposer(disposers)
       };
     };
   };
@@ -2225,27 +2184,6 @@
 
     CMSwift._cleanupObserver = observer;
   };
-
-  function cleanupNodeTree(node) {
-    if (!node) return;
-
-    // cleanup diretto
-    const disposers = CMSwift._cleanupRegistry.get(node);
-    if (disposers) {
-      for (const d of disposers) {
-        try { d(); } catch (e) { console.error("[cleanup] error:", e); }
-      }
-      CMSwift._cleanupRegistry.delete(node);
-    }
-
-    // cleanup figli
-    if (node.childNodes && node.childNodes.length) {
-      for (const child of node.childNodes) {
-        cleanupNodeTree(child);
-      }
-    }
-  }
-
   // ===============================
   // Debug utilities
   // ===============================
@@ -2422,6 +2360,49 @@
   })();
 
 
+  // ===============================
+  // Rod DevTools micro
+  // ===============================
+  CMSwift.rod = CMSwift.rod || {};
+
+  CMSwift.rod.inspect = function (r, label = "rod") {
+    if (!r || r.type !== "rod") {
+      console.warn("[CMSwift.rod.inspect] non è un rod:", r);
+      return null;
+    }
+
+    const bindings = typeof r.bindings === "function" ? r.bindings() : [];
+    const info = {
+      label,
+      value: r.value,
+      bindingsCount: bindings.length,
+      bindings: bindings.map(b => ({
+        key: b.key,
+        el: b.el?.nodeType === 3 ? "#text" : b.el?.tagName,
+        id: b.el?.id || null,
+        className: b.el?.className || null,
+        isConnected: b.el?.nodeType === 3 ? !!b.el.parentNode : (b.el?.isConnected ?? null)
+      })),
+      actionsCount: Array.isArray(r._actions) ? r._actions.length : null,
+      disposed: !!r._disposed
+    };
+
+    if (CMSwift.config.debug) {
+      console.groupCollapsed(`[CMSwift.rod.inspect] ${label}`);
+      console.log(info);
+      console.groupEnd();
+    } else {
+      console.log(info);
+    }
+
+    return info;
+  };
+
+  CMSwift.rod.inspectAll = function () {
+    const all = CMSwift.rod._all ? Array.from(CMSwift.rod._all) : [];
+    all.forEach((r, i) => CMSwift.rod.inspect(r, `rod#${i + 1}`));
+    return all.length;
+  };
   // ===============================
   // CMSwift.store v1 (persisted reactive state)
   // ===============================
@@ -2653,7 +2634,6 @@
 
     return { configure, stats, get, set, remove, clear, watch, signal };
   })();
-
   // ===============================
   // 1) store.computed (derivato, non persistito)
   // ===============================
@@ -2848,8 +2828,6 @@
 
     return [get, set];
   };
-
-
   // ===============================
   // Plugin system (CMSwift.usePlugin)
   // ===============================
@@ -3013,7 +2991,6 @@
       };
     }
   };
-
   // ===============================
   // Auth Plugin (store + router guard)
   // Auth Plugin + Roles / Permissions
@@ -3315,7 +3292,6 @@
       })(CMSwift);
     }
   };
-
   // ===============================
   // HTTP (fetch wrapper)
   // ===============================
@@ -3989,7 +3965,6 @@
     return ok ? (typeof render === "function" ? render() : render)
       : (typeof elseRender === "function" ? elseRender() : elseRender);
   };
-
   // ===============================
   // Can component (hyperscript-friendly)
   // ===============================
@@ -4010,7 +3985,6 @@
       ? (typeof props.then === "function" ? props.then() : props.then ?? null)
       : (typeof props.else === "function" ? props.else() : props.else ?? null);
   };
-
   // -- ROUTER --
   CMSwift.router = (() => {
     let mode = "history"; // "history" | "hash" | "auto"
@@ -4485,7 +4459,6 @@
   if (CMSwift.config?.debug) {
     window.$router = CMSwift.router;
   }
-
   // alias per compatibilità
   CMSwift.signal = CMSwift.reactive.signal;
   CMSwift.effect = CMSwift.reactive.effect;
