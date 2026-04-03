@@ -18,7 +18,7 @@ Stato generale oggi:
 - reactive core: milestone 1 chiusa
 - rod: milestone 1 chiusa
 - lifecycle / mount / cleanup: milestone 1 chiusa
-- moduli platform: ancora da aprire in modo strutturato
+- moduli platform: in apertura strutturata, focus iniziale `store`
 
 1. Renderer DOM e bridge props
 - file: `pages/_cmswift-fe/js/cms.js`
@@ -49,6 +49,7 @@ Stato generale oggi:
 - area: overlay, store, auth, http, router, `CMSwift.ui.meta`
 - motivo: sono utili, ma oggi vivono tutti nello stesso file con responsabilita molto ampie
 - obiettivo: modularita interna migliore, documentazione per modulo e confini piu chiari
+- stato: in progress, primo modulo in lavorazione `store`
 
 ## Stato iniziale
 
@@ -420,6 +421,69 @@ Checklist manuale:
 - `_.component(...)`: `ctx.onDispose(...)` viene chiamato quando l'istanza viene smontata
 - `_.enableAutoCleanup()`: la rimozione manuale di nodi dal DOM libera anche i disposer associati
 
+## Platform: apertura blocco
+
+Area:
+- `CMSwift.overlay`
+- `CMSwift.store`
+- `CMSwift.plugins.auth`
+- `CMSwift.http`
+- `CMSwift.router`
+- `CMSwift.ui.meta`
+
+Obiettivo del blocco:
+- trattare i moduli applicativi con lo stesso metodo usato per renderer, reactive, rod e lifecycle
+- definire responsabilita e invarianti per modulo
+- ridurre i bug nati da stato globale implicito dentro lo stesso file
+
+Sequenza proposta:
+1. `store`
+2. `router`
+3. `http`
+4. `overlay`
+5. `auth`
+6. `CMSwift.ui.meta`
+
+## Platform / Store: contratto iniziale
+
+Area:
+- `CMSwift.store.get`
+- `CMSwift.store.set`
+- `CMSwift.store.watch`
+- `CMSwift.store.signal`
+- `CMSwift.store.model`
+
+### Cosa supporta ora
+
+- storage persistente su `localStorage` o `sessionStorage`
+- cache runtime in memoria
+- watcher per chiave
+- `signal` persistente che usa il core reattivo
+- integrazione con `rod` tramite `store.model(...)`
+- sync cross-tab sugli scope registrati
+
+### Correzione fatta in questo step
+
+Store scoping:
+- `store.signal(key, initial, opts)` non muta piu temporaneamente la config globale per leggere o scrivere
+- cache, watcher e pending writes sono ora namespaced per coppia `storage + prefix + key`
+- gli update persistiti da `signal(...)` restano nello scope corretto anche quando usi `opts.storage` o `opts.prefix`
+- il listener `storage` del browser riallinea ora solo gli scope davvero registrati, non un solo prefix globale implicito
+
+Cleanup:
+- `store.signal(...)` dispone ora sia il watcher sia l'effect interno `signal -> store`
+- viene disposto anche il signal interno del core reattivo
+
+### Limiti attuali del blocco platform
+
+- il contratto di `overlay`, `router`, `http` e `auth` non e ancora formalizzato
+- mancano demo browser dedicate per i moduli platform
+- `store` non ha ancora una suite di test automatica dedicata
+
+Stato:
+- platform: `priority-5-in-progress`
+- store: primo modulo aperto e corretto a livello strutturale
+
 Fase 5: Meta e modularita
 - mantenere `CMSwift.meta` corto e strutturato
 - usare questo file come documento esteso
@@ -447,3 +511,5 @@ Campi consigliati per ogni modulo:
 - registrato come issue strutturale il bug sulle CSS custom properties nel renderer
 - aggiunta pagina demo browser `cms-renderer` per verificare bridge `props -> DOM`
 - implementata la prima semantica eventi del renderer con handler dinamici e custom event
+- aperto il blocco `platform` con focus iniziale su `store`
+- corretto `store.signal(...)` per scope `storage/prefix`, cleanup completo e cache/watcher namespaced
