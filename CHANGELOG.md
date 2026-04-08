@@ -1,0 +1,50 @@
+# Changelog
+
+Tutte le modifiche rilevanti di CMSwift verranno documentate qui.
+
+Il formato segue in modo pragmatico:
+- Added
+- Changed
+- Fixed
+- Docs
+
+## [1.0.0] - draft
+
+### Added
+- modularizzazione completa del core `cms-src`
+- modularizzazione completa del layer UI `ui-src`
+- build runtime standard e minificata:
+  - `cms.js`
+  - `min-cms.js`
+  - `ui.js`
+  - `min-ui.js`
+- documentazione interna per core e UI
+- checklist pre-release `v1`
+- policy di stabilita e compatibilita
+- smoke checklist browser di release
+- prima bozza di release notes `v1.0.0`
+
+### Changed
+- consolidata la struttura del renderer
+- consolidato il reactive core
+- riallineato `rod` al bridge DOM e ai form controls
+- separati i moduli platform e i moduli UI in file sorgente dedicati
+
+### Fixed
+- CSS custom properties nel renderer
+- semantica di remove/update props
+- children dinamici, classi, eventi e cleanup
+- casi rari dei form controls
+- bug reali emersi da demo e test del core
+
+### Docs
+- aggiunto `README.md` pubblico
+- aggiunti `readme_CMS.md` e `readme_UI.md` come riferimenti tecnici
+- aggiunto `LICENSE`
+
+## Note
+
+La release `1.0.0` resta draft finche non sono chiusi:
+- smoke test browser
+- versione ufficiale del package
+- release gate finale

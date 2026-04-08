@@ -28,6 +28,7 @@ Stato del ciclo corrente:
 - il core ha demo browser, meta, documentazione e test automatici allineati
 - i form controls principali e i casi rari gia trattati nel renderer sono coperti
 - il prossimo passo non e tecnico ma organizzativo: creare un checkpoint/commit e aprire il ciclo successivo solo quando c'e una nuova priorita chiara
+- la checklist operativa per una possibile `v1` e in `release_CMSwift_v1.md`
 
 1. Renderer DOM e bridge props
 - file: `pages/_cmswift-fe/js/cms.js`
