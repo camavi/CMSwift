@@ -604,6 +604,144 @@ test("renderer supports two-way checked rods on checkbox inputs", async () => {
   assert.equal(checkedValue.value, true);
 });
 
+test("renderer supports checked rods on radio groups via input value", async () => {
+  const CMS = await loadCMS();
+  const selectedValue = _.rod("b");
+
+  const radioA = CMS.input({
+    type: "radio",
+    name: "dept",
+    value: "a",
+    checked: selectedValue
+  });
+  const radioB = CMS.input({
+    type: "radio",
+    name: "dept",
+    value: "b",
+    checked: selectedValue
+  });
+
+  assert.equal(radioA.checked, false);
+  assert.equal(radioB.checked, true);
+
+  selectedValue.value = "a";
+  assert.equal(radioA.checked, true);
+  assert.equal(radioB.checked, false);
+
+  radioB.checked = true;
+  radioB.dispatchEvent({ type: "change" });
+  assert.equal(selectedValue.value, "b");
+  assert.equal(radioA.checked, false);
+  assert.equal(radioB.checked, true);
+
+  selectedValue.value = null;
+  assert.equal(radioA.checked, false);
+  assert.equal(radioB.checked, false);
+});
+
+test("renderer keeps numeric rods numeric on input range controls", async () => {
+  const CMS = await loadCMS();
+  const rangeValue = _.rod(25);
+
+  const range = CMS.input({
+    type: "range",
+    min: 0,
+    max: 100,
+    step: 5,
+    value: rangeValue
+  });
+
+  assert.equal(range.value, "25");
+
+  rangeValue.value = 40;
+  assert.equal(range.value, "40");
+
+  range.value = "55";
+  range.dispatchEvent({ type: "input" });
+  assert.equal(rangeValue.value, 55);
+  assert.equal(typeof rangeValue.value, "number");
+});
+
+test("renderer keeps numeric rods numeric and nullable on input number controls", async () => {
+  const CMS = await loadCMS();
+  const numberValue = _.rod(12);
+
+  const input = CMS.input({
+    type: "number",
+    min: 0,
+    max: 100,
+    step: 1,
+    value: numberValue
+  });
+
+  assert.equal(input.value, "12");
+
+  numberValue.value = 48;
+  assert.equal(input.value, "48");
+
+  input.value = "33";
+  input.dispatchEvent({ type: "input" });
+  assert.equal(numberValue.value, 33);
+  assert.equal(typeof numberValue.value, "number");
+
+  input.value = "";
+  input.dispatchEvent({ type: "input" });
+  assert.equal(numberValue.value, null);
+
+  numberValue.value = 7;
+  assert.equal(input.value, "7");
+});
+
+test("renderer maps single select empty placeholder to null rods", async () => {
+  const CMS = await loadCMS();
+  const selectValue = _.rod(null);
+
+  const select = CMS.select({ value: selectValue },
+    CMS.option({ value: "" }, "Choose one"),
+    CMS.option({ value: "ops" }, "Operations"),
+    CMS.option({ value: "sales" }, "Sales")
+  );
+
+  assert.equal(select.value, "");
+
+  selectValue.value = "sales";
+  assert.equal(select.value, "sales");
+
+  select.value = "";
+  select.dispatchEvent({ type: "change" });
+  assert.equal(selectValue.value, null);
+
+  select.value = "ops";
+  select.dispatchEvent({ type: "change" });
+  assert.equal(selectValue.value, "ops");
+});
+
+test("renderer supports files rods on input file controls", async () => {
+  const CMS = await loadCMS();
+  const filesRod = _.rod([]);
+
+  const input = CMS.input({
+    type: "file",
+    multiple: true,
+    files: filesRod
+  });
+
+  const fakeFiles = [
+    { name: "alpha.txt", size: 12, type: "text/plain" },
+    { name: "beta.jpg", size: 42, type: "image/jpeg" }
+  ];
+
+  input.files = fakeFiles.slice();
+  input.value = "C:\\fakepath\\alpha.txt";
+  input.dispatchEvent({ type: "change" });
+
+  assert.deepEqual(filesRod.value, fakeFiles);
+
+  filesRod.value = [];
+  assert.equal(input.value, "");
+  assert.deepEqual(input.files, []);
+});
+
 test("renderer supports select multiple value rods", async () => {
   const CMS = await loadCMS();
   const selectedValues = _.rod(["b", "c"]);

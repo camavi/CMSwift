@@ -129,7 +129,7 @@ class FakeNode extends FakeEventTarget {
     this.className = "";
     this.isConnected = false;
     this.textContent = "";
-    this.value = "";
+    this._value = "";
     this.disabled = false;
     this.required = false;
     this.readOnly = false;
@@ -137,6 +137,31 @@ class FakeNode extends FakeEventTarget {
     this.selected = false;
     this.multiple = false;
     this.type = "";
+    this.files = [];
+  }
+
+  get value() {
+    return this._value ?? "";
+  }
+
+  set value(value) {
+    this._value = value == null ? "" : String(value);
+    if (this.type === "file" && this._value === "") {
+      this.files = [];
+    }
+  }
+
+  get valueAsNumber() {
+    const parsed = Number(this.value);
+    return Number.isNaN(parsed) ? Number.NaN : parsed;
+  }
+
+  set valueAsNumber(value) {
+    if (value == null || Number.isNaN(Number(value))) {
+      this.value = "";
+      return;
+    }
+    this.value = String(value);
   }
 
   get firstChild() {

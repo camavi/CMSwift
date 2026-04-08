@@ -68,6 +68,26 @@
       return stop;
     }
 
+    function isNumericValueControl(control) {
+      if (String(control?.tagName || "").toLowerCase() !== "input") return false;
+      const inputType = String(control?.type || "").toLowerCase();
+      return inputType === "range" || inputType === "number";
+    }
+
+    function getValueControlType(control) {
+      if (String(control?.tagName || "").toLowerCase() !== "input") return "";
+      return String(control?.type || "").toLowerCase();
+    }
+
+    function isSingleSelectControl(control) {
+      return String(control?.tagName || "").toLowerCase() === "select" && !control.multiple;
+    }
+
+    function isFileInputControl(control) {
+      return String(control?.tagName || "").toLowerCase() === "input"
+        && String(control?.type || "").toLowerCase() === "file";
+    }
+
     function bindRodValueControl(control, rodValue, eventName) {
       registerNodeEffect(() => {
         const next = rodValue.value ?? "";
@@ -75,7 +95,21 @@
       });
 
       const onValueChange = () => {
-        const next = control.value;
+        let next = control.value;
+        const controlType = getValueControlType(control);
+        const isNumericRod = typeof rodValue.value === "number" || rodValue.value == null;
+        if (isSingleSelectControl(control) && control.value === "") {
+          next = null;
+        } else if (isNumericValueControl(control) && isNumericRod) {
+          if (controlType === "number" && control.value === "") {
+            next = null;
+          } else {
+          const numeric = typeof control.valueAsNumber === "number" && !Number.isNaN(control.valueAsNumber)
+            ? control.valueAsNumber
+            : Number(control.value);
+            next = Number.isNaN(numeric) ? (controlType === "number" ? null : 0) : numeric;
+          }
+        }
         if (rodValue.value !== next) rodValue.value = next;
       };
 
@@ -99,6 +133,55 @@
       control.addEventListener("change", onCheckedChange);
       CMSwift._registerCleanup(control, () => {
         control.removeEventListener("change", onCheckedChange);
+      });
+    }
+
+    function bindRodRadioControl(control, rodValue) {
+      const readOwnValue = () => String(control.value ?? "on");
+
+      registerNodeEffect(() => {
+        const next = rodValue.value == null ? null : String(rodValue.value);
+        const shouldCheck = next === readOwnValue();
+        if (!!control.checked !== shouldCheck) setProp("checked", shouldCheck);
+      });
+
+      const onCheckedChange = () => {
+        if (!control.checked) return;
+        const next = readOwnValue();
+        if (rodValue.value !== next) rodValue.value = next;
+      };
+
+      control.addEventListener("change", onCheckedChange);
+      CMSwift._registerCleanup(control, () => {
+        control.removeEventListener("change", onCheckedChange);
+      });
+    }
+
+    function bindRodFilesControl(control, rodValue) {
+      const readFiles = () => {
+        const files = control.files;
+        if (files == null) return [];
+        if (Array.isArray(files)) return files.slice();
+        if (typeof files.length === "number") return Array.from(files);
+        return [files];
+      };
+
+      registerNodeEffect(() => {
+        const next = rodValue.value;
+        const shouldClear = next == null || (Array.isArray(next) && next.length === 0);
+        if (!shouldClear) return;
+        if (control.value !== "") setProp("value", "");
+        if (Array.isArray(control.files)) control.files = [];
+      });
+
+      const onFilesChange = () => {
+        const next = readFiles();
+        rodValue.value = next;
+      };
+
+      control.addEventListener("change", onFilesChange);
+      CMSwift._registerCleanup(control, () => {
+        control.removeEventListener("change", onFilesChange);
       });
     }
 
@@ -221,7 +304,15 @@
         return;
       }
       if (key === "checked" && isRod(value) && tag === "input") {
+        if (String(el.type || "").toLowerCase() === "radio") {
+          bindRodRadioControl(el, value);
+          return;
+        }
         bindRodCheckedControl(el, value);
+        return;
+      }
+      if (key === "files" && isRod(value) && isFileInputControl(el)) {
+        bindRodFilesControl(el, value);
         return;
       }
       if (key === "selected" && isRod(value) && tag === "option") {

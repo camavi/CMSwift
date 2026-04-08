@@ -1,5 +1,6 @@
 const infoLine = (label, getter) => _.div({ class: "cms-m-b-xs" }, _.b(`${label}: `), _.span(getter));
 const toJson = (value) => JSON.stringify(value);
+const fileNames = (files) => Array.from(files || []).map((file) => file?.name || "unnamed").join(", ");
 const readSelectedValues = (selectEl) => Array.from(selectEl?.options || selectEl?.children || [])
   .filter((option) => option && option.selected)
   .map((option) => option.value);
@@ -30,9 +31,14 @@ const cmsRod = _.component((props, ctx) => {
   const textRod = _.rod("rodBind active");
 
   const modelRod = _.rod("ops");
+  const fileRod = _.rod([]);
+  const singleSelectRod = _.rod(null);
+  const numberRod = _.rod(12);
   const textareaRod = _.rod("Inventory note\nSecond row");
+  const rangeRod = _.rod(35);
   const multiValueRod = _.rod(["sales", "finance"]);
   const checkedRod = _.rod(true);
+  const radioRod = _.rod("sales");
   const optionOpsRod = _.rod(true);
   const optionSalesRod = _.rod(false);
   const optionFinanceRod = _.rod(true);
@@ -55,6 +61,12 @@ const cmsRod = _.component((props, ctx) => {
 
   const modelInput = _.input({ class: "cms-input-raw", type: "text", placeholder: "rodModel -> input", style: { width: "100%" } });
   const modelSelect = _.select({ class: "cms-input-raw", style: { width: "100%" } },
+    _.option({ value: "ops" }, "Operations"),
+    _.option({ value: "sales" }, "Sales"),
+    _.option({ value: "finance" }, "Finance")
+  );
+  const singleSelectInput = _.select({ class: "cms-input-raw", style: { width: "100%" }, value: singleSelectRod },
+    _.option({ value: "" }, "Choose one"),
     _.option({ value: "ops" }, "Operations"),
     _.option({ value: "sales" }, "Sales"),
     _.option({ value: "finance" }, "Finance")
@@ -86,11 +98,52 @@ const cmsRod = _.component((props, ctx) => {
     type: "checkbox",
     checked: checkedRod
   });
+  const radioSalesInput = _.input({
+    type: "radio",
+    name: "cms-rod-radio-demo",
+    value: "sales",
+    checked: radioRod
+  });
+  const radioOpsInput = _.input({
+    type: "radio",
+    name: "cms-rod-radio-demo",
+    value: "ops",
+    checked: radioRod
+  });
+  const radioFinanceInput = _.input({
+    type: "radio",
+    name: "cms-rod-radio-demo",
+    value: "finance",
+    checked: radioRod
+  });
   const textareaInput = _.textarea({
     class: "cms-input-raw",
     rows: 4,
     style: { width: "100%" },
     value: textareaRod
+  });
+  const rangeInput = _.input({
+    type: "range",
+    min: 0,
+    max: 100,
+    step: 5,
+    style: { width: "100%" },
+    value: rangeRod
+  });
+  const numberInput = _.input({
+    class: "cms-input-raw",
+    type: "number",
+    min: 0,
+    max: 100,
+    step: 1,
+    style: { width: "100%" },
+    value: numberRod
+  });
+  const fileInput = _.input({
+    class: "cms-input-raw",
+    type: "file",
+    multiple: true,
+    files: fileRod
   });
   const disposeModelInput = _.rodModel(modelInput, modelRod, { event: "input" });
   const disposeModelSelect = _.rodModel(modelSelect, modelRod, { event: "change" });
@@ -234,6 +287,61 @@ const cmsRod = _.component((props, ctx) => {
             ),
             infoLine("checked rod", () => String(checkedRod.value)),
             infoLine("checked DOM", () => String(!!checkedInput.checked)),
+            _.h4("checked: rod -> radio group"),
+            _.div({ style: { display: "grid", gap: "8px" } },
+              _.label({ class: "cms-flex-inline cms-gap-sm cms-align-center" }, radioSalesInput, _.span("Sales")),
+              _.label({ class: "cms-flex-inline cms-gap-sm cms-align-center" }, radioOpsInput, _.span("Operations")),
+              _.label({ class: "cms-flex-inline cms-gap-sm cms-align-center" }, radioFinanceInput, _.span("Finance"))
+            ),
+            actionRow(
+              _.Btn({ size: "sm", outline: true, onClick: () => { radioRod.value = "sales"; } }, "radio sales"),
+              _.Btn({ size: "sm", onClick: () => { radioRod.value = "ops"; } }, "radio ops"),
+              _.Btn({ size: "sm", color: "warning", onClick: () => { radioRod.value = "finance"; } }, "radio finance"),
+              _.Btn({ size: "sm", outline: true, onClick: () => { radioRod.value = null; } }, "radio clear")
+            ),
+            infoLine("radio rod", () => String(radioRod.value)),
+            infoLine("radio DOM", () => toJson({
+              sales: !!radioSalesInput.checked,
+              ops: !!radioOpsInput.checked,
+              finance: !!radioFinanceInput.checked
+            })),
+            _.h4("files: rod -> input[type=file]"),
+            _.div({ class: "cms-muted" }, "Seleziona file reali dal browser: il binding legge i file nel rod e permette solo il clear programmato."),
+            fileInput,
+            actionRow(
+              _.Btn({ size: "sm", outline: true, onClick: () => { fileRod.value = []; } }, "file clear"),
+              _.Btn({ size: "sm", color: "warning", onClick: () => { fileRod.value = null; } }, "file clear null")
+            ),
+            infoLine("file rod count", () => String(Array.isArray(fileRod.value) ? fileRod.value.length : 0)),
+            infoLine("file DOM names", () => fileNames(fileInput.files) || "none"),
+            infoLine("file DOM value", () => fileInput.value || "empty"),
+            _.h4("value: rod -> select one placeholder/null"),
+            singleSelectInput,
+            actionRow(
+              _.Btn({ size: "sm", outline: true, onClick: () => { singleSelectRod.value = null; } }, "select clear"),
+              _.Btn({ size: "sm", onClick: () => { singleSelectRod.value = "ops"; } }, "select ops"),
+              _.Btn({ size: "sm", color: "warning", onClick: () => { singleSelectRod.value = "sales"; } }, "select sales")
+            ),
+            infoLine("single select rod", () => `${singleSelectRod.value} (${typeof singleSelectRod.value})`),
+            infoLine("single select DOM", () => `${singleSelectInput.value} (${typeof singleSelectInput.value})`),
+            _.h4("value: rod -> input[type=number]"),
+            numberInput,
+            actionRow(
+              _.Btn({ size: "sm", outline: true, onClick: () => { numberRod.value = 8; } }, "number 8"),
+              _.Btn({ size: "sm", onClick: () => { numberRod.value = 24; } }, "number 24"),
+              _.Btn({ size: "sm", color: "warning", onClick: () => { numberRod.value = null; } }, "number clear")
+            ),
+            infoLine("number rod", () => `${numberRod.value} (${typeof numberRod.value})`),
+            infoLine("number DOM", () => `${numberInput.value} (${typeof numberInput.value})`),
+            _.h4("value: rod -> input[type=range]"),
+            rangeInput,
+            actionRow(
+              _.Btn({ size: "sm", outline: true, onClick: () => { rangeRod.value = 20; } }, "range 20"),
+              _.Btn({ size: "sm", onClick: () => { rangeRod.value = 50; } }, "range 50"),
+              _.Btn({ size: "sm", color: "warning", onClick: () => { rangeRod.value = 80; } }, "range 80")
+            ),
+            infoLine("range rod", () => `${rangeRod.value} (${typeof rangeRod.value})`),
+            infoLine("range DOM", () => `${rangeInput.value} (${typeof rangeInput.value})`),
             _.h4("value: rod -> textarea"),
             textareaInput,
             actionRow(
@@ -284,8 +392,18 @@ const cmsRod = _.component((props, ctx) => {
       sample: [
         'const multiValueRod = _.rod(["sales", "finance"]);',
         'const checkedRod = _.rod(true);',
+        'const radioRod = _.rod("sales");',
+        'const fileRod = _.rod([]);',
+        'const singleSelectRod = _.rod(null);',
+        'const numberRod = _.rod(12);',
+        'const rangeRod = _.rod(35);',
         'const textareaRod = _.rod("Inventory note");',
         '_.input({ type: "checkbox", checked: checkedRod });',
+        '_.input({ type: "radio", value: "sales", checked: radioRod });',
+        '_.input({ type: "file", multiple: true, files: fileRod });',
+        '_.select({ value: singleSelectRod }, _.option({ value: "" }, "Choose one"));',
+        '_.input({ type: "number", min: 0, max: 100, step: 1, value: numberRod });',
+        '_.input({ type: "range", min: 0, max: 100, step: 5, value: rangeRod });',
         '_.textarea({ value: textareaRod });',
         'const multiSelect = _.select({',
         '  multiple: true,',
@@ -309,8 +427,9 @@ const cmsRod = _.component((props, ctx) => {
       _.Item("`_.rodBind(el, rod, { key })` -> binding diretto su un nodo DOM"),
       _.Item("`_.rodModel(el, rod, opts)` -> two-way model per input/select"),
       _.Item("`_.rodFromSignal(get, set)` -> bridge tra signal e rod"),
-      _.Item("`value: rod` -> binding diretto su input, textarea, select e select[multiple]"),
-      _.Item("`checked: rod` -> binding diretto su checkbox input"),
+      _.Item("`files: rod` -> binding diretto su input[type=file], solo DOM -> rod + clear programmato"),
+      _.Item("`value: rod` -> binding diretto su input, number, textarea, range, select singolo e select[multiple]"),
+      _.Item("`checked: rod` -> binding diretto su checkbox e radio input"),
       _.Item("`selected: rod` -> binding diretto su option")
     ),
     _.h2("Esempi"),

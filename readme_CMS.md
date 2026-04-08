@@ -21,6 +21,12 @@ Stato generale oggi:
 - moduli platform: milestone 2 chiusa
 - test automatici core: prima base attiva con `node:test`
 
+Stato del ciclo corrente:
+- ciclo tecnico corrente chiuso
+- il core ha demo browser, meta, documentazione e test automatici allineati
+- i form controls principali e i casi rari gia trattati nel renderer sono coperti
+- il prossimo passo non e tecnico ma organizzativo: creare un checkpoint/commit e aprire il ciclo successivo solo quando c'e una nuova priorita chiara
+
 1. Renderer DOM e bridge props
 - file: `pages/_cmswift-fe/js/cms.js`
 - area: `createElement`, `setProp`, `bindProp`, gestione `style`, attributi, eventi, children
@@ -392,6 +398,11 @@ Checklist manuale:
 - `rodModel`: input e select restano sincronizzati con il rod
 - `rodFromSignal`: update da signal e da rod restano coerenti nei due sensi
 - `checked: rod`: il checkbox resta sincronizzato tra rod e DOM
+- `checked: rod`: il gruppo radio sincronizza il `value` selezionato tra rod e DOM
+- `files: rod`: `input[type="file"]` legge i file nel rod e supporta il clear programmato
+- `value: rod`: `select` singolo con placeholder `value=""` mappa il rod `null`
+- `value: rod`: `input[type="number"]` mantiene il rod numerico e usa `null` quando il campo viene svuotato
+- `value: rod`: `input[type="range"]` mantiene il rod numerico in two-way
 - `value: rod`: la textarea resta sincronizzata tra rod e DOM
 - `value: rod`: `select[multiple]` resta allineato con array e selezione iniziale
 - `selected: rod`: le `option` sincronizzano stato rod e stato DOM
