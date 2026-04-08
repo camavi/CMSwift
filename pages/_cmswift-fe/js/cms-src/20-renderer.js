@@ -55,10 +55,113 @@
     const domBridge = createDomPropBridge(el, { isSVG, normalizeClass, isContentProp });
     const {
       isBooleanDomProp,
+      isBindingValueKey,
+      applyBindingValue,
       setStyleEntry,
       setProp,
       setClassValue
     } = domBridge;
+
+    function registerNodeEffect(run) {
+      const stop = CMSwift.reactive.effect(run);
+      CMSwift._registerCleanup(el, stop);
+      return stop;
+    }
+
+    function bindRodValueControl(control, rodValue, eventName) {
+      registerNodeEffect(() => {
+        const next = rodValue.value ?? "";
+        if (control.value !== String(next)) setProp("value", next);
+      });
+
+      const onValueChange = () => {
+        const next = control.value;
+        if (rodValue.value !== next) rodValue.value = next;
+      };
+
+      control.addEventListener(eventName, onValueChange);
+      CMSwift._registerCleanup(control, () => {
+        control.removeEventListener(eventName, onValueChange);
+      });
+    }
+
+    function bindRodCheckedControl(control, rodValue) {
+      registerNodeEffect(() => {
+        const next = !!rodValue.value;
+        if (!!control.checked !== next) setProp("checked", next);
+      });
+
+      const onCheckedChange = () => {
+        const next = !!control.checked;
+        if (rodValue.value !== next) rodValue.value = next;
+      };
+
+      control.addEventListener("change", onCheckedChange);
+      CMSwift._registerCleanup(control, () => {
+        control.removeEventListener("change", onCheckedChange);
+      });
+    }
+
+    function bindRodSelectMultiple(control, rodValue) {
+      const readValues = () => Array.from(control.childNodes || [])
+        .filter((node) => node?.tagName === "OPTION" && node.selected)
+        .map((node) => String(node.value ?? ""));
+
+      const applyFromRod = () => {
+        const nextValues = Array.isArray(rodValue.value)
+          ? rodValue.value.map((item) => String(item))
+          : [];
+        const nextSet = new Set(nextValues);
+        Array.from(control.childNodes || []).forEach((node) => {
+          if (node?.tagName !== "OPTION") return;
+          const shouldSelect = nextSet.has(String(node.value ?? ""));
+          if (!!node.selected === shouldSelect) return;
+          node.selected = shouldSelect;
+          if (shouldSelect) node.setAttribute("selected", "");
+          else node.removeAttribute("selected");
+        });
+      };
+
+      registerNodeEffect(applyFromRod);
+      control._cmsApplySelectedValues = applyFromRod;
+      queueMicrotask(applyFromRod);
+
+      const onValueChange = () => {
+        const next = readValues();
+        const current = Array.isArray(rodValue.value) ? rodValue.value.map((item) => String(item)) : [];
+        if (current.length === next.length && current.every((item, index) => item === next[index])) return;
+        rodValue.value = next;
+      };
+
+      control.addEventListener("change", onValueChange);
+      CMSwift._registerCleanup(control, () => {
+        control.removeEventListener("change", onValueChange);
+      });
+    }
+
+    function bindRodOptionSelected(optionEl, rodValue) {
+      registerNodeEffect(() => {
+        const next = !!rodValue.value;
+        if (!!optionEl.selected !== next) setProp("selected", next);
+      });
+
+      let parentSelect = null;
+      const onParentChange = () => {
+        const next = !!optionEl.selected;
+        if (rodValue.value !== next) rodValue.value = next;
+      };
+
+      const attachParent = () => {
+        if (parentSelect || optionEl.parentNode?.tagName !== "SELECT") return;
+        parentSelect = optionEl.parentNode;
+        parentSelect.addEventListener("change", onParentChange);
+      };
+
+      queueMicrotask(attachParent);
+      CMSwift._registerCleanup(optionEl, () => {
+        parentSelect?.removeEventListener("change", onParentChange);
+      });
+    }
 
     function bindProp(key, value) {
       if (isEventProp(key)) {
@@ -67,7 +170,7 @@
       }
       if (key === "class") {
         if (hasDynamicClassValue(value)) {
-          CMSwift.reactive.effect(() => {
+          registerNodeEffect(() => {
             setClassValue(normalizeClass(value));
           });
           return;
@@ -78,7 +181,7 @@
       if (key === "style" && value && typeof value === "object") {
         const styleApplier = createStyleObjectApplier(setStyleEntry);
         if (hasDynamicStyleValue(value, isRod)) {
-          CMSwift.reactive.effect(() => {
+          registerNodeEffect(() => {
             styleApplier.apply(value, isRod);
           });
           return;
@@ -88,36 +191,52 @@
       }
       if (key === "style" && (typeof value === "function" || isRod(value))) {
         const styleApplier = createStyleObjectApplier(setStyleEntry);
-        CMSwift.reactive.effect(() => {
+        registerNodeEffect(() => {
           styleApplier.apply(value, isRod);
         });
         return;
       }
+      if (isBindingValueKey(key) && typeof value === "function") {
+        registerNodeEffect(() => {
+          applyBindingValue(key, value());
+        });
+        return;
+      }
+      if (isBindingValueKey(key) && !isRod(value)) {
+        applyBindingValue(key, value);
+        return;
+      }
       if (typeof value === "function") {
-        CMSwift.reactive.effect(() => {
+        registerNodeEffect(() => {
           setProp(key, value());
         });
         return;
       }
-      if (key === "value" && isRod(value) && tag === "input") {
-        CMSwift.reactive.effect(() => {
-          const next = value.value ?? "";
-          if (el.value !== String(next)) setProp("value", next);
-        });
-        el.addEventListener("input", () => {
-          const next = el.value;
-          if (value.value !== next) value.value = next;
-        });
+      if (key === "value" && isRod(value) && (tag === "input" || tag === "textarea" || tag === "select")) {
+        if (tag === "select" && !!el.multiple) {
+          bindRodSelectMultiple(el, value);
+          return;
+        }
+        bindRodValueControl(el, value, tag === "select" ? "change" : "input");
+        return;
+      }
+      if (key === "checked" && isRod(value) && tag === "input") {
+        bindRodCheckedControl(el, value);
+        return;
+      }
+      if (key === "selected" && isRod(value) && tag === "option") {
+        bindRodOptionSelected(el, value);
         return;
       }
       if (isContentProp(key) && isRod(value)) {
-        CMSwift.reactive.effect(() => {
+        registerNodeEffect(() => {
           setProp(key, value.value);
         });
         return;
       }
       if (isRod(value)) {
-        CMSwift.rodBind(el, value, { key });
+        const unbind = CMSwift.rodBind(el, value, { key });
+        CMSwift._registerCleanup(el, unbind);
         return;
       }
       setProp(key, value);
@@ -133,6 +252,10 @@
       appendDynamicChild,
       bindProp
     });
+
+    if (tag === "select" && typeof el._cmsApplySelectedValues === "function") {
+      el._cmsApplySelectedValues();
+    }
 
     return el;
   }

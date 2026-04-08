@@ -26,7 +26,7 @@ Stato generale oggi:
 - area: `createElement`, `setProp`, `bindProp`, gestione `style`, attributi, eventi, children
 - motivo: ogni bug qui impatta tutto il framework
 - obiettivo: rendere prevedibile la traduzione `props -> DOM` e coprire gli edge case con test
-- stato: milestone 3 chiusa, con un mini-terzo-giro dedicato a style, eventi e children dinamici
+- stato: milestone 3 chiusa, con mini-terzo-giro e micro-giro avanzato chiusi su style, eventi, children e props/attr speciali
 
 2. Reactive core
 - area: `CMSwift.reactive.signal` e `CMSwift.reactive.effect`
@@ -76,6 +76,7 @@ Stato:
 - milestone 3 chiusa sul piano qualitativo: il mini-terzo-giro ha chiuso il cleanup di `style`, `eventi` e `children` dinamici
 - nel terzo giro il blocco eventi del renderer dispone ora davvero gli `effect` dei listener dinamici quando il nodo viene smontato
 - nel terzo giro anche i `children` dinamici puliscono il subtree precedente e dispongono i relativi cleanup/effect quando fanno replace
+- chiuso anche un micro-giro avanzato del renderer su composizione eventi, `children` con `rod` annidati e key speciali `attr:`, `@`, `style.*`, path annidati e semantica `aria-*`
 
 ## Renderer: contratto attuale
 
@@ -117,8 +118,10 @@ Semantica eventi:
 - `onClick: fn` per handler statico
 - `onClick: rod(fn|null)` per attach/detach dinamico
 - `onClick: { handler, options }` per usare `addEventListener` con options
+- `onClick: [fnA, { handler: fnB, options: { once: true } }]` per comporre piu listener nello stesso prop
 - `on:custom-event` per eventi custom senza normalizzazione automatica del nome
 - `options` supporta `once`, `capture`, `passive`
+- sugli attributi `aria-*`, il valore booleano `false` viene serializzato come `"false"`; `null` invece rimuove l'attributo
 
 Children:
 - stringhe e numeri
@@ -167,7 +170,7 @@ Semantica eventi:
 
 ### Limiti attuali confermati
 
-- gli eventi non hanno ancora delegation o composizione/diff avanzato di listener multipli
+- gli eventi non hanno ancora delegation o diff avanzato di listener multipli
 - il renderer non ha ancora una suite di test automatica dedicata
 
 ### Step successivi del renderer
@@ -388,6 +391,10 @@ Checklist manuale:
 - `rodBind`: testo, classi e attributi seguono il valore del rod
 - `rodModel`: input e select restano sincronizzati con il rod
 - `rodFromSignal`: update da signal e da rod restano coerenti nei due sensi
+- `checked: rod`: il checkbox resta sincronizzato tra rod e DOM
+- `value: rod`: la textarea resta sincronizzata tra rod e DOM
+- `value: rod`: `select[multiple]` resta allineato con array e selezione iniziale
+- `selected: rod`: le `option` sincronizzano stato rod e stato DOM
 
 ## Verifica browser reactive core
 
@@ -809,6 +816,10 @@ Campi consigliati per ogni modulo:
 - corretto anche il cleanup degli `effect` per i listener dinamici del renderer durante l'unmount dei nodi
 - corretto anche il cleanup dei `children` dinamici: il subtree precedente viene pulito davvero durante replace e unmount
 - chiuso formalmente il mini-terzo-giro del `renderer`
+- corretto un edge case ulteriore del renderer: anche `class/style/props` dinamici e `rod` binding vengono ora dismessi davvero all'unmount
+- corretto un altro edge case del renderer: `value: rod` e ora coerente in two-way anche su `textarea` e `select`
+- corretto un altro edge case del renderer: `checked: rod` e ora coerente in two-way sui checkbox `input`
+- corretto un altro edge case del renderer: `select[multiple]` con `value: rod` e `option` con `selected: rod` sono ora coerenti
 
 ## Test automatici del core
 
@@ -831,6 +842,12 @@ Copertura iniziale:
 - `renderer`: cleanup corretto delle chiavi stale quando un oggetto `style` dinamico cambia shape
 - `renderer`: cleanup corretto degli `effect` per listener dinamici quando il nodo viene smontato
 - `renderer`: cleanup corretto dei subtree precedenti quando i `children` dinamici fanno replace
+- `renderer`: i `rod` dentro array/nested return dei `children` dinamici restano reattivi e si puliscono correttamente all'unmount
+- `renderer`: i key speciali `attr:`, `@`, `style.*` e i path annidati sono ora allineati anche nei props normali, non solo in `rodBind`
+- `renderer`: cleanup corretto anche per `class/style/props` dinamici e `rod` binding quando il nodo viene smontato
+- `renderer`: `value: rod` e ora davvero two-way anche su `textarea` e `select`, non solo su `input`
+- `renderer`: `checked: rod` e ora coerente in two-way anche sui checkbox `input`
+- `renderer`: `value: rod` supporta ora anche `select[multiple]` con array e `selected: rod` su `option`
 - `lifecycle`: `mount`, `component`, `ctx.onDispose`, cleanup su `clear/unmount`
 - `overlay`: stack, scroll lock, z-index/root, cleanup listener documento/window
 - `auth`: login/logout, ruoli/permessi, `status()/inspect()`, retry `401` una sola volta dopo refresh
@@ -838,6 +855,7 @@ Copertura iniziale:
 - `rod`: semantica base condivisa con il renderer per `class`, CSS custom properties e boolean props
 - `rod`: semantica condivisa anche per `auto`, `attr:`, `style.*` e assegnazione su path annidati
 - `renderer`: helper di classi, eventi e interpolazioni separati dal body di `createElement(...)`
+- `renderer`: semantica eventi estesa con composizione base di listener multipli nello stesso prop
 - `renderer`: helper dei dynamic children separati dal body di `createElement(...)`
 - `renderer`: parsing finale `args/props/children` separato dal body di `createElement(...)`
 - `lifecycle`: helper di mount/cleanup/component dispose estratti dal modulo pubblico

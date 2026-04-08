@@ -193,8 +193,11 @@
   }
 
   function hasDynamicEventValue(value, isRod) {
+    if (Array.isArray(value)) return value.some((entry) => hasDynamicEventValue(entry, isRod));
     if (isRod(value)) return true;
     if (!value || typeof value !== "object" || Array.isArray(value) || value.nodeType) return false;
+    if (Array.isArray(value.handlers)) return value.handlers.some((entry) => hasDynamicEventValue(entry, isRod)) || isRod(value.options) || typeof value.options === "function";
+    if (Array.isArray(value.listeners)) return value.listeners.some((entry) => hasDynamicEventValue(entry, isRod)) || isRod(value.options) || typeof value.options === "function";
     return isRod(value.handler)
       || isRod(value.listener)
       || isRod(value.fn)
@@ -202,28 +205,39 @@
       || typeof value.options === "function";
   }
 
-  function normalizeEventValue(value, isRod) {
+  function normalizeEventEntry(value, isRod, inheritedOptions) {
     if (value == null || value === false) {
-      return { handler: null, options: false };
+      return [];
     }
     if (typeof value === "function") {
-      return { handler: value, options: false };
+      return [{ handler: value, options: normalizeEventOptions(inheritedOptions ?? false) }];
     }
     if (isRod(value)) {
-      return normalizeEventValue(value.value, isRod);
+      return normalizeEventEntry(value.value, isRod, inheritedOptions);
+    }
+    if (Array.isArray(value)) {
+      return value.flatMap((entry) => normalizeEventEntry(entry, isRod, inheritedOptions));
     }
     if (typeof value === "object" && !Array.isArray(value) && !value.nodeType) {
+      if (Array.isArray(value.handlers) || Array.isArray(value.listeners)) {
+        const handlers = value.handlers || value.listeners || [];
+        const sharedOptions = value.options ?? inheritedOptions ?? false;
+        return handlers.flatMap((entry) => normalizeEventEntry(entry, isRod, sharedOptions));
+      }
       let handler = value.handler ?? value.listener ?? value.fn ?? null;
-      let options = value.options ?? false;
+      let options = value.options ?? inheritedOptions ?? false;
       if (isRod(handler)) handler = handler.value;
       if (isRod(options)) options = options.value;
       if (typeof options === "function") options = options();
-      return {
-        handler: typeof handler === "function" ? handler : null,
-        options: normalizeEventOptions(options)
-      };
+      return typeof handler === "function"
+        ? [{ handler, options: normalizeEventOptions(options) }]
+        : [];
     }
-    return { handler: null, options: false };
+    return [];
+  }
+
+  function normalizeEventValue(value, isRod) {
+    return normalizeEventEntry(value, isRod);
   }
 
   function bindEventProp(el, key, value, isRod) {
@@ -231,52 +245,45 @@
     if (!eventName) return;
 
     const state = {
-      attached: false,
-      handler: null,
-      options: false
-    };
-
-    const dispatch = (event) => {
-      if (typeof state.handler === "function") {
-        const result = state.handler.call(el, event);
-        if (state.options && typeof state.options === "object" && state.options.once) {
-          state.attached = false;
-          state.handler = null;
-        }
-        return result;
-      }
+      listeners: []
     };
 
     const detach = () => {
-      if (state.attached) {
-        el.removeEventListener(eventName, dispatch, state.options);
-        state.attached = false;
-      }
-      state.handler = null;
+      state.listeners.forEach((entry) => {
+        el.removeEventListener(eventName, entry.dispatch, entry.options);
+      });
+      state.listeners = [];
     };
 
     const apply = (nextValue) => {
-      const next = normalizeEventValue(nextValue, isRod);
-      const nextHandler = typeof next.handler === "function" ? next.handler : null;
-      const nextOptions = next.options;
-      const optionsChanged = !eventOptionsEqual(state.options, nextOptions);
+      const nextListeners = normalizeEventValue(nextValue, isRod);
+      const isSameShape = state.listeners.length === nextListeners.length && state.listeners.every((entry, index) => {
+        const next = nextListeners[index];
+        return entry.handler === next.handler && eventOptionsEqual(entry.options, next.options);
+      });
+      if (isSameShape) return;
 
-      if (!nextHandler) {
-        detach();
-        state.options = nextOptions;
-        return;
-      }
+      detach();
 
-      state.handler = nextHandler;
-
-      if (!state.attached || optionsChanged) {
-        if (state.attached) {
-          el.removeEventListener(eventName, dispatch, state.options);
-        }
-        el.addEventListener(eventName, dispatch, nextOptions);
-        state.attached = true;
-        state.options = nextOptions;
-      }
+      nextListeners.forEach((listener) => {
+        const entry = {
+          handler: listener.handler,
+          options: listener.options,
+          dispatch: null
+        };
+        entry.dispatch = (event) => {
+          if (typeof entry.handler === "function") {
+            const result = entry.handler.call(el, event);
+            if (entry.options && typeof entry.options === "object" && entry.options.once) {
+              el.removeEventListener(eventName, entry.dispatch, entry.options);
+              state.listeners = state.listeners.filter((item) => item !== entry);
+            }
+            return result;
+          }
+        };
+        el.addEventListener(eventName, entry.dispatch, entry.options);
+        state.listeners.push(entry);
+      });
     };
 
     CMSwift._registerCleanup(el, detach);

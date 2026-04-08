@@ -48,9 +48,9 @@
         entrypoints: ["createElement", "setProp", "bindProp"],
         status: "milestone-3-closed",
         knownLimits: [
-          "Il mini-terzo-giro ha chiuso style dinamico, eventi dinamici e children dinamici, ma restano altri edge case avanzati da esplorare.",
-          "Gli eventi non hanno ancora delegation o composizione/diff avanzato di listener multipli.",
-          "Restano da esplorare edge case avanzati del renderer oltre al primo giro gia coperto dai test."
+          "Il mini-terzo-giro e il successivo micro-giro avanzato hanno chiuso style dinamico, eventi, children e props/attr speciali, ma restano altri edge case avanzati da esplorare.",
+          "Gli eventi ora supportano composizione base di listener multipli, ma non hanno ancora delegation o diff avanzato.",
+          "Restano da esplorare edge case avanzati del renderer oltre ai giri gia coperti dai test."
         ]
       },
       reactive: {

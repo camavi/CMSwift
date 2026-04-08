@@ -8,11 +8,15 @@
       interpolationCursor = null
     } = options;
 
-    function appendRodText(rod) {
+    function createRodTextNode(rod) {
       const t = document.createTextNode("");
-      el.appendChild(t);
       const unbind = CMSwift.rodBind(t, rod);
       CMSwift._registerCleanup(t, unbind);
+      return t;
+    }
+
+    function appendRodText(rod) {
+      el.appendChild(createRodTextNode(rod));
     }
 
     function appendInterpolatedText(segments) {
@@ -42,7 +46,7 @@
         }
         if (typeof item === "boolean") return;
         if (isRod(item)) {
-          out.push(document.createTextNode(String(item.value ?? "")));
+          out.push(createRodTextNode(item));
           return;
         }
         if (item?.nodeType) {

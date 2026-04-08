@@ -24,7 +24,15 @@
     }
 
     function setAttributeValue(name, value) {
-      if (value == null || value === false) {
+      if (value == null) {
+        el.removeAttribute(name);
+        return;
+      }
+      if (value === false) {
+        if (name.startsWith("aria-")) {
+          el.setAttribute(name, "false");
+          return;
+        }
         el.removeAttribute(name);
         return;
       }
@@ -144,6 +152,15 @@
       obj[parts[parts.length - 1]] = value;
     }
 
+    function isBindingValueKey(name) {
+      if (!name) return false;
+      return name === "auto"
+        || name.startsWith("attr:")
+        || name.startsWith("@")
+        || name.startsWith("style.")
+        || name.includes(".");
+    }
+
     function applyBindingValue(name, value) {
       if (!name || name === "auto") {
         if (autoValueTags.has(el.tagName)) {
@@ -180,6 +197,7 @@
     return {
       isBooleanDomProp,
       isAttributeOnlyProp,
+      isBindingValueKey,
       setAttributeValue,
       setStyleEntry,
       setClassValue,

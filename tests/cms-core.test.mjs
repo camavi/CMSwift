@@ -367,6 +367,30 @@ test("renderer applies class, style, boolean props and event options", async () 
   assert.equal(clicks, 1);
 });
 
+test("renderer supports attr style and nested-path keys directly in props", async () => {
+  const CMS = await loadCMS();
+  const [getOn, setOn] = CMS.signal(true);
+
+  const node = CMS.div({
+    "attr:data-state": () => getOn() ? "open" : null,
+    "@aria-expanded": () => getOn(),
+    "style.opacity": () => getOn() ? "1" : "",
+    "dataset.mode": () => getOn() ? "active" : "idle"
+  });
+
+  assert.equal(node.getAttribute("data-state"), "open");
+  assert.equal(node.getAttribute("aria-expanded"), "true");
+  assert.equal(node.style.opacity, "1");
+  assert.equal(node.dataset.mode, "active");
+
+  setOn(false);
+
+  assert.equal(node.getAttribute("data-state"), null);
+  assert.equal(node.getAttribute("aria-expanded"), "false");
+  assert.equal(node.style.opacity, "");
+  assert.equal(node.dataset.mode, "idle");
+});
+
 test("renderer cleans up stale keys when dynamic style objects change shape", async () => {
   const CMS = await loadCMS();
   const [getEnabled, setEnabled] = CMS.signal(true);
@@ -429,6 +453,29 @@ test("renderer disposes dynamic event effects on unmount", async () => {
   assert.equal(removeCalls, 0);
 });
 
+test("renderer composes multiple event listeners in a single event prop", async () => {
+  const CMS = await loadCMS();
+  const dynamicHandler = CMS.rod((event) => calls.push(`dynamic:${event.type}:v1`));
+  const calls = [];
+
+  const node = CMS.button({
+    onClick: [
+      () => calls.push("static"),
+      { handler: dynamicHandler, options: { once: true } }
+    ]
+  }, "Compose");
+
+  node.dispatchEvent({ type: "click" });
+  node.dispatchEvent({ type: "click" });
+
+  assert.deepEqual(calls, ["static", "dynamic:click:v1", "static"]);
+
+  dynamicHandler.value = (event) => calls.push(`dynamic:${event.type}:v2`);
+  node.dispatchEvent({ type: "click" });
+
+  assert.deepEqual(calls, ["static", "dynamic:click:v1", "static", "static", "dynamic:click:v2"]);
+});
+
 test("renderer dynamic children cleanup disposed subtrees on replace", async () => {
   const CMS = await loadCMS();
   const [getVisible, setVisible] = CMS.signal(true);
@@ -470,6 +517,151 @@ test("renderer dynamic children cleanup disposed subtrees on replace", async () 
   assert.equal(removeCalls, 0);
 });
 
+test("renderer disposes dynamic prop effects and rod bindings on unmount", async () => {
+  const CMS = await loadCMS();
+  const [getOn, setOn] = CMS.signal(true);
+  const rodLabel = _.rod("alpha");
+  const host = document.createElement("div");
+  document.body.appendChild(host);
+
+  const node = CMS.div({
+    class: () => getOn() ? "on" : "off",
+    "aria-label": () => getOn() ? "enabled" : null,
+    "data-probe": rodLabel
+  }, "Probe");
+
+  const unmount = CMS.mount(host, node, { clear: true });
+  unmount();
+
+  let setCalls = 0;
+  let removeCalls = 0;
+  const originalSet = node.setAttribute.bind(node);
+  const originalRemove = node.removeAttribute.bind(node);
+
+  node.setAttribute = function (...args) {
+    setCalls += 1;
+    return originalSet(...args);
+  };
+
+  node.removeAttribute = function (...args) {
+    removeCalls += 1;
+    return originalRemove(...args);
+  };
+
+  setOn(false);
+  rodLabel.value = "beta";
+
+  assert.equal(setCalls, 0);
+  assert.equal(removeCalls, 0);
+});
+
+test("renderer supports two-way value rods on textarea and select", async () => {
+  const CMS = await loadCMS();
+  const textValue = _.rod("hello");
+  const selectValue = _.rod("b");
+
+  const textarea = CMS.textarea({ value: textValue });
+  const select = CMS.select({ value: selectValue },
+    CMS.option({ value: "a" }, "A"),
+    CMS.option({ value: "b" }, "B")
+  );
+
+  assert.equal(textarea.value, "hello");
+  assert.equal(select.value, "b");
+
+  textValue.value = "world";
+  selectValue.value = "a";
+
+  assert.equal(textarea.value, "world");
+  assert.equal(select.value, "a");
+
+  textarea.value = "from-dom";
+  textarea.dispatchEvent({ type: "input" });
+  select.value = "b";
+  select.dispatchEvent({ type: "change" });
+
+  assert.equal(textValue.value, "from-dom");
+  assert.equal(selectValue.value, "b");
+});
+
+test("renderer supports two-way checked rods on checkbox inputs", async () => {
+  const CMS = await loadCMS();
+  const checkedValue = _.rod(true);
+
+  const checkbox = CMS.input({
+    type: "checkbox",
+    checked: checkedValue
+  });
+
+  assert.equal(checkbox.checked, true);
+
+  checkedValue.value = false;
+  assert.equal(checkbox.checked, false);
+
+  checkbox.checked = true;
+  checkbox.dispatchEvent({ type: "change" });
+
+  assert.equal(checkedValue.value, true);
+});
+
+test("renderer supports select multiple value rods", async () => {
+  const CMS = await loadCMS();
+  const selectedValues = _.rod(["b", "c"]);
+
+  const select = CMS.select({ multiple: true, value: selectedValues },
+    CMS.option({ value: "a" }, "A"),
+    CMS.option({ value: "b" }, "B"),
+    CMS.option({ value: "c" }, "C")
+  );
+
+  const options = select.childNodes.filter((node) => node.tagName === "OPTION");
+  assert.equal(options[0].selected, false);
+  assert.equal(options[1].selected, true);
+  assert.equal(options[2].selected, true);
+
+  selectedValues.value = ["a"];
+  assert.equal(options[0].selected, true);
+  assert.equal(options[1].selected, false);
+  assert.equal(options[2].selected, false);
+
+  options[0].selected = true;
+  options[1].selected = true;
+  options[2].selected = false;
+  select.dispatchEvent({ type: "change" });
+
+  assert.deepEqual(selectedValues.value, ["a", "b"]);
+});
+
+test("renderer supports selected rods on option elements", async () => {
+  const CMS = await loadCMS();
+  const optionASelected = _.rod(false);
+  const optionBSelected = _.rod(true);
+
+  const select = CMS.select({ value: "b" },
+    CMS.option({ value: "a", selected: optionASelected }, "A"),
+    CMS.option({ value: "b", selected: optionBSelected }, "B")
+  );
+
+  const options = select.childNodes.filter((node) => node.tagName === "OPTION");
+  await new Promise((resolve) => queueMicrotask(resolve));
+
+  assert.equal(options[0].selected, false);
+  assert.equal(options[1].selected, true);
+
+  optionASelected.value = true;
+  optionBSelected.value = false;
+
+  assert.equal(options[0].selected, true);
+  assert.equal(options[1].selected, false);
+
+  options[0].selected = false;
+  options[1].selected = true;
+  select.dispatchEvent({ type: "change" });
+
+  assert.equal(optionASelected.value, false);
+  assert.equal(optionBSelected.value, true);
+});
+
 test("renderer supports dynamic children and SVG text nodes", async () => {
   const CMS = await loadCMS();
   const [getMode, setMode] = CMS.signal("single");
@@ -500,6 +692,29 @@ test("renderer supports dynamic children and SVG text nodes", async () => {
   assert.equal(textNode.tagName, "TEXT");
   assert.equal(textNode.nodeType, 1);
   assert.equal(textNode.getAttribute("aria-label"), "probe");
+});
+
+test("renderer keeps rod children reactive inside dynamic child arrays", async () => {
+  const CMS = await loadCMS();
+  const labelRod = CMS.rod("A");
+  const host = CMS.div(() => ["prefix:", labelRod, ":suffix"]);
+  const textContent = () => host.childNodes
+    .filter((node) => node.nodeType === 3)
+    .map((node) => node.textContent)
+    .join("");
+
+  assert.equal(textContent(), "prefix:A:suffix");
+
+  labelRod.value = "B";
+  assert.equal(textContent(), "prefix:B:suffix");
+
+  const mountHost = document.createElement("div");
+  document.body.appendChild(mountHost);
+  const unmount = CMS.mount(mountHost, host, { clear: true });
+  unmount();
+
+  labelRod.value = "C";
+  assert.equal(textContent(), "prefix:B:suffix");
 });
 
 test("rod binding shares renderer DOM prop semantics for class style and boolean props", async () => {

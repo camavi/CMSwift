@@ -1,4 +1,8 @@
 const infoLine = (label, getter) => _.div({ class: "cms-m-b-xs" }, _.b(`${label}: `), _.span(getter));
+const toJson = (value) => JSON.stringify(value);
+const readSelectedValues = (selectEl) => Array.from(selectEl?.options || selectEl?.children || [])
+  .filter((option) => option && option.selected)
+  .map((option) => option.value);
 
 const actionRow = (...children) => _.div({
   style: {
@@ -26,6 +30,12 @@ const cmsRod = _.component((props, ctx) => {
   const textRod = _.rod("rodBind active");
 
   const modelRod = _.rod("ops");
+  const textareaRod = _.rod("Inventory note\nSecond row");
+  const multiValueRod = _.rod(["sales", "finance"]);
+  const checkedRod = _.rod(true);
+  const optionOpsRod = _.rod(true);
+  const optionSalesRod = _.rod(false);
+  const optionFinanceRod = _.rod(true);
 
   const [getQty, setQty] = _.signal(5);
   const bridgeRod = _.rodFromSignal(getQty, setQty);
@@ -49,6 +59,39 @@ const cmsRod = _.component((props, ctx) => {
     _.option({ value: "sales" }, "Sales"),
     _.option({ value: "finance" }, "Finance")
   );
+  const multiValueSelect = _.select({
+    class: "cms-input-raw",
+    multiple: true,
+    size: 4,
+    style: { width: "100%", minHeight: "124px" },
+    value: multiValueRod
+  },
+    _.option({ value: "ops" }, "Operations"),
+    _.option({ value: "sales" }, "Sales"),
+    _.option({ value: "finance" }, "Finance"),
+    _.option({ value: "support" }, "Support")
+  );
+  const optionSelectedSelect = _.select({
+    class: "cms-input-raw",
+    multiple: true,
+    size: 4,
+    style: { width: "100%", minHeight: "124px" }
+  },
+    _.option({ value: "ops", selected: optionOpsRod }, "Operations"),
+    _.option({ value: "sales", selected: optionSalesRod }, "Sales"),
+    _.option({ value: "finance", selected: optionFinanceRod }, "Finance"),
+    _.option({ value: "support" }, "Support")
+  );
+  const checkedInput = _.input({
+    type: "checkbox",
+    checked: checkedRod
+  });
+  const textareaInput = _.textarea({
+    class: "cms-input-raw",
+    rows: 4,
+    style: { width: "100%" },
+    value: textareaRod
+  });
   const disposeModelInput = _.rodModel(modelInput, modelRod, { event: "input" });
   const disposeModelSelect = _.rodModel(modelSelect, modelRod, { event: "change" });
 
@@ -173,24 +216,109 @@ const cmsRod = _.component((props, ctx) => {
         '  parse: (value) => Number(value)',
         '});'
       ]
+    },
+    renderer: {
+      code: [
+        _.Card({ title: "Renderer + rod su form controls", subtitle: "value: rod su select[multiple] e selected: rod su option" },
+          stack(
+            _.div({ class: "cms-muted" }, "Test manuale: usa Cmd/Ctrl + click per cambiare piu opzioni nel select multiplo e verifica che DOM e rod restino allineati."),
+            _.h4("checked: rod -> checkbox"),
+            _.label({ class: "cms-flex-inline cms-gap-sm cms-align-center" },
+              checkedInput,
+              _.span("Inventory lock")
+            ),
+            actionRow(
+              _.Btn({ size: "sm", outline: true, onClick: () => { checkedRod.value = !checkedRod.value; } }, "toggle checked"),
+              _.Btn({ size: "sm", onClick: () => { checkedRod.value = true; } }, "checked true"),
+              _.Btn({ size: "sm", color: "warning", onClick: () => { checkedRod.value = false; } }, "checked false")
+            ),
+            infoLine("checked rod", () => String(checkedRod.value)),
+            infoLine("checked DOM", () => String(!!checkedInput.checked)),
+            _.h4("value: rod -> textarea"),
+            textareaInput,
+            actionRow(
+              _.Btn({ size: "sm", outline: true, onClick: () => { textareaRod.value = "Inventory note\nSecond row"; } }, "textarea default"),
+              _.Btn({ size: "sm", onClick: () => { textareaRod.value = "Manual override\nPriority: high"; } }, "textarea override"),
+              _.Btn({ size: "sm", color: "warning", onClick: () => { textareaRod.value = ""; } }, "textarea clear")
+            ),
+            infoLine("textarea rod", () => toJson(textareaRod.value)),
+            infoLine("textarea DOM", () => toJson(textareaInput.value)),
+            _.h4("value: rod -> select[multiple]"),
+            multiValueSelect,
+            actionRow(
+              _.Btn({ size: "sm", outline: true, onClick: () => { multiValueRod.value = ["sales", "finance"]; } }, "preset sales+finance"),
+              _.Btn({ size: "sm", onClick: () => { multiValueRod.value = ["ops", "support"]; } }, "preset ops+support"),
+              _.Btn({ size: "sm", color: "warning", onClick: () => { multiValueRod.value = []; } }, "clear")
+            ),
+            infoLine("value rod array", () => toJson(multiValueRod.value)),
+            infoLine("value DOM selected", () => toJson(readSelectedValues(multiValueSelect))),
+            _.h4("selected: rod -> option"),
+            optionSelectedSelect,
+            actionRow(
+              _.Btn({ size: "sm", outline: true, onClick: () => { optionOpsRod.value = !optionOpsRod.value; } }, "toggle ops"),
+              _.Btn({ size: "sm", outline: true, onClick: () => { optionSalesRod.value = !optionSalesRod.value; } }, "toggle sales"),
+              _.Btn({ size: "sm", outline: true, onClick: () => { optionFinanceRod.value = !optionFinanceRod.value; } }, "toggle finance"),
+              _.Btn({ size: "sm", onClick: () => {
+                optionOpsRod.value = true;
+                optionSalesRod.value = false;
+                optionFinanceRod.value = true;
+              } }, "preset rods"),
+              _.Btn({ size: "sm", color: "warning", onClick: () => {
+                optionOpsRod.value = false;
+                optionSalesRod.value = false;
+                optionFinanceRod.value = false;
+              } }, "clear rods")
+            ),
+            infoLine("selected rods", () => toJson({
+              ops: optionOpsRod.value,
+              sales: optionSalesRod.value,
+              finance: optionFinanceRod.value
+            })),
+            infoLine("selected DOM", () => toJson(readSelectedValues(optionSelectedSelect))),
+            _.Chip({ color: "success", outline: true }, () => readSelectedValues(multiValueSelect).join(", ") === multiValueRod.value.join(", ")
+              ? "select[multiple] iniziale e runtime allineati"
+              : "controllare sincronizzazione select[multiple]")
+          )
+        )
+      ],
+      sample: [
+        'const multiValueRod = _.rod(["sales", "finance"]);',
+        'const checkedRod = _.rod(true);',
+        'const textareaRod = _.rod("Inventory note");',
+        '_.input({ type: "checkbox", checked: checkedRod });',
+        '_.textarea({ value: textareaRod });',
+        'const multiSelect = _.select({',
+        '  multiple: true,',
+        '  value: multiValueRod',
+        '},',
+        '  _.option({ value: "ops" }, "Operations"),',
+        '  _.option({ value: "sales" }, "Sales")',
+        ');',
+        'const optionOpsRod = _.rod(true);',
+        '_.option({ value: "ops", selected: optionOpsRod }, "Operations");'
+      ]
     }
   };
 
   return _.div({ class: "cms-panel cms-page" },
     _.h1("CMS Rod"),
-    _.p("Tutorial minimo del blocco `rod`. Qui usiamo direttamente `_.rod`, `_.rodBind`, `_.rodModel` e `_.rodFromSignal` per verificare il comportamento del layer bridge rispetto al core reattivo."),
+    _.p("Tutorial del blocco `rod`. Qui usiamo `_.rod`, `_.rodBind`, `_.rodModel`, `_.rodFromSignal` e anche i binding diretti del renderer su `value`, `checked` e `selected` per verificare il comportamento del bridge rispetto al core reattivo."),
     _.h2("API disponibili"),
     _.List(
       _.Item("`_.rod(initial)` -> contenitore reattivo con `.value`, `.action()`, `.dispose()`"),
       _.Item("`_.rodBind(el, rod, { key })` -> binding diretto su un nodo DOM"),
       _.Item("`_.rodModel(el, rod, opts)` -> two-way model per input/select"),
-      _.Item("`_.rodFromSignal(get, set)` -> bridge tra signal e rod")
+      _.Item("`_.rodFromSignal(get, set)` -> bridge tra signal e rod"),
+      _.Item("`value: rod` -> binding diretto su input, textarea, select e select[multiple]"),
+      _.Item("`checked: rod` -> binding diretto su checkbox input"),
+      _.Item("`selected: rod` -> binding diretto su option")
     ),
     _.h2("Esempi"),
     boxCode("Rod base", listSample.basic, 24),
     boxCode("rodBind", listSample.bind, 24),
     boxCode("rodModel", listSample.model, 24),
-    boxCode("rodFromSignal", listSample.bridge, 24)
+    boxCode("rodFromSignal", listSample.bridge, 24),
+    boxCode("Renderer + rod", listSample.renderer, 24)
   );
 });
 

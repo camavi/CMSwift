@@ -134,6 +134,9 @@ class FakeNode extends FakeEventTarget {
     this.required = false;
     this.readOnly = false;
     this.checked = false;
+    this.selected = false;
+    this.multiple = false;
+    this.type = "";
   }
 
   get firstChild() {
@@ -242,6 +245,8 @@ class FakeNode extends FakeEventTarget {
     } else if (name.startsWith("data-")) {
       const key = name.slice(5).replace(/-([a-z])/g, (_, char) => char.toUpperCase());
       this.dataset[key] = next;
+    } else if (name === "type") {
+      this.type = next;
     }
   }
 
