@@ -10,6 +10,8 @@ Scopo:
 Regola di aggiornamento:
 - quando cambia un modulo core, aggiornare questo file
 - quando cambia la superficie macchina utile ad AI/devtools, aggiornare anche `CMSwift.meta` dentro `pages/_cmswift-fe/js/cms.js`
+- `npm run build:cms` genera sia `pages/_cmswift-fe/js/cms.js` sia `pages/_cmswift-fe/js/min-cms.js`
+- `npm run build:ui` genera sia `pages/_cmswift-fe/js/ui.js` sia `pages/_cmswift-fe/js/min-ui.js`
 
 ## Priorita attuali
 

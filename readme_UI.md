@@ -13,9 +13,42 @@ Dove il runtime espone componenti senza meta nativo (`InputRaw`), ho aggiunto un
 ## Fonti
 
 - Runtime principale: `pages/_cmswift-fe/js/ui.js`
+- Struttura di modularizzazione pianificata: `pages/_cmswift-fe/js/ui-src/modules.json`
 - Descrizioni tutorial: `pages/tutorial/descriptions.js`
 - Esempi per componente: `pages/tutorial/*.cms.js`
 - Demo entrypoint: `pages/index.html`
+
+## Stato Sorgenti UI
+
+- Runtime generato: `pages/_cmswift-fe/js/ui.js`
+- Runtime minificato: `pages/_cmswift-fe/js/min-ui.js`
+- Sorgenti modulari: `pages/_cmswift-fe/js/ui-src/`
+- Migrazione: avviata, non ancora completata
+
+Regola attuale:
+- i moduli gia estratti si modificano in `ui-src/`
+- dopo ogni migrazione va rigenerato `ui.js` con `npm run build:ui`
+- `npm run build:ui` genera sia `ui.js` sia `min-ui.js`
+
+Stato migrazione attuale:
+- `00-bootstrap.js`: estratto
+- `01-foundation-helpers.js`: estratto
+- `10-primitives-layout.js`: estratto (`Row`, `Col`, `Spacer`, `Container`, `Card`, `Footer`, `Toolbar`, `Grid`, `GridCol`, `FormField`, `InputRaw`, `Input`, `Select`)
+- `20-display-content.js`: estratto (`Icon`, `Badge`, `Avatar`, `Chip`)
+- `21-list-content.js`: estratto (`List`, `Item`, `Separator`)
+- `22-banner-content.js`: estratto (`Banner`)
+- `23-tooltip.js`: estratto (`Tooltip`)
+- `31-form-advanced.js`: estratto (`Checkbox`, `Radio`, `Toggle`, `Slider`, `Rating`, `Date`, `Time`)
+- `40-navigation.js`: estratto (`Tabs`, `RouteTab`, `Breadcrumbs`, `Pagination`)
+- `41-tab-panel.js`: estratto (`TabPanel`)
+- `50-feedback.js`: estratto (`Spinner`, `Progress`, `LoadingBar`, `Notify`)
+- `51-feedback-service.js`: estratto (toast root + notify wiring)
+- `60-shell-app.js`: estratto (`Header`, `Drawer`, `Page`, `AppShell`, `Parallax`)
+- `61-form-service.js`: estratto (`CMSwift.form`, `CMSwift.useForm`, `Form`, `cardHeader`, `cardBody`, `cardFooter`, dialog bootstrap)
+- `70-dialog.js`: estratto (`Dialog`)
+- `71-menu-overlays.js`: estratto (`Menu`, `Popover`, `ContextMenu`, footer bundle)
+- `80-data.js`: estratto (`Table`)
+- `99-legacy-ui.js`: rimosso
 
 ## Convenzioni Globali
 

@@ -353,6 +353,13 @@
     return null;
   };
 
+  const isUIPlainObject = (value) => value && typeof value === "object" && !value.nodeType && !Array.isArray(value) && !(value instanceof Function);
+  const isListItemNode = (value) => value && value.nodeType === 1 && String(value.tagName || "").toLowerCase() === "li";
+  const asNodeArray = (value) => {
+    if (value == null || value === false || value === "") return [];
+    return Array.isArray(value) ? value : [value];
+  };
+
   const applyCommonProps = (props = {}) => {
     const classTokens = [];
     const style = {};
@@ -5780,339 +5787,6 @@
     setTimeout(finish, ms + 40);
   };
 
-  UI.Tooltip = (...args) => {
-    const { props, children } = CMSwift.uiNormalizeArgs(args);
-    const slots = props.slots || {};
-    let entry = null;
-    let openTimer = null;
-    let closeTimer = null;
-    let boundEl = null;
-    const hasOwn = (key) => Object.prototype.hasOwnProperty.call(props, key);
-    const hasExternalTarget = hasOwn("target") || hasOwn("anchorEl") || hasOwn("triggerEl");
-    const targetNode = props.target || props.anchorEl || props.triggerEl || (children && children.length ? children[0] : null);
-
-    const getNumber = (value, fallback) => {
-      const raw = uiUnwrap(value);
-      if (raw == null || raw === "") return fallback;
-      const n = Number(raw);
-      return Number.isFinite(n) ? n : fallback;
-    };
-    const clearTimers = () => {
-      clearTimeout(openTimer);
-      clearTimeout(closeTimer);
-      openTimer = null;
-      closeTimer = null;
-    };
-    const getDelay = () => getNumber(props.delay, 350);
-    const getHideDelay = () => getNumber(props.hideDelay, uiUnwrap(props.interactive) ? 120 : 0);
-    const closeNow = () => {
-      clearTimers();
-      if (!entry) return;
-      const toClose = entry;
-      entry = null;
-      overlayLeave(toClose, () => CMSwift.overlay.close(toClose.id));
-    };
-    const parseTriggers = (value) => {
-      if (value == null || value === true) return new Set(["hover", "focus"]);
-      if (value === false) return new Set(["manual"]);
-      const raw = Array.isArray(value) ? value : String(value).split(/[\s,|/]+/);
-      const out = new Set();
-      raw.forEach((item) => {
-        const key = String(item || "").trim().toLowerCase();
-        if (!key) return;
-        if (key === "mouseenter" || key === "mouseover") out.add("hover");
-        else if (key === "blur" || key === "focusin") out.add("focus");
-        else if (key === "tap") out.add("click");
-        else out.add(key);
-      });
-      return out.size ? out : new Set(["manual"]);
-    };
-    const triggers = parseTriggers(props.trigger ?? props.triggers ?? (hasOwn("open") ? "manual" : null));
-    const allowHover = triggers.has("hover");
-    const allowFocus = triggers.has("focus");
-    const allowClick = triggers.has("click");
-    const isManual = triggers.has("manual") || (!allowHover && !allowFocus && !allowClick);
-
-    const buildContent = () => {
-      const ctx = {
-        anchorEl: boundEl || targetNode || null,
-        close: () => closeNow(),
-        hide: () => closeNow(),
-        isOpen: () => !!entry
-      };
-      const iconFallback = props.icon
-        ? (typeof props.icon === "string"
-          ? UI.Icon({ name: props.icon, size: props.iconSize || props.size || "sm" })
-          : CMSwift.ui.slot(props.icon, { as: "icon" }))
-        : null;
-      const titleNodes = renderSlotToArray(slots, "title", ctx, props.title ?? props.heading);
-      const iconNodes = renderSlotToArray(slots, "icon", ctx, iconFallback);
-      const footerNodes = renderSlotToArray(slots, "footer", ctx, props.footer ?? props.actions);
-
-      let bodyRaw = props.content ?? props.text ?? props.body ?? props.description ?? props.label;
-      if (bodyRaw == null) {
-        if (hasExternalTarget) bodyRaw = children;
-        else if (targetNode && children && children.length > 1) bodyRaw = children.slice(1);
-        else if (!targetNode) bodyRaw = children;
-      }
-      let bodyNodes = renderSlotToArray(slots, "content", ctx, bodyRaw);
-      if (!bodyNodes.length) bodyNodes = renderSlotToArray(slots, "default", ctx, bodyRaw);
-
-      const bodyEl = bodyNodes.length ? _.div({ class: "cms-tooltip-body" }, ...bodyNodes) : null;
-      const headEl = (iconNodes.length || titleNodes.length)
-        ? _.div(
-          { class: "cms-tooltip-head" },
-          iconNodes.length ? _.div({ class: "cms-tooltip-icon" }, ...iconNodes) : null,
-          _.div(
-            { class: "cms-tooltip-head-main" },
-            titleNodes.length ? _.div({ class: "cms-tooltip-title" }, ...titleNodes) : null,
-            bodyEl
-          )
-        )
-        : bodyEl;
-      const footerEl = footerNodes.length ? _.div({ class: "cms-tooltip-footer" }, ...footerNodes) : null;
-
-      return _.div({ class: "cms-tooltip-content" }, ...[headEl, footerEl].filter(Boolean));
-    };
-
-    const open = (anchorEl) => {
-      const anchor = anchorEl || boundEl;
-      if (!anchor || uiUnwrap(props.disabled)) return null;
-      if (entry && entry._anchorEl === anchor) return entry;
-      if (entry) closeNow();
-      const shouldCloseOnOutside = props.closeOnOutside ?? (allowClick || uiUnwrap(props.interactive));
-      const shouldCloseOnEsc = props.closeOnEsc ?? (allowClick || uiUnwrap(props.interactive));
-      let currentRef = null;
-      entry = CMSwift.overlay.open(() => buildContent(), {
-        type: "tooltip",
-        anchorEl: anchor,
-        placement: props.placement || "top",
-        offsetX: props.offsetX ?? 0,
-        offsetY: props.offsetY ?? props.offset ?? 8,
-        backdrop: false,
-        lockScroll: false,
-        trapFocus: false,
-        closeOnOutside: shouldCloseOnOutside,
-        closeOnBackdrop: false,
-        closeOnEsc: shouldCloseOnEsc,
-        autoFocus: false,
-        className: uiClassStatic([
-          "cms-tooltip",
-          uiWhen(props.interactive, "interactive"),
-          props.class,
-          props.panelClass
-        ]),
-        onClose: () => {
-          currentRef?._tooltipCleanup?.();
-          if (entry === currentRef) entry = null;
-          props.onClose?.();
-        }
-      });
-      if (!entry?.panel) return entry;
-      const current = entry;
-      currentRef = current;
-      current._anchorEl = anchor;
-      current.panel.dataset.placement = String(uiUnwrap(props.placement || "top"));
-      if (props.maxWidth != null) current.panel.style.maxWidth = toCssSize(uiUnwrap(props.maxWidth));
-      if (props.minWidth != null) current.panel.style.minWidth = toCssSize(uiUnwrap(props.minWidth));
-      if (props.width != null) current.panel.style.width = toCssSize(uiUnwrap(props.width));
-      if (props.style) Object.assign(current.panel.style, props.style);
-      setPropertyProps(current.panel, props);
-      if (uiUnwrap(props.interactive)) {
-        const cancelHide = () => {
-          clearTimeout(closeTimer);
-          closeTimer = null;
-        };
-        const scheduleHide = () => hide();
-        const onPanelClick = (e) => {
-          const target = e.target;
-          if (target && target.closest && target.closest("[data-tooltip-close]")) {
-            closeNow();
-          }
-        };
-        current.panel.addEventListener("mouseenter", cancelHide);
-        current.panel.addEventListener("mouseleave", scheduleHide);
-        current.panel.addEventListener("focusin", cancelHide);
-        current.panel.addEventListener("focusout", scheduleHide);
-        current.panel.addEventListener("click", onPanelClick);
-        current._tooltipCleanup = () => {
-          current.panel?.removeEventListener("mouseenter", cancelHide);
-          current.panel?.removeEventListener("mouseleave", scheduleHide);
-          current.panel?.removeEventListener("focusin", cancelHide);
-          current.panel?.removeEventListener("focusout", scheduleHide);
-          current.panel?.removeEventListener("click", onPanelClick);
-        };
-      }
-      overlayEnter(current);
-      props.onOpen?.(current);
-      return current;
-    };
-
-    const show = (anchorEl) => {
-      clearTimeout(closeTimer);
-      closeTimer = null;
-      clearTimeout(openTimer);
-      openTimer = setTimeout(() => open(anchorEl), getDelay());
-    };
-
-    const hide = (immediate = false) => {
-      clearTimeout(openTimer);
-      openTimer = null;
-      if (!entry) return;
-      clearTimeout(closeTimer);
-      if (immediate) {
-        closeNow();
-        return;
-      }
-      closeTimer = setTimeout(() => closeNow(), getHideDelay());
-    };
-    const toggle = (anchorEl) => {
-      if (entry) hide(true);
-      else open(anchorEl);
-    };
-    const isOpen = () => !!entry;
-
-    const bind = (el) => {
-      if (!el) return () => { };
-      boundEl = el;
-      const cleanups = [];
-      const cleanup = () => {
-        clearTimers();
-        cleanups.forEach((fn) => fn());
-      };
-      if (hasOwn("open")) {
-        if (uiIsReactive(props.open)) {
-          CMSwift.reactive.effect(() => {
-            if (!boundEl) return;
-            if (uiUnwrap(props.open)) open(boundEl);
-            else hide(true);
-          }, "UI.Tooltip:open");
-        } else if (props.open === true) {
-          open(el);
-        } else if (props.open === false) {
-          hide(true);
-        }
-        return cleanup;
-      }
-      if (isManual || uiUnwrap(props.disabled)) return cleanup;
-      if (allowHover) {
-        const onEnter = () => show(el);
-        const onLeave = () => hide();
-        el.addEventListener("mouseenter", onEnter);
-        el.addEventListener("mouseleave", onLeave);
-        cleanups.push(() => {
-          el.removeEventListener("mouseenter", onEnter);
-          el.removeEventListener("mouseleave", onLeave);
-        });
-      }
-      if (allowFocus) {
-        const onFocus = () => show(el);
-        const onBlur = () => hide();
-        el.addEventListener("focus", onFocus);
-        el.addEventListener("blur", onBlur);
-        cleanups.push(() => {
-          el.removeEventListener("focus", onFocus);
-          el.removeEventListener("blur", onBlur);
-        });
-      }
-      if (allowClick) {
-        const onClick = (e) => {
-          props.onTriggerClick?.(e);
-          if (e.defaultPrevented) return;
-          toggle(el);
-        };
-        el.addEventListener("click", onClick);
-        cleanups.push(() => el.removeEventListener("click", onClick));
-      }
-      return cleanup;
-    };
-
-    if (targetNode) {
-      const cls = uiClass(["cms-tooltip-wrap", props.wrapClass, props.targetClass]);
-      const p = CMSwift.omit(props, [
-        "actions", "anchorEl", "body", "closeOnEsc", "closeOnOutside", "content", "delay", "description",
-        "disabled", "footer", "heading", "hideDelay", "icon", "iconSize", "interactive", "label",
-        "maxWidth", "minWidth", "offset", "offsetX", "offsetY", "onClose", "onOpen", "onTriggerClick",
-        "open", "panelClass", "placement", "slots", "style", "target", "targetClass", "targetStyle",
-        "text", "title", "trigger", "triggerEl", "triggers", "width", "wrapClass", "wrapStyle"
-      ]);
-      p.class = cls;
-      p.style = { display: "inline-flex", alignItems: "center", ...(props.wrapStyle || props.targetStyle || {}) };
-      const target = CMSwift.ui.renderSlot(slots, "target", {
-        open: () => open(boundEl),
-        show: () => show(boundEl),
-        hide: () => hide(true),
-        toggle: () => toggle(boundEl),
-        isOpen
-      }, targetNode);
-      const wrap = _.span(p, ...renderSlotToArray(null, "default", {}, target));
-      bind(wrap);
-      wrap._tooltip = { bind, open, show, hide, close: closeNow, toggle, isOpen };
-      return wrap;
-    }
-
-    return { bind, open, show, hide, close: closeNow, toggle, isOpen };
-  };
-  if (CMSwift.isDev?.()) {
-    UI.meta = UI.meta || {};
-    UI.meta.Tooltip = {
-      signature: "UI.Tooltip(props, target?) | UI.Tooltip(target, content)",
-      props: {
-        title: "String|Node|Function|Array",
-        content: "String|Node|Function|Array",
-        text: "String|Node|Function|Array",
-        body: "String|Node|Function|Array",
-        footer: "String|Node|Function|Array",
-        icon: "String|Node|Function|Array",
-        target: "Node|Function|Array",
-        trigger: "\"hover focus\" | \"click\" | \"manual\" | Array",
-        interactive: "boolean",
-        disabled: "boolean",
-        open: "boolean | reactive",
-        placement: "string",
-        delay: "number",
-        hideDelay: "number",
-        offset: "number (legacy)",
-        offsetX: "number",
-        offsetY: "number",
-        closeOnOutside: "boolean",
-        closeOnEsc: "boolean",
-        maxWidth: "string|number",
-        minWidth: "string|number",
-        width: "string|number",
-        slots: "{ target?, icon?, title?, content?, footer?, default? }",
-        class: "string",
-        panelClass: "string",
-        wrapClass: "string",
-        style: "object",
-        targetStyle: "object"
-      },
-      slots: {
-        target: "Tooltip trigger content ({ open, show, hide, toggle, isOpen })",
-        icon: "Tooltip icon content",
-        title: "Tooltip title content",
-        content: "Tooltip body content ({ close, hide, isOpen, anchorEl })",
-        footer: "Tooltip footer content ({ close, hide, isOpen, anchorEl })",
-        default: "Fallback tooltip body content"
-      },
-      events: {
-        onOpen: "(entry) => void",
-        onClose: "() => void",
-        onTriggerClick: "(event) => void"
-      },
-      returns: "Object { bind(), open(), show(), hide(), close(), toggle(), isOpen() } | HTMLSpanElement",
-      description: "Tooltip ancorato con trigger hover/focus/click, contenuto ricco e API imperativa."
-    };
-  }
-  // Esempio: CMSwift.ui.Tooltip({ title: "Info", text: "Dettaglio rapido" }, CMSwift.ui.Icon({ name: "info" }))
-
-  const isUIPlainObject = (value) => value && typeof value === "object" && !value.nodeType && !Array.isArray(value) && !(value instanceof Function);
-  const isListItemNode = (value) => value && value.nodeType === 1 && String(value.tagName || "").toLowerCase() === "li";
-  const asNodeArray = (value) => {
-    if (value == null || value === false || value === "") return [];
-    return Array.isArray(value) ? value : [value];
-  };
-
   UI.List = (...args) => {
     const { props, children } = CMSwift.uiNormalizeArgs(args);
     const slots = props.slots || {};
@@ -6453,6 +6127,587 @@
     };
   }
   // Esempio: CMSwift.ui.Separator()
+
+  UI.Banner = (...args) => {
+    const { props: rawProps, children } = CMSwift.uiNormalizeArgs(args);
+    const slots = rawProps.slots || {};
+
+    const resolveStateValue = () => normalizeState(uiUnwrap(rawProps.type) || uiUnwrap(rawProps.state) || "");
+    const ctx = {
+      state: resolveStateValue,
+      dismissible: () => !!uiUnwrap(rawProps.dismissible)
+    };
+
+    const typeClass = uiComputed([rawProps.type, rawProps.state], () => resolveStateValue());
+    const variantClass = uiComputed(rawProps.variant, () => {
+      const variant = String(uiUnwrap(rawProps.variant) || "").toLowerCase();
+      return ["solid", "outline", "ghost"].includes(variant) ? `cms-banner-${variant}` : "";
+    });
+    const actionsPlacementClass = uiComputed([rawProps.actionsPlacement, rawProps.stack], () => {
+      const placement = String(uiUnwrap(rawProps.actionsPlacement) || "").toLowerCase();
+      return placement === "bottom" || !!uiUnwrap(rawProps.stack) ? "cms-banner-actions-bottom" : "";
+    });
+    const stackClass = uiComputed(rawProps.stack, () => uiUnwrap(rawProps.stack) ? "cms-banner-stack" : "");
+
+    const props = { ...rawProps };
+    const p = CMSwift.omit(props, [
+      "actions", "actionsPlacement", "accent", "aside", "body", "closeLabel", "description",
+      "dismiss", "dismissible", "icon", "iconSize", "message", "meta", "onDismiss", "slots",
+      "stack", "state", "subtitle", "title", "type", "variant"
+    ]);
+    p.class = uiClass([
+      "cms-clear-set",
+      "cms-banner",
+      "cms-singularity",
+      typeClass,
+      variantClass,
+      actionsPlacementClass,
+      stackClass,
+      props.class
+    ]);
+    p.style = { ...(props.style || {}) };
+
+    const toneToCss = (value) => {
+      if (value == null || value === "") return "";
+      const v = uiUnwrap(value);
+      if (v == null || v === "") return "";
+      const s = String(v);
+      if (isTokenCSS(s)) return `var(--cms-${s})`;
+      return s;
+    };
+
+    if (rawProps.accent != null || uiIsReactive(rawProps.accent)) {
+      p.style["--cms-banner-accent"] = () => toneToCss(rawProps.accent);
+      p.style["--cms-banner-border"] = () => {
+        const tone = toneToCss(rawProps.accent);
+        return tone ? `color-mix(in srgb, ${tone} 38%, var(--cms-border-color))` : "";
+      };
+      p.style["--cms-banner-bg"] = () => {
+        const tone = toneToCss(rawProps.accent);
+        return tone ? `color-mix(in srgb, ${tone} 14%, var(--cms-panel))` : "";
+      };
+      p.style["--cms-banner-color"] = () => {
+        const tone = toneToCss(rawProps.accent);
+        return tone ? `color-mix(in srgb, ${tone} 78%, white)` : "";
+      };
+    }
+
+    const autoIconMap = {
+      success: "check_circle",
+      warning: "warning",
+      danger: "error",
+      info: "info",
+      primary: "bolt",
+      secondary: "campaign",
+      dark: "shield",
+      light: "notifications"
+    };
+
+    const iconFallback = (() => {
+      if (rawProps.icon === false || rawProps.icon === null) return null;
+      if (rawProps.icon != null) {
+        return typeof rawProps.icon === "string"
+          ? UI.Icon({ name: rawProps.icon, size: rawProps.iconSize || rawProps.size || "md" })
+          : CMSwift.ui.slot(rawProps.icon, { as: "icon" });
+      }
+      const state = resolveStateValue();
+      const iconName = state ? autoIconMap[state] : null;
+      return iconName ? UI.Icon({ name: iconName, size: rawProps.iconSize || rawProps.size || "md" }) : null;
+    })();
+
+    const titleNodes = renderSlotToArray(slots, "title", ctx, rawProps.title);
+    const messageNodes = renderSlotToArray(slots, "message", ctx, rawProps.message != null ? rawProps.message : children);
+    const descriptionNodes = renderSlotToArray(slots, "description", ctx, rawProps.description ?? rawProps.subtitle);
+    const metaNodes = renderSlotToArray(slots, "meta", ctx, rawProps.meta);
+    const bodyNodes = renderSlotToArray(
+      slots,
+      "default",
+      ctx,
+      rawProps.body != null ? [rawProps.body, ...(children || [])] : (rawProps.message != null ? children : null)
+    );
+    const iconNodes = renderSlotToArray(slots, "icon", ctx, iconFallback);
+    const asideNodes = renderSlotToArray(slots, "aside", ctx, rawProps.aside);
+    const actionsNodes = renderSlotToArray(slots, "actions", ctx, rawProps.actions);
+    const dismissNodes = renderSlotToArray(slots, "dismiss", ctx, rawProps.dismiss);
+
+    const hasBottomActions = (() => {
+      const placement = String(uiUnwrap(rawProps.actionsPlacement) || "").toLowerCase();
+      return placement === "bottom" || !!uiUnwrap(rawProps.stack);
+    })();
+    const isDismissible = !!uiUnwrap(rawProps.dismissible) || !!rawProps.onDismiss;
+
+    let bannerEl = null;
+    const defaultDismissNode = isDismissible
+      ? UI.Btn({
+        class: "cms-banner-close",
+        outline: true,
+        size: rawProps.size || "sm",
+        "aria-label": rawProps.closeLabel || "Chiudi banner",
+        onClick: (e) => {
+          rawProps.onDismiss?.(e);
+          if (e.defaultPrevented) return;
+          bannerEl?.remove();
+        }
+      }, UI.Icon({ name: "close", size: rawProps.size || "sm" }))
+      : null;
+
+    const sideNodes = [
+      ...asideNodes,
+      ...(!hasBottomActions ? actionsNodes : []),
+      ...(dismissNodes.length ? dismissNodes : (defaultDismissNode ? [defaultDismissNode] : []))
+    ];
+
+    bannerEl = _.div(
+      p,
+      iconNodes.length ? _.div({ class: "cms-banner-icon" }, ...iconNodes) : null,
+      _.div(
+        { class: "cms-banner-body" },
+        _.div(
+          { class: "cms-banner-copy" },
+          titleNodes.length ? _.div({ class: "cms-banner-title" }, ...titleNodes) : null,
+          messageNodes.length ? _.div({ class: "cms-banner-message" }, ...messageNodes) : null,
+          descriptionNodes.length ? _.div({ class: "cms-banner-description" }, ...descriptionNodes) : null,
+          bodyNodes.length ? _.div({ class: "cms-banner-extra" }, ...bodyNodes) : null,
+          metaNodes.length ? _.div({ class: "cms-banner-meta" }, ...metaNodes) : null
+        ),
+        hasBottomActions && actionsNodes.length
+          ? _.div({ class: "cms-banner-actions" }, ...actionsNodes)
+          : null
+      ),
+      sideNodes.length ? _.div({ class: "cms-banner-side" }, ...sideNodes) : null
+    );
+
+    const role = p.role || (() => {
+      const state = resolveStateValue();
+      return state === "danger" || state === "warning" ? "alert" : "status";
+    })();
+    bannerEl.setAttribute("role", role);
+    setPropertyProps(bannerEl, rawProps);
+    return bannerEl;
+  };
+  if (CMSwift.isDev?.()) {
+    UI.meta = UI.meta || {};
+    UI.meta.Banner = {
+      signature: "UI.Banner(...children) | UI.Banner(props, ...children)",
+      props: {
+        title: "String|Node|Function|Array",
+        message: "String|Node|Function|Array",
+        description: "String|Node|Function|Array",
+        meta: "String|Node|Function|Array",
+        icon: "String|Node|Function|Array|false",
+        actions: "Node|Function|Array",
+        aside: "Node|Function|Array",
+        body: "Node|Function|Array",
+        dismissible: "boolean",
+        dismiss: "Node|Function|Array",
+        onDismiss: "function",
+        closeLabel: "string",
+        type: "success|warning|danger|error|info|primary|secondary|light|dark",
+        state: "success|warning|danger|error|info|primary|secondary|light|dark",
+        accent: "string",
+        variant: "soft|solid|outline|ghost",
+        actionsPlacement: "end|bottom",
+        dense: "boolean",
+        stack: "boolean",
+        slots: "{ icon?, title?, message?, description?, meta?, actions?, aside?, dismiss?, default? }",
+        class: "string",
+        style: "object"
+      },
+      slots: {
+        icon: "Leading visual/icon content",
+        title: "Banner title content",
+        message: "Primary message content",
+        description: "Secondary/supporting text",
+        meta: "Meta information content",
+        actions: "Actions area content",
+        aside: "Right side support content",
+        dismiss: "Custom dismiss control",
+        default: "Extra banner body content"
+      },
+      returns: "HTMLDivElement",
+      description: "Banner strutturato con tono, azioni, dismiss e slots composabili."
+    };
+  }
+  // Esempio: CMSwift.ui.Banner({ type: "warning", title: "Pagamento in sospeso", message: "Aggiorna il batch entro le 18:00" })
+
+  // -------------------------------
+  // 3) APP SHELL
+  // -------------------------------
+  let drawerStateKey = "cmswift:drawer-open";
+  const drawerToggleIcons = new Set();
+  const drawerElsByKey = new Map();
+  const readDrawerOpen = (key = drawerStateKey) => {
+    const store = CMSwift?.store;
+    if (store?.get) {
+      const stored = store.get(key, undefined);
+      if (typeof stored === "boolean") return stored;
+    }
+    try {
+      return localStorage.getItem(key) === "1";
+    } catch {
+      return false;
+    }
+  };
+  const writeDrawerOpen = (open, key = drawerStateKey) => {
+    const store = CMSwift?.store;
+    if (store?.set) {
+      store.set(key, !!open);
+      return;
+    }
+    try {
+      localStorage.setItem(key, open ? "1" : "0");
+    } catch {
+      // ignore storage errors
+    }
+  };
+  let drawerOpen = readDrawerOpen();
+  const setDrawerOpen = (open, key = drawerStateKey) => {
+    drawerOpen = !!open;
+    const drawerEls = drawerElsByKey.get(key);
+    if (drawerEls && drawerEls.size) {
+      drawerEls.forEach((el) => el?.classList.toggle("open", drawerOpen));
+    } else {
+      const drawerEl = document.querySelector(".cms-drawer");
+      if (drawerEl) drawerEl.classList.toggle("open", drawerOpen);
+    }
+    drawerToggleIcons.forEach((entry) => {
+      if (!entry) return;
+      if (typeof entry.update === "function") {
+        entry.update(drawerOpen);
+        return;
+      }
+      const { el, openIcon, closeIcon } = entry;
+      if (el) el.textContent = drawerOpen ? openIcon : closeIcon;
+    });
+    writeDrawerOpen(drawerOpen, key);
+    return drawerOpen;
+  };
+
+  UI.Tooltip = (...args) => {
+    const { props, children } = CMSwift.uiNormalizeArgs(args);
+    const slots = props.slots || {};
+    let entry = null;
+    let openTimer = null;
+    let closeTimer = null;
+    let boundEl = null;
+    const hasOwn = (key) => Object.prototype.hasOwnProperty.call(props, key);
+    const hasExternalTarget = hasOwn("target") || hasOwn("anchorEl") || hasOwn("triggerEl");
+    const targetNode = props.target || props.anchorEl || props.triggerEl || (children && children.length ? children[0] : null);
+
+    const getNumber = (value, fallback) => {
+      const raw = uiUnwrap(value);
+      if (raw == null || raw === "") return fallback;
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : fallback;
+    };
+    const clearTimers = () => {
+      clearTimeout(openTimer);
+      clearTimeout(closeTimer);
+      openTimer = null;
+      closeTimer = null;
+    };
+    const getDelay = () => getNumber(props.delay, 350);
+    const getHideDelay = () => getNumber(props.hideDelay, uiUnwrap(props.interactive) ? 120 : 0);
+    const closeNow = () => {
+      clearTimers();
+      if (!entry) return;
+      const toClose = entry;
+      entry = null;
+      overlayLeave(toClose, () => CMSwift.overlay.close(toClose.id));
+    };
+    const parseTriggers = (value) => {
+      if (value == null || value === true) return new Set(["hover", "focus"]);
+      if (value === false) return new Set(["manual"]);
+      const raw = Array.isArray(value) ? value : String(value).split(/[\s,|/]+/);
+      const out = new Set();
+      raw.forEach((item) => {
+        const key = String(item || "").trim().toLowerCase();
+        if (!key) return;
+        if (key === "mouseenter" || key === "mouseover") out.add("hover");
+        else if (key === "blur" || key === "focusin") out.add("focus");
+        else if (key === "tap") out.add("click");
+        else out.add(key);
+      });
+      return out.size ? out : new Set(["manual"]);
+    };
+    const triggers = parseTriggers(props.trigger ?? props.triggers ?? (hasOwn("open") ? "manual" : null));
+    const allowHover = triggers.has("hover");
+    const allowFocus = triggers.has("focus");
+    const allowClick = triggers.has("click");
+    const isManual = triggers.has("manual") || (!allowHover && !allowFocus && !allowClick);
+
+    const buildContent = () => {
+      const ctx = {
+        anchorEl: boundEl || targetNode || null,
+        close: () => closeNow(),
+        hide: () => closeNow(),
+        isOpen: () => !!entry
+      };
+      const iconFallback = props.icon
+        ? (typeof props.icon === "string"
+          ? UI.Icon({ name: props.icon, size: props.iconSize || props.size || "sm" })
+          : CMSwift.ui.slot(props.icon, { as: "icon" }))
+        : null;
+      const titleNodes = renderSlotToArray(slots, "title", ctx, props.title ?? props.heading);
+      const iconNodes = renderSlotToArray(slots, "icon", ctx, iconFallback);
+      const footerNodes = renderSlotToArray(slots, "footer", ctx, props.footer ?? props.actions);
+
+      let bodyRaw = props.content ?? props.text ?? props.body ?? props.description ?? props.label;
+      if (bodyRaw == null) {
+        if (hasExternalTarget) bodyRaw = children;
+        else if (targetNode && children && children.length > 1) bodyRaw = children.slice(1);
+        else if (!targetNode) bodyRaw = children;
+      }
+      let bodyNodes = renderSlotToArray(slots, "content", ctx, bodyRaw);
+      if (!bodyNodes.length) bodyNodes = renderSlotToArray(slots, "default", ctx, bodyRaw);
+
+      const bodyEl = bodyNodes.length ? _.div({ class: "cms-tooltip-body" }, ...bodyNodes) : null;
+      const headEl = (iconNodes.length || titleNodes.length)
+        ? _.div(
+          { class: "cms-tooltip-head" },
+          iconNodes.length ? _.div({ class: "cms-tooltip-icon" }, ...iconNodes) : null,
+          _.div(
+            { class: "cms-tooltip-head-main" },
+            titleNodes.length ? _.div({ class: "cms-tooltip-title" }, ...titleNodes) : null,
+            bodyEl
+          )
+        )
+        : bodyEl;
+      const footerEl = footerNodes.length ? _.div({ class: "cms-tooltip-footer" }, ...footerNodes) : null;
+
+      return _.div({ class: "cms-tooltip-content" }, ...[headEl, footerEl].filter(Boolean));
+    };
+
+    const open = (anchorEl) => {
+      const anchor = anchorEl || boundEl;
+      if (!anchor || uiUnwrap(props.disabled)) return null;
+      if (entry && entry._anchorEl === anchor) return entry;
+      if (entry) closeNow();
+      const shouldCloseOnOutside = props.closeOnOutside ?? (allowClick || uiUnwrap(props.interactive));
+      const shouldCloseOnEsc = props.closeOnEsc ?? (allowClick || uiUnwrap(props.interactive));
+      let currentRef = null;
+      entry = CMSwift.overlay.open(() => buildContent(), {
+        type: "tooltip",
+        anchorEl: anchor,
+        placement: props.placement || "top",
+        offsetX: props.offsetX ?? 0,
+        offsetY: props.offsetY ?? props.offset ?? 8,
+        backdrop: false,
+        lockScroll: false,
+        trapFocus: false,
+        closeOnOutside: shouldCloseOnOutside,
+        closeOnBackdrop: false,
+        closeOnEsc: shouldCloseOnEsc,
+        autoFocus: false,
+        className: uiClassStatic([
+          "cms-tooltip",
+          uiWhen(props.interactive, "interactive"),
+          props.class,
+          props.panelClass
+        ]),
+        onClose: () => {
+          currentRef?._tooltipCleanup?.();
+          if (entry === currentRef) entry = null;
+          props.onClose?.();
+        }
+      });
+      if (!entry?.panel) return entry;
+      const current = entry;
+      currentRef = current;
+      current._anchorEl = anchor;
+      current.panel.dataset.placement = String(uiUnwrap(props.placement || "top"));
+      if (props.maxWidth != null) current.panel.style.maxWidth = toCssSize(uiUnwrap(props.maxWidth));
+      if (props.minWidth != null) current.panel.style.minWidth = toCssSize(uiUnwrap(props.minWidth));
+      if (props.width != null) current.panel.style.width = toCssSize(uiUnwrap(props.width));
+      if (props.style) Object.assign(current.panel.style, props.style);
+      setPropertyProps(current.panel, props);
+      if (uiUnwrap(props.interactive)) {
+        const cancelHide = () => {
+          clearTimeout(closeTimer);
+          closeTimer = null;
+        };
+        const scheduleHide = () => hide();
+        const onPanelClick = (e) => {
+          const target = e.target;
+          if (target && target.closest && target.closest("[data-tooltip-close]")) {
+            closeNow();
+          }
+        };
+        current.panel.addEventListener("mouseenter", cancelHide);
+        current.panel.addEventListener("mouseleave", scheduleHide);
+        current.panel.addEventListener("focusin", cancelHide);
+        current.panel.addEventListener("focusout", scheduleHide);
+        current.panel.addEventListener("click", onPanelClick);
+        current._tooltipCleanup = () => {
+          current.panel?.removeEventListener("mouseenter", cancelHide);
+          current.panel?.removeEventListener("mouseleave", scheduleHide);
+          current.panel?.removeEventListener("focusin", cancelHide);
+          current.panel?.removeEventListener("focusout", scheduleHide);
+          current.panel?.removeEventListener("click", onPanelClick);
+        };
+      }
+      overlayEnter(current);
+      props.onOpen?.(current);
+      return current;
+    };
+
+    const show = (anchorEl) => {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+      clearTimeout(openTimer);
+      openTimer = setTimeout(() => open(anchorEl), getDelay());
+    };
+
+    const hide = (immediate = false) => {
+      clearTimeout(openTimer);
+      openTimer = null;
+      if (!entry) return;
+      clearTimeout(closeTimer);
+      if (immediate) {
+        closeNow();
+        return;
+      }
+      closeTimer = setTimeout(() => closeNow(), getHideDelay());
+    };
+    const toggle = (anchorEl) => {
+      if (entry) hide(true);
+      else open(anchorEl);
+    };
+    const isOpen = () => !!entry;
+
+    const bind = (el) => {
+      if (!el) return () => { };
+      boundEl = el;
+      const cleanups = [];
+      const cleanup = () => {
+        clearTimers();
+        cleanups.forEach((fn) => fn());
+      };
+      if (hasOwn("open")) {
+        if (uiIsReactive(props.open)) {
+          CMSwift.reactive.effect(() => {
+            if (!boundEl) return;
+            if (uiUnwrap(props.open)) open(boundEl);
+            else hide(true);
+          }, "UI.Tooltip:open");
+        } else if (props.open === true) {
+          open(el);
+        } else if (props.open === false) {
+          hide(true);
+        }
+        return cleanup;
+      }
+      if (isManual || uiUnwrap(props.disabled)) return cleanup;
+      if (allowHover) {
+        const onEnter = () => show(el);
+        const onLeave = () => hide();
+        el.addEventListener("mouseenter", onEnter);
+        el.addEventListener("mouseleave", onLeave);
+        cleanups.push(() => {
+          el.removeEventListener("mouseenter", onEnter);
+          el.removeEventListener("mouseleave", onLeave);
+        });
+      }
+      if (allowFocus) {
+        const onFocus = () => show(el);
+        const onBlur = () => hide();
+        el.addEventListener("focus", onFocus);
+        el.addEventListener("blur", onBlur);
+        cleanups.push(() => {
+          el.removeEventListener("focus", onFocus);
+          el.removeEventListener("blur", onBlur);
+        });
+      }
+      if (allowClick) {
+        const onClick = (e) => {
+          props.onTriggerClick?.(e);
+          if (e.defaultPrevented) return;
+          toggle(el);
+        };
+        el.addEventListener("click", onClick);
+        cleanups.push(() => el.removeEventListener("click", onClick));
+      }
+      return cleanup;
+    };
+
+    if (targetNode) {
+      const cls = uiClass(["cms-tooltip-wrap", props.wrapClass, props.targetClass]);
+      const p = CMSwift.omit(props, [
+        "actions", "anchorEl", "body", "closeOnEsc", "closeOnOutside", "content", "delay", "description",
+        "disabled", "footer", "heading", "hideDelay", "icon", "iconSize", "interactive", "label",
+        "maxWidth", "minWidth", "offset", "offsetX", "offsetY", "onClose", "onOpen", "onTriggerClick",
+        "open", "panelClass", "placement", "slots", "style", "target", "targetClass", "targetStyle",
+        "text", "title", "trigger", "triggerEl", "triggers", "width", "wrapClass", "wrapStyle"
+      ]);
+      p.class = cls;
+      p.style = { display: "inline-flex", alignItems: "center", ...(props.wrapStyle || props.targetStyle || {}) };
+      const target = CMSwift.ui.renderSlot(slots, "target", {
+        open: () => open(boundEl),
+        show: () => show(boundEl),
+        hide: () => hide(true),
+        toggle: () => toggle(boundEl),
+        isOpen
+      }, targetNode);
+      const wrap = _.span(p, ...renderSlotToArray(null, "default", {}, target));
+      bind(wrap);
+      wrap._tooltip = { bind, open, show, hide, close: closeNow, toggle, isOpen };
+      return wrap;
+    }
+
+    return { bind, open, show, hide, close: closeNow, toggle, isOpen };
+  };
+  if (CMSwift.isDev?.()) {
+    UI.meta = UI.meta || {};
+    UI.meta.Tooltip = {
+      signature: "UI.Tooltip(props, target?) | UI.Tooltip(target, content)",
+      props: {
+        title: "String|Node|Function|Array",
+        content: "String|Node|Function|Array",
+        text: "String|Node|Function|Array",
+        body: "String|Node|Function|Array",
+        footer: "String|Node|Function|Array",
+        icon: "String|Node|Function|Array",
+        target: "Node|Function|Array",
+        trigger: "\"hover focus\" | \"click\" | \"manual\" | Array",
+        interactive: "boolean",
+        disabled: "boolean",
+        open: "boolean | reactive",
+        placement: "string",
+        delay: "number",
+        hideDelay: "number",
+        offset: "number (legacy)",
+        offsetX: "number",
+        offsetY: "number",
+        closeOnOutside: "boolean",
+        closeOnEsc: "boolean",
+        maxWidth: "string|number",
+        minWidth: "string|number",
+        width: "string|number",
+        slots: "{ target?, icon?, title?, content?, footer?, default? }",
+        class: "string",
+        panelClass: "string",
+        wrapClass: "string",
+        style: "object",
+        targetStyle: "object"
+      },
+      slots: {
+        target: "Tooltip trigger content ({ open, show, hide, toggle, isOpen })",
+        icon: "Tooltip icon content",
+        title: "Tooltip title content",
+        content: "Tooltip body content ({ close, hide, isOpen, anchorEl })",
+        footer: "Tooltip footer content ({ close, hide, isOpen, anchorEl })",
+        default: "Fallback tooltip body content"
+      },
+      events: {
+        onOpen: "(entry) => void",
+        onClose: "() => void",
+        onTriggerClick: "(event) => void"
+      },
+      returns: "Object { bind(), open(), show(), hide(), close(), toggle(), isOpen() } | HTMLSpanElement",
+      description: "Tooltip ancorato con trigger hover/focus/click, contenuto ricco e API imperativa."
+    };
+  }
+  // Esempio: CMSwift.ui.Tooltip({ title: "Info", text: "Dettaglio rapido" }, CMSwift.ui.Icon({ name: "info" }))
 
   const buildChoiceControl = (type, args, options = {}) => {
     const { props, children } = CMSwift.uiNormalizeArgs(args);
@@ -12161,261 +12416,6 @@
     };
   }
 
-
-  UI.Banner = (...args) => {
-    const { props: rawProps, children } = CMSwift.uiNormalizeArgs(args);
-    const slots = rawProps.slots || {};
-
-    const resolveStateValue = () => normalizeState(uiUnwrap(rawProps.type) || uiUnwrap(rawProps.state) || "");
-    const ctx = {
-      state: resolveStateValue,
-      dismissible: () => !!uiUnwrap(rawProps.dismissible)
-    };
-
-    const typeClass = uiComputed([rawProps.type, rawProps.state], () => resolveStateValue());
-    const variantClass = uiComputed(rawProps.variant, () => {
-      const variant = String(uiUnwrap(rawProps.variant) || "").toLowerCase();
-      return ["solid", "outline", "ghost"].includes(variant) ? `cms-banner-${variant}` : "";
-    });
-    const actionsPlacementClass = uiComputed([rawProps.actionsPlacement, rawProps.stack], () => {
-      const placement = String(uiUnwrap(rawProps.actionsPlacement) || "").toLowerCase();
-      return placement === "bottom" || !!uiUnwrap(rawProps.stack) ? "cms-banner-actions-bottom" : "";
-    });
-    const stackClass = uiComputed(rawProps.stack, () => uiUnwrap(rawProps.stack) ? "cms-banner-stack" : "");
-
-    const props = { ...rawProps };
-    const p = CMSwift.omit(props, [
-      "actions", "actionsPlacement", "accent", "aside", "body", "closeLabel", "description",
-      "dismiss", "dismissible", "icon", "iconSize", "message", "meta", "onDismiss", "slots",
-      "stack", "state", "subtitle", "title", "type", "variant"
-    ]);
-    p.class = uiClass([
-      "cms-clear-set",
-      "cms-banner",
-      "cms-singularity",
-      typeClass,
-      variantClass,
-      actionsPlacementClass,
-      stackClass,
-      props.class
-    ]);
-    p.style = { ...(props.style || {}) };
-
-    const toneToCss = (value) => {
-      if (value == null || value === "") return "";
-      const v = uiUnwrap(value);
-      if (v == null || v === "") return "";
-      const s = String(v);
-      if (isTokenCSS(s)) return `var(--cms-${s})`;
-      return s;
-    };
-
-    if (rawProps.accent != null || uiIsReactive(rawProps.accent)) {
-      p.style["--cms-banner-accent"] = () => toneToCss(rawProps.accent);
-      p.style["--cms-banner-border"] = () => {
-        const tone = toneToCss(rawProps.accent);
-        return tone ? `color-mix(in srgb, ${tone} 38%, var(--cms-border-color))` : "";
-      };
-      p.style["--cms-banner-bg"] = () => {
-        const tone = toneToCss(rawProps.accent);
-        return tone ? `color-mix(in srgb, ${tone} 14%, var(--cms-panel))` : "";
-      };
-      p.style["--cms-banner-color"] = () => {
-        const tone = toneToCss(rawProps.accent);
-        return tone ? `color-mix(in srgb, ${tone} 78%, white)` : "";
-      };
-    }
-
-    const autoIconMap = {
-      success: "check_circle",
-      warning: "warning",
-      danger: "error",
-      info: "info",
-      primary: "bolt",
-      secondary: "campaign",
-      dark: "shield",
-      light: "notifications"
-    };
-
-    const iconFallback = (() => {
-      if (rawProps.icon === false || rawProps.icon === null) return null;
-      if (rawProps.icon != null) {
-        return typeof rawProps.icon === "string"
-          ? UI.Icon({ name: rawProps.icon, size: rawProps.iconSize || rawProps.size || "md" })
-          : CMSwift.ui.slot(rawProps.icon, { as: "icon" });
-      }
-      const state = resolveStateValue();
-      const iconName = state ? autoIconMap[state] : null;
-      return iconName ? UI.Icon({ name: iconName, size: rawProps.iconSize || rawProps.size || "md" }) : null;
-    })();
-
-    const titleNodes = renderSlotToArray(slots, "title", ctx, rawProps.title);
-    const messageNodes = renderSlotToArray(slots, "message", ctx, rawProps.message != null ? rawProps.message : children);
-    const descriptionNodes = renderSlotToArray(slots, "description", ctx, rawProps.description ?? rawProps.subtitle);
-    const metaNodes = renderSlotToArray(slots, "meta", ctx, rawProps.meta);
-    const bodyNodes = renderSlotToArray(
-      slots,
-      "default",
-      ctx,
-      rawProps.body != null ? [rawProps.body, ...(children || [])] : (rawProps.message != null ? children : null)
-    );
-    const iconNodes = renderSlotToArray(slots, "icon", ctx, iconFallback);
-    const asideNodes = renderSlotToArray(slots, "aside", ctx, rawProps.aside);
-    const actionsNodes = renderSlotToArray(slots, "actions", ctx, rawProps.actions);
-    const dismissNodes = renderSlotToArray(slots, "dismiss", ctx, rawProps.dismiss);
-
-    const hasBottomActions = (() => {
-      const placement = String(uiUnwrap(rawProps.actionsPlacement) || "").toLowerCase();
-      return placement === "bottom" || !!uiUnwrap(rawProps.stack);
-    })();
-    const isDismissible = !!uiUnwrap(rawProps.dismissible) || !!rawProps.onDismiss;
-
-    let bannerEl = null;
-    const defaultDismissNode = isDismissible
-      ? UI.Btn({
-        class: "cms-banner-close",
-        outline: true,
-        size: rawProps.size || "sm",
-        "aria-label": rawProps.closeLabel || "Chiudi banner",
-        onClick: (e) => {
-          rawProps.onDismiss?.(e);
-          if (e.defaultPrevented) return;
-          bannerEl?.remove();
-        }
-      }, UI.Icon({ name: "close", size: rawProps.size || "sm" }))
-      : null;
-
-    const sideNodes = [
-      ...asideNodes,
-      ...(!hasBottomActions ? actionsNodes : []),
-      ...(dismissNodes.length ? dismissNodes : (defaultDismissNode ? [defaultDismissNode] : []))
-    ];
-
-    bannerEl = _.div(
-      p,
-      iconNodes.length ? _.div({ class: "cms-banner-icon" }, ...iconNodes) : null,
-      _.div(
-        { class: "cms-banner-body" },
-        _.div(
-          { class: "cms-banner-copy" },
-          titleNodes.length ? _.div({ class: "cms-banner-title" }, ...titleNodes) : null,
-          messageNodes.length ? _.div({ class: "cms-banner-message" }, ...messageNodes) : null,
-          descriptionNodes.length ? _.div({ class: "cms-banner-description" }, ...descriptionNodes) : null,
-          bodyNodes.length ? _.div({ class: "cms-banner-extra" }, ...bodyNodes) : null,
-          metaNodes.length ? _.div({ class: "cms-banner-meta" }, ...metaNodes) : null
-        ),
-        hasBottomActions && actionsNodes.length
-          ? _.div({ class: "cms-banner-actions" }, ...actionsNodes)
-          : null
-      ),
-      sideNodes.length ? _.div({ class: "cms-banner-side" }, ...sideNodes) : null
-    );
-
-    const role = p.role || (() => {
-      const state = resolveStateValue();
-      return state === "danger" || state === "warning" ? "alert" : "status";
-    })();
-    bannerEl.setAttribute("role", role);
-    setPropertyProps(bannerEl, rawProps);
-    return bannerEl;
-  };
-  if (CMSwift.isDev?.()) {
-    UI.meta = UI.meta || {};
-    UI.meta.Banner = {
-      signature: "UI.Banner(...children) | UI.Banner(props, ...children)",
-      props: {
-        title: "String|Node|Function|Array",
-        message: "String|Node|Function|Array",
-        description: "String|Node|Function|Array",
-        meta: "String|Node|Function|Array",
-        icon: "String|Node|Function|Array|false",
-        actions: "Node|Function|Array",
-        aside: "Node|Function|Array",
-        body: "Node|Function|Array",
-        dismissible: "boolean",
-        dismiss: "Node|Function|Array",
-        onDismiss: "function",
-        closeLabel: "string",
-        type: "success|warning|danger|error|info|primary|secondary|light|dark",
-        state: "success|warning|danger|error|info|primary|secondary|light|dark",
-        accent: "string",
-        variant: "soft|solid|outline|ghost",
-        actionsPlacement: "end|bottom",
-        dense: "boolean",
-        stack: "boolean",
-        slots: "{ icon?, title?, message?, description?, meta?, actions?, aside?, dismiss?, default? }",
-        class: "string",
-        style: "object"
-      },
-      slots: {
-        icon: "Leading visual/icon content",
-        title: "Banner title content",
-        message: "Primary message content",
-        description: "Secondary/supporting text",
-        meta: "Meta information content",
-        actions: "Actions area content",
-        aside: "Right side support content",
-        dismiss: "Custom dismiss control",
-        default: "Extra banner body content"
-      },
-      returns: "HTMLDivElement",
-      description: "Banner strutturato con tono, azioni, dismiss e slots composabili."
-    };
-  }
-  // Esempio: CMSwift.ui.Banner({ type: "warning", title: "Pagamento in sospeso", message: "Aggiorna il batch entro le 18:00" })
-
-  // -------------------------------
-  // 3) APP SHELL
-  // -------------------------------
-  let drawerStateKey = "cmswift:drawer-open";
-  const drawerToggleIcons = new Set();
-  const drawerElsByKey = new Map();
-  const readDrawerOpen = (key = drawerStateKey) => {
-    const store = CMSwift?.store;
-    if (store?.get) {
-      const stored = store.get(key, undefined);
-      if (typeof stored === "boolean") return stored;
-    }
-    try {
-      return localStorage.getItem(key) === "1";
-    } catch {
-      return false;
-    }
-  };
-  const writeDrawerOpen = (open, key = drawerStateKey) => {
-    const store = CMSwift?.store;
-    if (store?.set) {
-      store.set(key, !!open);
-      return;
-    }
-    try {
-      localStorage.setItem(key, open ? "1" : "0");
-    } catch {
-      // ignore storage errors
-    }
-  };
-  let drawerOpen = readDrawerOpen();
-  const setDrawerOpen = (open, key = drawerStateKey) => {
-    drawerOpen = !!open;
-    const drawerEls = drawerElsByKey.get(key);
-    if (drawerEls && drawerEls.size) {
-      drawerEls.forEach((el) => el?.classList.toggle("open", drawerOpen));
-    } else {
-      const drawerEl = document.querySelector(".cms-drawer");
-      if (drawerEl) drawerEl.classList.toggle("open", drawerOpen);
-    }
-    drawerToggleIcons.forEach((entry) => {
-      if (!entry) return;
-      if (typeof entry.update === "function") {
-        entry.update(drawerOpen);
-        return;
-      }
-      const { el, openIcon, closeIcon } = entry;
-      if (el) el.textContent = drawerOpen ? openIcon : closeIcon;
-    });
-    writeDrawerOpen(drawerOpen, key);
-    return drawerOpen;
-  };
 
   UI.Header = (...args) => {
     const { props: rawProps, children } = CMSwift.uiNormalizeArgs(args);

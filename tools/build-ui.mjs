@@ -2,9 +2,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { transform } from "esbuild";
 
-const rootDir = path.resolve("pages/_cmswift-fe/js/cms-src");
-const outputFile = path.resolve("pages/_cmswift-fe/js/cms.js");
-const minOutputFile = path.resolve("pages/_cmswift-fe/js/min-cms.js");
+const rootDir = path.resolve("pages/_cmswift-fe/js/ui-src");
+const outputFile = path.resolve("pages/_cmswift-fe/js/ui.js");
+const minOutputFile = path.resolve("pages/_cmswift-fe/js/min-ui.js");
 const manifestFile = path.join(rootDir, "modules.json");
 
 async function readModule(name) {
@@ -13,9 +13,10 @@ async function readModule(name) {
 }
 
 async function main() {
-  const modules = JSON.parse(await fs.readFile(manifestFile, "utf8"));
-  if (!Array.isArray(modules) || !modules.length) {
-    throw new Error("Invalid cms module manifest");
+  const manifest = JSON.parse(await fs.readFile(manifestFile, "utf8"));
+  const modules = Array.isArray(manifest?.buildOrder) ? manifest.buildOrder : null;
+  if (!modules || !modules.length) {
+    throw new Error("Invalid ui module manifest");
   }
   const chunks = await Promise.all(modules.map(readModule));
   const output = chunks.join("");
@@ -27,10 +28,10 @@ async function main() {
   });
   await fs.writeFile(outputFile, output, "utf8");
   await fs.writeFile(minOutputFile, minified.code, "utf8");
-  process.stdout.write(`[build:cms] wrote ${path.relative(process.cwd(), outputFile)} and ${path.relative(process.cwd(), minOutputFile)} from ${modules.length} modules\n`);
+  process.stdout.write(`[build:ui] wrote ${path.relative(process.cwd(), outputFile)} and ${path.relative(process.cwd(), minOutputFile)} from ${modules.length} modules\n`);
 }
 
 main().catch((error) => {
-  console.error("[build:cms] failed:", error);
+  console.error("[build:ui] failed:", error);
   process.exitCode = 1;
 });
