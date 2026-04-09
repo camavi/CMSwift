@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const workspaceTab = _.rod("overview");
 const queueTab = _.rod("priority");
 const settingsTab = _.rod("profile");
@@ -486,18 +487,10 @@ const listSample = {
 };
 
 const tabs = _.div({ class: "cms-panel cms-page" },
-  _.h1("Tabs"),
-  _.p("Tabs e la tab bar standard per header di card, toolbar e navigazioni leggere: supporta model controllato o interno, slot strutturati, contenuti extra, varianti line/pills/soft e navigazione tastiera."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("tabs | items: array di tab con alias `value/name/id/key`, `label/title`, `note/subtitle/description`, `icon`, `badge/counter`, `disabled`, `hidden`"),
-    _.Item("model, value, defaultValue: gestione controllata o iniziale del tab attivo"),
-    _.Item("orientation, variant, fill, wrap, dense, color/state: controllano layout e look"),
-    _.Item("slots: nav, tab, label, icon, note, badge, extra, empty, default"),
-    _.Item("API runtime sul nodo: `_getValue()`, `_setValue(value)`, `_select(value)`, `_next()`, `_prev()`")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Tabs"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Tabs"),
+    api: () => _.docTable("Tabs")
+  }),
   _.h2("Esempi completi"),
   boxCode("Workspace tabs controllati", listSample.basic, 24),
   boxCode("Slots custom + azioni", listSample.slots, 24),

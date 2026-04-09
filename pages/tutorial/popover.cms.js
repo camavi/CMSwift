@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const createSection = (code, sample) => ({
   code: Array.isArray(code) ? code : [code],
   sample: Array.isArray(sample) ? sample : [sample]
@@ -434,18 +435,10 @@ const listSample = {
 };
 
 const popover = _.div({ class: "cms-panel cms-page" },
-  _.h1("Popover"),
-  _.p("Popover standardizzato per azioni contestuali, mini-workflow e pannelli rapidi ancorati a un trigger. Supporta layout ricco, slot completi, trigger bindabili e API imperativa con `open/close/show/hide/toggle/update/bind/isOpen`."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("title, subtitle, eyebrow, icon, content, body, actions, footer per il layout standard"),
-    _.Item("slots icon/eyebrow/title/subtitle/header/content/body/footer/actions/close/default per layout custom"),
-    _.Item("size, state, width, minWidth, maxWidth, bodyMaxHeight, placement, offsetX, offsetY per struttura e presenza"),
-    _.Item("trigger, anchorEl, target, closeButton, closeOnSelect, closeOnOutside, closeOnEsc, trapFocus e autoFocus per il comportamento"),
-    _.Item("API imperativa: open(anchor, overrides), close(), show(), hide(), toggle(), update(props), bind(el), isOpen(), entry()")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Popover"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Popover"),
+    api: () => _.docTable("Popover")
+  }),
   _.h2("Esempi completi"),
   boxCode("Azioni rapide", listSample.basic),
   boxCode("Slot custom", listSample.slots),

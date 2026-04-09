@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const row = (...children) => _.Row({
   style: {
     gap: "12px",
@@ -255,18 +256,10 @@ const listSample = {
 };
 
 const breadcrumbs = _.div({ class: "cms-panel cms-page" },
-  _.h1("Breadcrumbs"),
-  _.p("Breadcrumbs e ora un componente strutturato per navigazioni contestuali, path gerarchici, flussi operativi e documentazione: supporta item completi, slot, varianti, collapse automatico e step interattivi."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("items o model: sorgente dei livelli della breadcrumb, anche reattiva"),
-    _.Item("home, separator, before, after: composizione del contenitore e dei punti di appoggio laterali"),
-    _.Item("variant, dense, wrap/nowrap, color/state, itemSize: controllo visivo coerente con gli altri componenti UI"),
-    _.Item("max, leadingCount, trailingCount, collapsedLabel: gestione dei path lunghi"),
-    _.Item("slots.item, icon, label, note, badge, aside, default, separator, collapsed, empty: personalizzazione completa")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Breadcrumbs"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Breadcrumbs"),
+    api: () => _.docTable("Breadcrumbs")
+  }),
   _.h2("Esempi"),
   boxCode("Workspace header", listSample.basic, 24),
   boxCode("Slots custom", listSample.slots, 24),

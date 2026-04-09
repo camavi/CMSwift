@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const renderProgress = (options = {}, label = "") => {
   if (!Object.keys(options).length && !label) return _.Progress();
   if (!Object.keys(options).length) return _.Progress(label);
@@ -242,18 +243,10 @@ const listSample = {
 };
 
 const progress = _.div({ class: "cms-panel cms-page" },
-  _.h1("Progress"),
-  _.p("Progress standardizzato per stati di avanzamento reali: supporta valore reattivo, buffer, label e note contestuali, percentuale fuori o dentro la barra, stati semantici e modalita indeterminate senza workaround manuali."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("value, model, min, max e buffer per gestire progresso e pre-caricamento"),
-    _.Item("label, note, startLabel, endLabel, valueLabel e insideLabel per comporre il contenuto"),
-    _.Item("state oppure color, trackColor, bufferColor, height, radius e width per la resa visiva"),
-    _.Item("showValue, striped, animated, indeterminate e reverse per i diversi casi d'uso"),
-    _.Item("slots icon, label, note, value, inside, startLabel, endLabel e default per custom rendering")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Progress"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Progress"),
+    api: () => _.docTable("Progress")
+  }),
   _.h2("Esempi completi"),
   boxCode("State + custom color", listSample.state),
   boxCode("Height + radius", listSample.size),

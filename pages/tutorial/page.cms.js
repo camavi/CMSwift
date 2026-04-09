@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const createSection = (code, sample) => ({
   code: Array.isArray(code) ? code : [code],
   sample: Array.isArray(sample) ? sample : [sample]
@@ -324,32 +325,11 @@ const listSample = {
   )
 };
 
-const page = _.Page({
-  eyebrow: "Layout primitive",
-  title: "Page",
-  subtitle: "Contenitore pagina standard per viste applicative, dashboard e pagine editoriali interne. Ora ha una struttura coerente con gli altri componenti del kit: hero, header, body, footer, actions e slot dedicati.",
-  aside: row(
-    _.Chip({ color: "primary", outline: true, size: "sm" }, "hero"),
-    _.Chip({ color: "info", outline: true, size: "sm" }, "slots"),
-    _.Chip({ color: "secondary", outline: true, size: "sm" }, "actions")
-  ),
-  footer: _.div("Suggerimento: usa `Page` come shell del contenuto principale e lascia a `Card` il dettaglio delle singole sezioni."),
-  actions: row(
-    _.Btn({ size: "sm", outline: true }, "Apri sample"),
-    _.Btn({ size: "sm", color: "primary" }, "Copia pattern")
-  )
-},
-  _.Card({ title: "Props principali" },
-    _.List(
-      _.Item("hero, title, subtitle, header, aside: struttura standard dell'intestazione"),
-      _.Item("body, footer, actions: regioni dedicate per contenuti e CTA"),
-      _.Item("dense, flat, centered, narrow: varianti di densita e larghezza"),
-      _.Item("gap, padding, maxWidth, minHeight: controllo layout senza CSS custom"),
-      _.Item("slots.hero, slots.header, slots.body, slots.footer, slots.actions: override puntuali")
-    )
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Page"),
+const page = _.div({ class: "cms-panel cms-page" },
+  _.ComponentDocs({
+    doc: getComponentDoc("Page"),
+    api: () => _.docTable("Page")
+  }),
   _.h2("Esempi completi"),
   boxCode("Struttura standard con hero, aside e footer actions", listSample.structured),
   boxCode("Pagina totalmente custom via slot", listSample.slots),

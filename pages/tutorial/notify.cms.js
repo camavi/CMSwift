@@ -1,3 +1,5 @@
+import notifyDoc from "./docs/notify.doc.js";
+
 const manualToastId = _.rod("");
 
 const actionRow = (...children) => _.div({
@@ -308,18 +310,10 @@ const listSample = {
 };
 
 const notify = _.div({ class: "cms-panel cms-page" },
-  _.h1("Notify"),
-  _.p("Notify e il layer standard per toast e micro-feedback applicativi. Ora supporta payload strutturato, shortcut semantiche, update/remove/clear, slots custom e promise helper per flussi asincroni."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("type/state/color, variant e position per tono visivo e collocazione"),
-    _.Item("title, message, description, meta, body, icon, actions e dismiss per comporre contenuti reali"),
-    _.Item("timeout, closable, dismissLabel per il lifecycle del toast"),
-    _.Item("slots: icon, title, message, description, meta, actions, dismiss, default per casi avanzati"),
-    _.Item("methods: success, warning, error, info, update, remove, clear, promise")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Notify"),
+  _.ComponentDocs({
+    doc: notifyDoc,
+    api: () => _.docTable("Notify")
+  }),
   _.h2("Esempi completi"),
   boxCode("Shortcut rapide", listSample.shortcuts),
   boxCode("Payload strutturato", listSample.structured),

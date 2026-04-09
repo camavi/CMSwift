@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const createSection = (code, sample) => ({
   code: Array.isArray(code) ? code : [code],
   sample: Array.isArray(sample) ? sample : [sample]
@@ -191,17 +192,10 @@ const listSample = {
 };
 
 const tooltip = _.div({ class: "cms-panel cms-page" },
-  _.h1("Tooltip"),
-  _.p("Tooltip standardizzato per microcopy, spiegazioni KPI e azioni rapide. Supporta wrapper diretto, trigger configurabili, contenuto ricco con titolo/icona/footer e API imperativa."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("title, content, text, footer, icon per costruire tooltip semplici o ricchi"),
-    _.Item("trigger: hover/focus, click o manual per controllare come si apre"),
-    _.Item("interactive, closeOnOutside, closeOnEsc, delay, hideDelay per affinare UX"),
-    _.Item("slots target/icon/title/content/footer e API bind/open/show/hide/close/toggle")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Tooltip"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Tooltip"),
+    api: () => _.docTable("Tooltip")
+  }),
   _.h2("Esempi completi"),
   boxCode("Microcopy inline", listSample.basic),
   boxCode("Tooltip ricco in una card", listSample.rich),

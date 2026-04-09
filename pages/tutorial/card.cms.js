@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const createSection = (node, sample) => ({
   code: [node],
   sample: [sample]
@@ -216,17 +217,10 @@ const listSample = {
 };
 
 const card = _.div({ class: "cms-panel cms-page" },
-  _.h1("Card"),
-  _.p("Card standardizzata per blocchi editoriali, dashboard, listing e form. Supporta cover, media, header strutturato, footer con azioni e composizione diretta tramite `_.cardHeader`, `_.cardBody`, `_.cardFooter`."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("title, subtitle, eyebrow, icon, aside per costruire header completi senza markup ripetuto"),
-    _.Item("identifier, cover, media, image, coverHeight per gestire badge e aree visuali"),
-    _.Item("body, footer, actions e slots per usare sia API dichiarativa sia composizione libera"),
-    _.Item("dense, flat, clickable, to, class, bodyClass, headerClass, footerClass per adattare layout e interazione")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Card"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Card"),
+    api: () => _.docTable("Card")
+  }),
   _.h2("Esempi completi"),
   boxCode("Summary / content card", listSample.summary),
   boxCode("Cover / visual hero", listSample.cover),

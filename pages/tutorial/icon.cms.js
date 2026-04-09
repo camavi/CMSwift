@@ -1,4 +1,5 @@
 import { radio } from "./radio.cms";
+import { getComponentDoc } from "./docs/catalog.js";
 
 const render = (options) => _.Icon(options);
 
@@ -303,20 +304,10 @@ const listSample = {
 };
 
 const icon = _.div({ class: "cms-panel cms-page" },
-  _.h1("Icon"),
-  _.p("`_.Icon` e il componente base per tutte le micro-grafie dell'interfaccia: puoi renderizzare icone Google Material, sprite SVG Tabler oppure contenuto custom mantenendo la stessa API."),
-  _.p("Per Tabler usa il prefisso `#` nel nome, per esempio `_.Icon(\"#home\")` oppure `_.Icon({ name: \"#home\" })`. Per Google Material usa il nome diretto, per esempio `_.Icon(\"home\")` oppure `_.Icon({ name: \"favorite\" })`."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("name: string, Node o Function; se inizia con `#` usa lo sprite Tabler, altrimenti Material Icons"),
-    _.Item("size: token (`xs-sm-md-lg-xl`), numero in px o qualsiasi misura CSS"),
-    _.Item("color: supporta sia colori CSS sia stati standard come `success`, `warning`, `danger`, `info`, `primary`, `secondary`, `dark`, `light`"),
-    _.Item("shadow, lightShadow, clickable, border, glossy, glow, glass, gradient, outline e textGradient per tutte le varianti decorative standard"),
-    _.Item("style e class: rifinitura del wrapper quando l'icona diventa parte del layout"),
-    _.Item("contenuto custom: passa un Node o una Function per creare icone testuali, badge numerici o mini-shape")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Icon"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Icon"),
+    api: () => _.docTable("Icon")
+  }),
   _.h2("Tutorial completo"),
   boxCode("Material + Tabler", listSample.source),
   boxCode("String signature + props", listSample.signature),

@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const infoLine = (label, getter) => _.div({ class: "cms-m-b-sm" }, _.b(`${label}: `), _.span(getter));
 const formatValue = (value) => value == null ? "null" : String(value);
 
@@ -123,18 +124,10 @@ const listSample = {
 };
 
 const slider = _.div({ class: "cms-panel cms-page" },
-  _.h1("Slider"),
-  _.p("Slider reattivo con min/max/step, label, markers, icone e supporto a model, onInput e onChange."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("min, max, step: definiscono il range e la granularita del valore"),
-    _.Item("value o model: valore iniziale oppure binding reattivo"),
-    _.Item("label, showValue, labelValue, thumbLabel: controllo del testo mostrato"),
-    _.Item("icon, iconRight, thumbIcon, startLabel, endLabel, markers, markerLabels: arricchiscono la UI"),
-    _.Item("readonly, disabled, withQItem, color, trackColor, thumbColor: comportamento e resa visiva")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Slider"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Slider"),
+    api: () => _.docTable("Slider")
+  }),
   _.h2("Esempi"),
   boxCode("Basic", listSample.basic),
   boxCode("Step + markers", listSample.stepMarkers),

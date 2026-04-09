@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const avatarRowStyle = {
   display: "flex",
   flexWrap: "wrap",
@@ -15,12 +16,12 @@ const boardRow = (title, note, avatarNode, metaNode) => _.div({
     borderBottom: "1px solid var(--cms-border-color)"
   }
 },
-avatarNode,
-_.div({ style: { flex: "1 1 auto" } },
-  _.div({ style: { fontWeight: "700", marginBottom: "4px" } }, title),
-  _.div({ style: { color: "var(--cms-text-secondary, #7b8494)", fontSize: "13px" } }, note)
-),
-metaNode
+  avatarNode,
+  _.div({ style: { flex: "1 1 auto" } },
+    _.div({ style: { fontWeight: "700", marginBottom: "4px" } }, title),
+    _.div({ style: { color: "var(--cms-text-secondary, #7b8494)", fontSize: "13px" } }, note)
+  ),
+  metaNode
 );
 
 const liveMembers = {
@@ -222,7 +223,7 @@ const listSample = {
   },
   reactive: {
     code: [
-        _.div({ style: { display: "grid", gap: "16px" } },
+      _.div({ style: { display: "grid", gap: "16px" } },
         _.div({ style: avatarRowStyle },
           _.Btn({ size: "xs", color: () => liveSelected.value === "qa" ? "success" : "secondary", onClick: () => liveSelected.value = "qa" }, "QA"),
           _.Btn({ size: "xs", color: () => liveSelected.value === "ux" ? "warning" : "secondary", onClick: () => liveSelected.value = "ux" }, "UX"),
@@ -261,19 +262,10 @@ const listSample = {
 };
 
 const avatar = _.div({ class: "cms-panel cms-page" },
-  _.h1("Avatar"),
-  _.p("Avatar standardizzato per team, owner, reviewer e presenze live: supporta immagine, fallback intelligenti da label, overlay, badge, stati e slot custom senza dover costruire wrapper manuali ogni volta."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("label, name, initials, text: definiscono fallback e semantica dell'avatar"),
-    _.Item("src, srcset, sizes, fit: gestione immagine e comportamento media"),
-    _.Item("size, radius, square, fontSize: controllano dimensione e forma"),
-    _.Item("color, state, outline, shadow, glass, glow, gradient: stili coerenti con gli altri componenti UI"),
-    _.Item("badge, notification, status, statusColor, topLeft/topRight/bottomLeft/bottomRight: overlay rapidi"),
-    _.Item("slots media, fallback, label, icon, badge, status: personalizzazione completa del rendering")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Avatar"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Avatar"),
+    api: () => _.docTable("Avatar")
+  }),
   _.h2("Esempi completi"),
   boxCode("Base per team e presenze", listSample.basic),
   boxCode("Size scale", listSample.size),

@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const createSection = (code, sample) => ({
   code: Array.isArray(code) ? code : [code],
   sample: Array.isArray(sample) ? sample : [sample]
@@ -308,18 +309,10 @@ const listSample = {
 };
 
 const parallax = _.div({ class: "cms-panel cms-page" },
-  _.h1("Parallax"),
-  _.p("`UI.Parallax` ora e un contenitore standardizzato per hero, banner editoriali e sezioni operative: supporta header strutturato, body, footer, actions, slot dedicati e API minima di refresh."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("`src`, `image`, `background`, `overlay`, `bgPosition`, `bgSize`, `bgRepeat`: controllano il layer visivo"),
-    _.Item("`badge`, `eyebrow`, `title`, `subtitle`, `header`, `aside`, `media`, `content`, `footer`, `actions`: permettono layout piu ricchi senza markup ad hoc"),
-    _.Item("`height`, `minHeight`, `padding`, `gap`, `justify`, `align`, `contentMaxWidth`: governano layout e densita"),
-    _.Item("`speed`, `startTop`, `maxOffset`, `disabled`: controllano il comportamento parallax"),
-    _.Item("slot disponibili: `background`, `badge`, `eyebrow`, `title`, `subtitle`, `header`, `aside`, `media`, `content`, `footer`, `actions`, `default`")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Parallax"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Parallax"),
+    api: () => _.docTable("Parallax")
+  }),
   _.h2("Esempi completi"),
   boxCode("Hero commerciale", listSample.basic),
   boxCode("Slots e composizione", listSample.slots),

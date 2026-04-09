@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const infoLine = (label, getter) => _.div({ class: "cms-m-b-sm" }, _.b(`${label}: `), _.span(getter));
 const formatRating = (value) => {
   const next = Number(value || 0);
@@ -168,19 +169,10 @@ const listSample = {
 };
 
 const rating = _.div({ class: "cms-panel cms-page" },
-  _.h1("Rating"),
-  _.p("Rating reattivo con supporto a `value` o `model`, step interi o half, reset opzionale, icone custom e slot `star` per il rendering completo di ogni item."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("max, size, gap: definiscono quanti item renderizzare e la loro densita visiva"),
-    _.Item("value o model: valore iniziale oppure binding reattivo"),
-    _.Item("half o allowHalf, clearable: abilitano mezzi step e reset del valore"),
-    _.Item("readonly, disabled, label, name: comportamento e integrazione nel form"),
-    _.Item("checkedIcon, uncheckedIcon, halfIcon, hoveredIcon, color*: personalizzazione visuale"),
-    _.Item("slots.label, slots.star o slots.item: controllo completo del rendering")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Rating"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Rating"),
+    api: () => _.docTable("Rating")
+  }),
   _.h2("Esempi"),
   boxCode("Basic", listSample.basic),
   boxCode("Max + size", listSample.maxAndSize),

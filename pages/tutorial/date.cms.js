@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const infoLine = (label, getter) => _.div({ class: "cms-m-b-sm" }, _.b(`${label}: `), _.span(getter));
 window.CMSWIFT_DATE_DEBUG = true
 
@@ -225,18 +226,10 @@ const listSample = {
 };
 
 const date = _.div({ class: "cms-panel cms-page" },
-  _.h1("Date"),
-  _.p("Date picker reattivo con supporto single, range e multiple selection, input manuale, limiti, preset e casi d'uso reali come prenotazioni e soggiorni."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("value o model: valore iniziale oppure binding reattivo in formato stringa, range o array"),
-    _.Item('mode, range, multiple, range-multiple: configurano la selezione single, intervallo, multipla o multi intervallo'),
-    _.Item("min, max, minRange, maxRange, disableDates, weekdaysOnly: regole di disponibilita"),
-    _.Item("label, icon, iconRight, clearable, manualInput, confirm, shortcuts: UX del campo e del picker"),
-    _.Item("locale, firstDayOfWeek, monthsToShow, onInput, onChange: rendering e comportamento")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Date"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Date"),
+    api: () => _.docTable("Date")
+  }),
   _.h2("Esempi"),
   boxCode("Single date", listSample.basic),
   boxCode("Range per soggiorno", listSample.range),

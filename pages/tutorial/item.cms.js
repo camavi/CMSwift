@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const listSample = {
   basic: {
     code: [
@@ -143,18 +144,10 @@ const listSample = {
 };
 
 const item = _.div({ class: "cms-panel cms-page" },
-  _.h1("Item"),
-  _.p("`_.Item` non è più solo un wrapper per `<li>`: ora gestisce righe strutturate con media, testo, meta, trailing content, azioni e stati visuali, restando compatibile con l'uso semplice dentro `_.List`."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("`label` o children per il caso minimale da elenco testuale"),
-    _.Item("`icon`, `title`, `subtitle`, `meta`, `body`, `aside`, `actions` per costruire righe informative complete"),
-    _.Item("`clickable`, `to`, `active`, `disabled` per item navigabili o selezionabili"),
-    _.Item("`color/state`, `outline`, `shadow`, `glass`, `gradient`, `radius`, `size` per allinearsi al resto dei componenti UI"),
-    _.Item("slot disponibili: `icon`, `title`, `subtitle`, `meta`, `body`, `aside`, `actions`, `default`")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Item"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Item"),
+    api: () => _.docTable("Item")
+  }),
   _.h2("Esempio completo"),
   boxCode("Base minimale", listSample.basic),
   boxCode("Item strutturati", listSample.structured),

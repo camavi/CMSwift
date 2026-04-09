@@ -4309,26 +4309,38 @@
     }
 
     function renderMetaItem(_, item, Chip) {
-      return _.div({ class: "cms-p-md" },
-        _.p(
-          _.h3("Name: " + item.name),
-          _.div(_.b("Type: "), item.type ? String(item.type).split("|").map((token) => Chip({ color: "secondary", dense: true }, token)) : "—")
+      return _.div({ class: "cms-doc-meta" },
+        _.div({ class: "cms-doc-meta-head" },
+          _.div({ class: "cms-doc-meta-name" }, item.name),
+          _.div({ class: "cms-doc-meta-types" },
+            ...(item.type
+              ? String(item.type).split("|").map((token) => Chip({ color: "secondary", dense: true, outline: true }, token))
+              : [_.span("—")])
+          )
         ),
-        _.p(_.b("Default: "), _.span(item.default == null ? "—" : String(item.default))),
-        _.p(
-          _.h3("Values: "),
-          _.div({ class: "cms-p-l-md" }, _.span(formatMetaValues(item.values)))
+        _.div({ class: "cms-doc-meta-grid" },
+          _.div({ class: "cms-doc-meta-block" },
+            _.div({ class: "cms-doc-meta-label" }, "Default"),
+            _.div({ class: "cms-doc-meta-value" }, item.default == null ? "—" : String(item.default))
+          ),
+          _.div({ class: "cms-doc-meta-block" },
+            _.div({ class: "cms-doc-meta-label" }, "Values"),
+            _.div({ class: "cms-doc-meta-value" }, formatMetaValues(item.values))
+          )
         ),
-        _.p(
-          _.h3("Description: "),
-          _.div({ class: "cms-p-l-md" }, item.description || "—")
+        _.div({ class: "cms-doc-meta-block" },
+          _.div({ class: "cms-doc-meta-label" }, "Description"),
+          _.div({ class: "cms-doc-meta-value" }, item.description || "—")
         )
       );
     }
 
     function renderTabGroupFallback(_, rows) {
-      return _.div({ class: "cms-p-md" },
-        rows.map((row) => _.div({ class: "cms-m-b-lg" }, _.h4(row.label || row.name), row.content))
+      return _.div({ class: "cms-doc-fallback" },
+        rows.map((row) => _.div({ class: "cms-doc-fallback-item" },
+          _.div({ class: "cms-doc-fallback-title" }, row.label || row.name),
+          row.content
+        ))
       );
     }
 
@@ -4364,14 +4376,19 @@
         name: key,
         wrap: true,
         label: key,
-        content: _.div({ class: "cms-p-md" },
-          _.div(
-            _.h3("Name: " + key),
-            _.div({ class: "cms-p-l-md" }, value.type || "—")
+        content: _.div({ class: "cms-doc-meta" },
+          _.div({ class: "cms-doc-meta-head" },
+            _.div({ class: "cms-doc-meta-name" }, key)
           ),
-          _.div(
-            _.h3("Description:"),
-            _.div({ class: "cms-p-l-md" }, value.description || "—")
+          _.div({ class: "cms-doc-meta-grid" },
+            _.div({ class: "cms-doc-meta-block" },
+              _.div({ class: "cms-doc-meta-label" }, "Type"),
+              _.div({ class: "cms-doc-meta-value" }, value.type || "—")
+            )
+          ),
+          _.div({ class: "cms-doc-meta-block" },
+            _.div({ class: "cms-doc-meta-label" }, "Description"),
+            _.div({ class: "cms-doc-meta-value" }, value.description || "—")
           )
         )
       }));
@@ -4526,11 +4543,13 @@
       if (b.name === first) return 1;
       return a.name.localeCompare(b.name);
     })
-    return Card(
-      _.h3(`_.${name}`),
-      meta.signature ? _.p({ class: "cms-muted" }, String(meta.signature).replaceAll("UI.", "_.")) : null,
+    return Card({ class: "cms-doc-table" },
+      _.div({ class: "cms-doc-table-header" },
+        _.div({ class: "cms-doc-table-title" }, `_.${name}`),
+        meta.signature ? _.div({ class: "cms-doc-table-signature" }, String(meta.signature).replaceAll("UI.", "_.")) : null
+      ),
       taps.length
-        ? _.h4(propsTab.length ? "Props" : "Documentation")
+        ? _.div({ class: "cms-doc-table-section-title" }, propsTab.length ? "Props" : "Documentation")
         : _.p({ class: "cms-muted" }, "Nessuna documentazione strutturata disponibile."),
       taps.length
         ? (hasTabPanel ? _.TabPanel({

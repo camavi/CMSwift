@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const catalogPage = _.rod(2);
 const ordersPage = _.rod(4);
 const mobilePage = _.rod(1);
@@ -264,18 +265,10 @@ const listSample = {
 };
 
 const pagination = _.div({ class: "cms-panel cms-page" },
-  _.h1("Pagination"),
-  _.p("Componente standard per navigare pagine controllate o derivate da `total/pageSize`, con numeri, controlli edge, ellissi, summary e slots custom."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("`max` oppure `total + pageSize`: definiscono il numero totale di pagine"),
-    _.Item("`model`, `page`, `value`: pagina corrente controllata o iniziale"),
-    _.Item("`showPages`, `showSummary`, `showEdges`, `showFirst`, `showLast`: controllano il layout"),
-    _.Item("`siblings` e `boundaryCount`: regolano quanti numeri mostrare attorno alla pagina attiva"),
-    _.Item("slots `start`, `end`, `first`, `prev`, `page`, `ellipsis`, `next`, `last`, `summary`")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Pagination"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Pagination"),
+    api: () => _.docTable("Pagination")
+  }),
   _.h2("Esempio completo"),
   boxCode("Catalog pagination", listSample.basic),
   boxCode("Total + pageSize summary", listSample.totalAndSummary),

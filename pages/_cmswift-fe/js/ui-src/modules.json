@@ -18,6 +18,7 @@
     "61-form-service.js",
     "70-dialog.js",
     "41-tab-panel.js",
+    "42-docs.js",
     "80-data.js",
     "71-menu-overlays.js"
   ],
@@ -138,6 +139,13 @@
       "status": "migrated",
       "scope": [
         "TabPanel"
+      ]
+    },
+    {
+      "file": "42-docs.js",
+      "status": "migrated",
+      "scope": [
+        "ComponentDocs"
       ]
     },
     {

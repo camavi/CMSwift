@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const liveSpan = _.rod("12");
 const liveMd = _.rod("6");
 const liveGap = _.rod("md");
@@ -318,17 +319,10 @@ const listSample = {
 };
 
 const gridCol = _.div({ class: "cms-panel cms-page" },
-  _.h1("GridCol"),
-  _.p("`_.GridCol` non e piu solo un wrapper per `span`: resta l'item di `_.Grid`, ma puo diventare anche un contenitore strutturato con `start / body / end`, varianti visuali leggere e controlli di layout interno."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("`span`, `sm`, `md`, `lg`, `rowSpan`, `area`, `auto`: gestisci il posizionamento reale del grid item"),
-    _.Item("`gap`, `padding`, `direction`, `contentAlign`, `contentJustify`, `fullHeight`: trasformi il componente in un contenitore verticale leggibile"),
-    _.Item("`start`, `body`, `end` e slot equivalenti: componi pannelli veri senza wrapper extra"),
-    _.Item("`panel`, `color`, `outline`, `shadow`, `radius`, `clickable`, `to`: aggiungi superficie e comportamento quando serve")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("GridCol"),
+  _.ComponentDocs({
+    doc: getComponentDoc("GridCol"),
+    api: () => _.docTable("GridCol")
+  }),
   _.h2("Esempi reali"),
   boxCode("Metriche responsive con `span / md`", listSample.responsive, 24),
   boxCode("Pannelli strutturati con `start / body / end`", listSample.regions, 24),

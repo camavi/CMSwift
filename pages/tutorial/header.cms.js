@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const toolbarRow = (...children) => _.div({
   style: {
     display: "flex",
@@ -220,17 +221,10 @@ const listSample = {
 };
 
 const header = _.div({ class: "cms-panel cms-page" },
-  _.h1("Header"),
-  _.p("Header strutturato per shell applicative e pagine operative: supporta aree start/body/end, toggle drawer integrato, metadata, contenuti extra e override completo via slots."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("title, subtitle, eyebrow, icon, content e meta per costruire una testata completa senza markup custom"),
-    _.Item("left, right, actions e drawerStateKey per integrarsi con Layout, Drawer e AppShell"),
-    _.Item("slots start/left, center/body, end/right, title, subtitle, meta, content e actions per override mirati"),
-    _.Item("dense, stack, gap, minHeight, sticky, divider ed elevated per controllare layout e resa visiva")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Header"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Header"),
+    api: () => _.docTable("Header")
+  }),
   _.h2("Esempi completi"),
   boxCode("Basic", listSample.basic, 24),
   boxCode("Structured Header", listSample.structured, 24),

@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const catalogSearch = _.rod("");
 const catalogSort = _.rod("priority");
 const catalogOnlyStock = _.rod(true);
@@ -263,17 +264,10 @@ const listSample = {
 };
 
 const toolbar = _.div({ class: "cms-panel cms-page" },
-  _.h1("Toolbar"),
-  _.p("Toolbar standardizzata per action bar, header operativi e filtri: mantiene l'uso semplice con children ma aggiunge regioni strutturate come start, center, end, meta e after."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("start, center/body/content, end/actions, before e after per comporre la struttura"),
-    _.Item("title, subtitle e meta per costruire una toolbar informativa senza wrapper manuali"),
-    _.Item("gap, align, justify, wrap, size, dense, divider, elevated e sticky per il layout"),
-    _.Item("slots omonime per generare toolbar dinamiche da dati o stati applicativi")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Toolbar"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Toolbar"),
+    api: () => _.docTable("Toolbar")
+  }),
   _.h2("Esempi completi"),
   boxCode("Toolbar strutturata", listSample.structured, 24),
   boxCode("Toolbar filtri reali", listSample.filters, 24),

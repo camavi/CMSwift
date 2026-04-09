@@ -1,3 +1,5 @@
+import formDoc from "./docs/form.doc.js";
+
 const roleOptions = [
   { label: "Creator", value: "creator" },
   { label: "Admin", value: "admin" },
@@ -419,16 +421,10 @@ const listSample = {
 };
 
 const form = _.div({ class: "cms-panel cms-page" },
-  _.h1("Form"),
-  _.p("Form wrapper integrato con `useForm`: gestisce submit async, validazione e stato `submitting`. I children possono essere funzioni che ricevono l'istanza del form."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("form: istanza restituita da `CMSwift.useForm()`"),
-    _.Item("onSubmit: handler async con `(model, form)`"),
-    _.Item("class, style e children function per costruire layout avanzati")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Form"),
+  _.ComponentDocs({
+    doc: formDoc,
+    api: () => _.docTable("Form")
+  }),
   _.h2("Esempi completi"),
   _.Card({ header: "Demo" },
     boxCode("Registrazione creator", listSample.registration),

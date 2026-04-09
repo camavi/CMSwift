@@ -1,3 +1,5 @@
+import dialogDoc from "./docs/dialog.doc.js";
+
 const createSection = (code, sample) => ({
   code: Array.isArray(code) ? code : [code],
   sample: Array.isArray(sample) ? sample : [sample]
@@ -411,18 +413,10 @@ const listSample = {
 };
 
 const dialog = _.div({ class: "cms-panel cms-page" },
-  _.h1("Dialog"),
-  _.p("Dialog standardizzato per conferme, workspace temporanei e scenari operativi piu ricchi. Supporta header strutturato, slot completi, varianti visuali, backdrop animato e API imperativa con `open/close/toggle/update/isOpen`."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("title, subtitle, eyebrow, icon, content, actions, footer per il layout standard"),
-    _.Item("slots icon/eyebrow/title/subtitle/header/content/body/footer/actions/close per layout custom"),
-    _.Item("size, state, width, maxWidth, fullscreen, scrollable, stickyHeader, stickyActions per controllare struttura e presenza"),
-    _.Item("persistent, closeOnOutside, closeOnBackdrop, closeOnEsc, backdropBlur, trapFocus e lockScroll per la UX"),
-    _.Item("API imperativa: open(overrides), close(), toggle(), update(props), isOpen(), entry()")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Dialog"),
+  _.ComponentDocs({
+    doc: dialogDoc,
+    api: () => _.docTable("Dialog")
+  }),
   _.h2("Esempi completi"),
   boxCode("Conferma release", listSample.basic),
   boxCode("Dialog con slot custom", listSample.slots),

@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const createSection = (code, sample) => ({
   code: Array.isArray(code) ? code : [code],
   sample: Array.isArray(sample) ? sample : [sample]
@@ -345,17 +346,10 @@ _.Container({
 };
 
 const container = _.div({ class: "cms-panel cms-page" },
-  _.h1("Container"),
-  _.p("Container ora standardizzato come gli altri componenti UI: gestisce max-width, gutter, layout (`flex`, `grid`, `stack`, `inline`) e sezioni opzionali come `before`, `header`, `start`, `content`, `end`, `footer`, `after`. I children restano il fallback piu semplice."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("maxWidth, minWidth, width, fluid, padding, paddingX, paddingY per controllare larghezza e respiro del contenuto"),
-    _.Item("layout/display, direction, wrap, align, justify, gap, cols per trasformare il container in un wrapper di layout reale"),
-    _.Item("before, header, start, body, content, end, footer, after oppure i relativi slot per costruire strutture piu leggibili"),
-    _.Item("left/right e top/bottom come alias utili; children come fallback di `content` per mantenere l'uso minimale")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Container"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Container"),
+    api: () => _.docTable("Container")
+  }),
   _.h2("Esempi completi"),
   boxCode("Preset width + spacing", listSample.presets, 24),
   boxCode("Start / content / end layout", listSample.layout, 24),

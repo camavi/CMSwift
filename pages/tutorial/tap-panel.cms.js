@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const workspaceTab = _.rod("overview");
 const workspaceCardTab = _.rod("overview");
 const accountTab = _.rod("billing");
@@ -561,19 +562,10 @@ const listSample = {
 };
 
 const tapPanel = _.div({ class: "cms-panel cms-page" },
-  _.h1("TabPanel"),
-  _.p("TabPanel e il contenitore standard per navigazioni a sezioni: supporta model reattivo, slot strutturati, accessibilita tastiera, swipe, animazioni e layout orizzontali o verticali."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("tabs | items: array di tab con alias `label/title`, `content/panel/body`, `note/subtitle`, `icon`, `badge`, `disabled`, `hidden`"),
-    _.Item("model, value, defaultValue: gestione del tab attivo in modalita controllata o iniziale"),
-    _.Item("orientation, navPosition, variant, navFill, wrap: controllano struttura e look della navigazione"),
-    _.Item("animated, swipeable, infinite, transitionDuration, transitionEasing: definiscono il comportamento"),
-    _.Item("slots: nav, tab, label, icon, note, badge, panel, empty, default"),
-    _.Item("API sul nodo ritornato: `_getValue()`, `_setValue(value)`, `_select(value)`, `_next()`, `_prev()`")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("TabPanel"),
+  _.ComponentDocs({
+    doc: getComponentDoc("TabPanel"),
+    api: () => _.docTable("TabPanel")
+  }),
   _.h2("Esempi completi"),
   boxCode("Controlled workspace tabs", listSample.basic, 24),
   boxCode("Vertical nav con badge e note", listSample.vertical, 24),

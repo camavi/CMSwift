@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const infoLine = (label, getter) => _.div({ class: "cms-m-b-sm" }, _.b(`${label}: `), _.span(getter));
 
 const formatTimeValue = (value) => {
@@ -129,17 +130,10 @@ const listSample = {
 };
 
 const time = _.div({ class: "cms-panel cms-page" },
-  _.h1("Time"),
-  _.p("Time picker reattivo per selezionare orari con input manuale, secondi, limiti min/max, conferma, scorciatoie e binding tramite `model`."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("value o model: valore iniziale oppure binding reattivo in formato HH:mm o HH:mm:ss"),
-    _.Item("min, max, minuteStep, secondStep, withSeconds: regole di selezione e granularita"),
-    _.Item("label, icon, iconRight, pointIcon, clearable, manualInput, confirm: UX del campo e del picker"),
-    _.Item("shortcuts, onInput, onChange: preset rapidi e gestione eventi")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Time"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Time"),
+    api: () => _.docTable("Time")
+  }),
   _.h2("Esempi"),
   boxCode("Base", listSample.basic),
   boxCode("Con secondi", listSample.seconds),

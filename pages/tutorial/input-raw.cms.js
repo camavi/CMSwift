@@ -1,3 +1,5 @@
+import { getComponentDoc } from "./docs/catalog.js";
+
 const infoLine = (label, getter) => _.div({ class: "cms-m-b-xs" }, _.b(`${label}: `), _.span(getter));
 const formatValue = (value) => value == null || value === "" ? "empty" : String(value);
 const row = (...children) => _.div({
@@ -90,15 +92,10 @@ const listSample = {
 };
 
 const inputRaw = _.div({ class: "cms-panel cms-page" },
-  _.h1("InputRaw"),
-  _.p("Input nativo minimale con classe `cms-input-raw`. E utile quando vuoi un campo puro HTML con binding reattivo e supporto autofill, senza il wrapper di `_.FormField`."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("type, name, placeholder, autocomplete, value: pass-through nativi dell'input"),
-    _.Item("model: binding reattivo con `_.rod(...)` oppure `_.signal(...)`"),
-    _.Item("class: aggiunge classi custom al controllo raw"),
-    _.Item("ideale per comporre manualmente layout o card custom partendo da un input base")
-  ),
+  _.ComponentDocs({
+    doc: getComponentDoc("InputRaw"),
+    api: null
+  }),
   _.h2("Esempi"),
   boxCode("Basic", listSample.basic),
   boxCode("Native types", listSample.types),

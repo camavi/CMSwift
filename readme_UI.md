@@ -41,6 +41,7 @@ Stato migrazione attuale:
 - `31-form-advanced.js`: estratto (`Checkbox`, `Radio`, `Toggle`, `Slider`, `Rating`, `Date`, `Time`)
 - `40-navigation.js`: estratto (`Tabs`, `RouteTab`, `Breadcrumbs`, `Pagination`)
 - `41-tab-panel.js`: estratto (`TabPanel`)
+- `42-docs.js`: estratto (`ComponentDocs`)
 - `50-feedback.js`: estratto (`Spinner`, `Progress`, `LoadingBar`, `Notify`)
 - `51-feedback-service.js`: estratto (toast root + notify wiring)
 - `60-shell-app.js`: estratto (`Header`, `Drawer`, `Page`, `AppShell`, `Parallax`)
@@ -49,6 +50,12 @@ Stato migrazione attuale:
 - `71-menu-overlays.js`: estratto (`Menu`, `Popover`, `ContextMenu`, footer bundle)
 - `80-data.js`: estratto (`Table`)
 - `99-legacy-ui.js`: rimosso
+
+## Documentazione Umana vs API Raw
+
+- `UI.meta.*` e `_.docTable("Component")` restano la sorgente tecnica/macchina della reference.
+- `_.ComponentDocs({ doc, api? })` e il layer editoriale per tutorial/demo umani: overview, when to use, patterns, gotchas e tab `Full API`.
+- I dataset umani possono vivere in file dedicati come `pages/tutorial/docs/*.doc.js`, cosi la parte narrativa non viene forzata dentro il meta runtime.
 
 ## Convenzioni Globali
 

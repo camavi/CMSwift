@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const createSection = (code, sample) => ({
   code: Array.isArray(code) ? code : [code],
   sample: Array.isArray(sample) ? sample : [sample]
@@ -472,18 +473,10 @@ const listSample = {
 };
 
 const contextMenu = _.div({ class: "cms-panel cms-page" },
-  _.h1("ContextMenu"),
-  _.p("Context menu standardizzato costruito sopra `Menu`: supporta `items`, slot ricchi, footer custom, runtime overrides per target diversi e API imperativa con `open/openAt/openFromEvent/toggle/update/bind/isOpen`."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("title, subtitle, eyebrow, icon, content, footer, status, empty per la struttura standard"),
-    _.Item("items con stringhe, item object, divider, group, checked, shortcut, badge, color, onClick e closeOnSelect"),
-    _.Item("slots before/icon/eyebrow/title/subtitle/header/content/item/groupLabel/footer/after per layout custom"),
-    _.Item("size, state, width, minWidth, maxWidth, maxHeight, placement, offsetX, offsetY per presenza e posizionamento"),
-    _.Item("bind(el), bind(el, overrides), open(event), openAt(x, y), close, toggle, update e apertura anche da tastiera con tasto ContextMenu / Shift+F10")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("ContextMenu"),
+  _.ComponentDocs({
+    doc: getComponentDoc("ContextMenu"),
+    api: () => _.docTable("ContextMenu")
+  }),
   _.h2("Esempi completi"),
   boxCode("Bind base su asset", listSample.basic),
   boxCode("Runtime overrides per riga", listSample.dynamic),

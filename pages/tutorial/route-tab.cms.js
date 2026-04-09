@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const liveRoute = _.rod("/workspace/overview");
 const liveVariant = _.rod("line");
 const liveDense = _.rod(false);
@@ -298,18 +299,10 @@ const listSample = {
 };
 
 const routeTab = _.div({ class: "cms-panel cms-page" },
-  _.h1("RouteTab"),
-  _.p("RouteTab e un link/tab standardizzato per navigazioni locali, header operativi, sidebar e scorciatoie verso route o href esterni."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("to o href: destinazione interna via router oppure link normale/esterno"),
-    _.Item("label, note, badge, icon, iconRight, aside: struttura base del componente"),
-    _.Item("active o selected, match/matchMode, exact, startsWith: controllo dello stato attivo"),
-    _.Item("variant, block, dense, disabled, color/state: resa visiva e comportamento"),
-    _.Item("slots.icon, slots.label, slots.note, slots.badge, slots.aside, slots.default: personalizzazione completa")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("RouteTab"),
+  _.ComponentDocs({
+    doc: getComponentDoc("RouteTab"),
+    api: () => _.docTable("RouteTab")
+  }),
   _.h2("Esempi"),
   boxCode("Header workspace", listSample.basic),
   boxCode("Slots custom", listSample.slots),

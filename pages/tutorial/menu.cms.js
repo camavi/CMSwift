@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const createSection = (code, sample) => ({
   code: Array.isArray(code) ? code : [code],
   sample: Array.isArray(sample) ? sample : [sample]
@@ -449,18 +450,10 @@ const listSample = {
 };
 
 const menu = _.div({ class: "cms-panel cms-page" },
-  _.h1("Menu"),
-  _.p("Menu standardizzato per azioni contestuali, account switcher, filtri rapidi e controlli runtime. Supporta `items`, header/footer, contenuto custom, trigger bindabili e API imperativa con `open/close/show/hide/toggle/update/bind/isOpen`."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("title, subtitle, eyebrow, icon, content, footer, status, empty per comporre il layout standard"),
-    _.Item("items con stringhe, item object, divider, group, checked, shortcut, badge, color, onClick, closeOnSelect"),
-    _.Item("slots before/icon/eyebrow/title/subtitle/header/content/item/groupLabel/footer/after per layout custom"),
-    _.Item("size, state, width, minWidth, maxWidth, maxHeight, placement, offsetX, offsetY per presenza e struttura"),
-    _.Item("trigger, anchorEl, closeOnSelect, closeOnOutside, closeOnEsc, autoFocus e API `open/toggle/update/bind` per il comportamento")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Menu"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Menu"),
+    api: () => _.docTable("Menu")
+  }),
   _.h2("Esempi completi"),
   boxCode("Azioni rapide", listSample.basic),
   boxCode("Header custom + gruppi", listSample.sections),

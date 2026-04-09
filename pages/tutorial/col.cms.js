@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const liveGap = _.rod("md");
 const liveAlign = _.rod("stretch");
 const liveJustify = _.rod("flex-start");
@@ -234,17 +235,10 @@ const listSample = {
 };
 
 const col = _.div({ class: "cms-panel cms-page" },
-  _.h1("Col"),
-  _.p("`_.Col` funziona come item responsive nel layout a 24 colonne e, quando serve, come stack verticale. Di default resta un contenitore normale; entra in modalita flex colonna quando usi `gap`, `align`, `justify`, le regioni `start / body / end` oppure `stack: true`."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("`col` o `span`, `sm`, `md`, `lg`, `auto`: controlli lo span responsive senza wrapper aggiuntivi"),
-    _.Item("`gap`, `align`, `justify`, `width`, `height`, `fill`, `scroll`, `stack`: trasformi la colonna in un contenitore verticale vero e proprio"),
-    _.Item("`start`, `body`, `end` e slot equivalenti (`header`, `content`, `footer`): componi layout strutturati in modo leggibile"),
-    _.Item("Compatibile con children tradizionali: se non usi regioni o slot, il contenuto viene renderizzato in modo semplice")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Col"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Col"),
+    api: () => _.docTable("Col")
+  }),
   _.h2("Esempi reali"),
   boxCode("Metriche responsive con span `col/md/lg`", listSample.responsive),
   boxCode("Pannello verticale con `start / body / end`", listSample.regions),

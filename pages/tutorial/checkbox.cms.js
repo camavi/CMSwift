@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const createCheckboxState = (keys) => _.rod(
   keys.reduce((acc, key, index) => {
     acc[key] = index === 0;
@@ -481,16 +482,10 @@ const listSample = {
   }
 };
 const checkbox = _.div({ class: "cms-panel cms-page" },
-  _.h1("Checkbox"),
-  _.p("Checkbox con label e supporto model reattivo. Espone onChange/onInput e variante dense."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("size: dimensione del componente (xs-sm-md-lg-xl)"),
-    _.Item("state: success, warning, danger, info, primary, secondary"),
-    _.Item("outline, shadow, borderRadius, clickable per stile e interazione")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Checkbox"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Checkbox"),
+    api: () => _.docTable("Checkbox")
+  }),
   _.h2("Esempio completo"),
   boxCode('Basic color', listSample.basic),
   boxCode('Size', listSample.size),

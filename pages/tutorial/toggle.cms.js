@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const renderToggle = (options, label) => {
   if (label == null) return _.Toggle(options);
   if (!Object.keys(options).length) return _.Toggle(label);
@@ -125,17 +126,10 @@ const listSample = {
 };
 
 const toggle = _.div({ class: "cms-panel cms-page" },
-  _.h1("Toggle"),
-  _.p("Switch toggle basato su checkbox con label. Supporta model, eventi, icone custom e anche comportamento radio."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("checked o model: controllo iniziale o binding reattivo"),
-    _.Item("color, size, dense: styling del toggle e del label"),
-    _.Item("icon, checkedIcon, uncheckedIcon, standbyIcon: gestione visuale dei diversi stati"),
-    _.Item('behavior: "radio" con value e name per gruppi esclusivi')
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Toggle"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Toggle"),
+    api: () => _.docTable("Toggle")
+  }),
   _.h2("Esempi"),
   boxCode("Basic color", listSample.basic),
   boxCode("Size", listSample.size),

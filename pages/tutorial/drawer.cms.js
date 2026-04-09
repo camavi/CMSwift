@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const toolbarRow = (...children) => _.div({
   style: {
     display: "flex",
@@ -312,17 +313,10 @@ const listSample = {
 };
 
 const drawer = _.div({ class: "cms-panel cms-page" },
-  _.h1("Drawer"),
-  _.p("Drawer strutturato per sidebar operative, navigazione applicativa e pannelli utility. Mantiene retro compatibilita con `items`, gruppi e stato persistente, ma ora supporta anche header/footer standard, empty state, contenuti custom e slot piu granulari."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("`items`, `stateKey`, `closeOnSelect`, `groupOpenIcon` e `groupCloseIcon` restano l’API base per la navigazione compatibile con il codice esistente"),
-    _.Item("`title`, `subtitle`, `eyebrow`, `icon`, `meta`, `content`, `actions` e `footer` permettono di costruire sidebar complete senza markup custom"),
-    _.Item("`before`, `after`, `empty`, `emptyText`, `gap`, `indent`, `padding`, `width`, `minHeight`, `maxHeight` aiutano a modellare layout e density"),
-    _.Item("slot `item*`, `group*`, `header`, `body`, `footer`, `before`, `after`, `empty` e `sectionLabel` per override mirati")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Drawer"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Drawer"),
+    api: () => _.docTable("Drawer")
+  }),
   _.h2("Esempi completi"),
   boxCode("Basic Navigation", listSample.basic, 24),
   boxCode("Structured Sidebar", listSample.structured, 24),

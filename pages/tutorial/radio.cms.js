@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const valBase = _.rod("");
 const valSize = _.rod("");
 const valIcon = _.rod("");
@@ -466,16 +467,10 @@ const listSample = {
   }
 };
 const radio = _.div({ class: "cms-panel cms-page" },
-  _.h1("Radio"),
-  _.p("Radio button con label, value e supporto model. Gestisce onChange/onInput e classi dense."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("size: dimensione del componente (xs-sm-md-lg-xl)"),
-    _.Item("state: success, warning, danger, info, primary, secondary"),
-    _.Item("outline, shadow, borderRadius, clickable per stile e interazione")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Radio"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Radio"),
+    api: () => _.docTable("Radio")
+  }),
   _.h2("Esempio completo"),
   boxCode('Basic color', listSample.basic),
   boxCode('Size', listSample.size),

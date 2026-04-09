@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const liveWrap = _.rod(true);
 const liveInline = _.rod(false);
 const liveDirection = _.rod("row");
@@ -211,17 +212,10 @@ const listSample = {
 };
 
 const row = _.div({ class: "cms-panel cms-page" },
-  _.h1("Row"),
-  _.p("Layout flex orizzontale standardizzato per toolbar, filtri, header operativi e gruppi di card. Oltre ai children supporta `gap`, `align`, `justify`, `wrap`, `direction`, `inline` e regioni `start` / `default` / `end`."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("gap, rowGap, columnGap: spaziatura rapida con numeri, CSS value o token UI (`sm`, `md`, `lg`...)"),
-    _.Item("align, justify, wrap, direction, inline: controllo completo del comportamento flex"),
-    _.Item("start/body/end e relativi slot: costruisci action bar e header senza wrapper manuali"),
-    _.Item("full, width, minWidth, maxWidth: controllo della larghezza del contenitore")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Row"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Row"),
+    api: () => _.docTable("Row")
+  }),
   _.h2("Esempi reali"),
   boxCode("Toolbar operativa con gap e wrap", listSample.basic),
   boxCode("Header strutturato con start / end", listSample.regions),

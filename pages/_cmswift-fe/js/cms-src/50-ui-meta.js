@@ -139,11 +139,13 @@
       if (b.name === first) return 1;
       return a.name.localeCompare(b.name);
     })
-    return Card(
-      _.h3(`_.${name}`),
-      meta.signature ? _.p({ class: "cms-muted" }, String(meta.signature).replaceAll("UI.", "_.")) : null,
+    return Card({ class: "cms-doc-table" },
+      _.div({ class: "cms-doc-table-header" },
+        _.div({ class: "cms-doc-table-title" }, `_.${name}`),
+        meta.signature ? _.div({ class: "cms-doc-table-signature" }, String(meta.signature).replaceAll("UI.", "_.")) : null
+      ),
       taps.length
-        ? _.h4(propsTab.length ? "Props" : "Documentation")
+        ? _.div({ class: "cms-doc-table-section-title" }, propsTab.length ? "Props" : "Documentation")
         : _.p({ class: "cms-muted" }, "Nessuna documentazione strutturata disponibile."),
       taps.length
         ? (hasTabPanel ? _.TabPanel({

@@ -1,3 +1,5 @@
+import bannerDoc from "./docs/banner.doc.js";
+
 const createSection = (code, sample) => ({ code, sample });
 
 const listSample = {
@@ -206,17 +208,10 @@ const listSample = {
 };
 
 const banner = _.div({ class: "cms-panel cms-page" },
-  _.h1("Banner"),
-  _.p("Banner standardizzato per stati operativi, note contestuali e avvisi con CTA. Supporta titolo, messaggio, descrizione, icona automatica, dismiss e composizione via slot."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("type/state, accent, variant, size, dense, stack per tono visivo e layout"),
-    _.Item("title, message, description, meta, body, icon, aside, actions per comporre il contenuto senza markup ripetuto"),
-    _.Item("dismissible, dismiss, onDismiss, closeLabel per banner chiudibili"),
-    _.Item("slots: icon, title, message, description, meta, actions, aside, dismiss, default per casi custom")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Banner"),
+  _.ComponentDocs({
+    doc: bannerDoc,
+    api: () => _.docTable("Banner")
+  }),
   _.h2("Esempi completi"),
   boxCode("Stati reali", listSample.states),
   boxCode("CTA e varianti", listSample.actions),

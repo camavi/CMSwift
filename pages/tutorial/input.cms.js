@@ -1,15 +1,10 @@
+import { getComponentDoc } from "./docs/catalog.js";
 
 const input = _.div({ class: "cms-panel cms-page" },
-  _.h1("Input"),
-  _.p("Input con _.FormField integrato: label floating, hint/error, icon/prefix/suffix e clearable. Supporta model reattivo e onInput/onChange."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("size: dimensione del componente (xs-sm-md-lg-xl)"),
-    _.Item("state: success, warning, danger, info, primary, secondary"),
-    _.Item("outline, shadow, borderRadius, clickable per stile e interazione")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Input"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Input"),
+    api: () => _.docTable("Input")
+  }),
   _.h2("Esempio completo"),
   _.Card({ header: "Demo" },
     _.Input({ label: "Nome", placeholder: "Inserisci nome", hint: "Helper text", icon: "home", prefix: "home" }),

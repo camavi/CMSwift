@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const render = (options, label) => {
   if (!Object.keys(options).length) return _.Btn(label);
   return _.Btn(options, label);
@@ -54,16 +55,10 @@ const listSample = {
 };
 
 const btn = _.div({ class: "cms-panel cms-page" },
-  _.h1("Button"),
-  _.p("Bottone con varianti colore, outline, icona/label e stato loading. Gestisce disabilitazione, aria e animazione burst su pointerdown."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("size: dimensione del componente (xs-sm-md-lg-xl)"),
-    _.Item("state: success, warning, danger, info, primary, secondary"),
-    _.Item("outline, shadow, borderRadius, clickable per stile e interazione")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Btn"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Btn"),
+    api: () => _.docTable("Btn")
+  }),
   _.h2("Esempio completo"),
   boxCode("Basic color", listSample.basic),
   boxCode("Size", listSample.size),

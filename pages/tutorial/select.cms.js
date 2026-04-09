@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const statusValue = _.rod("live");
 const topLabelValue = _.rod("draft");
 const clearableValue = _.rod("archived");
@@ -261,17 +262,10 @@ const listSample = {
 };
 
 const select = _.div({ class: "cms-panel cms-page" },
-  _.h1("Select"),
-  _.p("Select costruito su FormField: supporta opzioni semplici o raggruppate, filtro, multi-select, valori custom, clearable e slot per personalizzare il dropdown."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("options, model o value: sorgente dati e binding reattivo"),
-    _.Item("label, topLabel, hint, error, note: contenuti del field"),
-    _.Item("clearable, filterable, multiple, allowCustom: principali comportamenti del select"),
-    _.Item("icon, iconRight, prefix, suffix, wrapClass, slots: personalizzazione visuale")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Select"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Select"),
+    api: () => _.docTable("Select")
+  }),
   _.h2("Esempi"),
   boxCode("Basic", listSample.basic),
   boxCode("Top label", listSample.topLabel),

@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const badgeNotifications = _.signal(7);
 const badgeDownloads = _.signal(2);
 const badgeEnergy = _.signal(84);
@@ -226,18 +227,10 @@ const listSample = {
 };
 
 const badge = _.div({ class: "cms-panel cms-page" },
-  _.h1("Badge"),
-  _.p("Badge e un micro-componente scenico: etichetta compatta, icone ancorate, notification reattiva e slot per costruire micro-stati ricchi senza aprire card o modali."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("color, outline e size per definire tono visivo e densita"),
-    _.Item("label o children per il contenuto principale"),
-    _.Item("notification anche reattiva tramite signal"),
-    _.Item("left, right, topLeft, topRight, bottomLeft, bottomRight per ancorare icone"),
-    _.Item("slots: label, notification e slot icona per render custom")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Badge"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Badge"),
+    api: () => _.docTable("Badge")
+  }),
   _.h2("Tutorial completo"),
   boxCode("Basic color", listSample.basic),
   boxCode("Size", listSample.size),

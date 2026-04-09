@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const createSection = (code, sample) => ({
   code: Array.isArray(code) ? code : [code],
   sample: Array.isArray(sample) ? sample : [sample]
@@ -275,17 +276,10 @@ const listSample = {
 };
 
 const appShell = _.div({ class: "cms-panel cms-page" },
-  _.h1("AppShell"),
-  _.p("Shell applicativa composabile per orchestrare `Header`, `Drawer`, `Page` e `Footer` con shortcut rapidi, slot completi e metodi per controllare il drawer."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("shortcut: `title`, `subtitle`, `left`, `right`, `drawerItems`, `drawerHeader`, `footerContent`"),
-    _.Item("composizione: `headerProps`, `drawerProps`, `pageProps`, `footerProps` oppure `slots.header/drawer/page/footer`"),
-    _.Item("layout: `noDrawer`, `drawerWidth`, `gap`, `padding`, `reverse`, `stack`, `flush`, `divider`"),
-    _.Item("API nodo: `openDrawer()`, `closeDrawer()`, `toggleDrawer()`, `isDrawerOpen()`")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("AppShell"),
+  _.ComponentDocs({
+    doc: getComponentDoc("AppShell"),
+    api: () => _.docTable("AppShell")
+  }),
   _.h2("Esempi reali"),
   boxCode("Shorthand Composition", listSample.shorthand, 24),
   boxCode("Slots And Custom Regions", listSample.slots, 24),

@@ -30,6 +30,7 @@ Ordine di migrazione consigliato:
 - `31-form-advanced.js`
 - `40-navigation.js`
 - `41-tab-panel.js`
+- `42-docs.js`
 - `50-feedback.js`
 - `51-feedback-service.js`
 - `60-shell-app.js`
@@ -57,6 +58,8 @@ Famiglie previste:
   `Tabs`, `RouteTab`, `Breadcrumbs`, `Pagination`
 - tab panel:
   `TabPanel`
+- docs:
+  `ComponentDocs`
 - feedback:
   `Spinner`, `Progress`, `LoadingBar`, `Notify`
 - feedback service:

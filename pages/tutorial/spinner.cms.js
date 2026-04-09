@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const renderSpinner = (options = {}, label = "") => {
   if (!Object.keys(options).length && !label) return _.Spinner();
   if (!Object.keys(options).length) return _.Spinner(label);
@@ -171,17 +172,10 @@ const listSample = {
 };
 
 const spinner = _.div({ class: "cms-panel cms-page" },
-  _.h1("Spinner"),
-  _.p("Spinner standardizzato per stati di caricamento puntuali o contestuali: supporta dimensioni, stato semantico, velocita, traccia, layout con label e integrazione pulita dentro button, card e aree operative."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("size, thickness, speed e trackColor per calibrare la resa visiva"),
-    _.Item("state oppure color per gestire il tono del feedback"),
-    _.Item("label, note, vertical, reverse, center e block per adattare il layout"),
-    _.Item("slots indicator, label, note e default per casi custom senza wrapper extra")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Spinner"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Spinner"),
+    api: () => _.docTable("Spinner")
+  }),
   _.h2("Esempi completi"),
   boxCode("Size", listSample.size),
   boxCode("State + custom color", listSample.state),

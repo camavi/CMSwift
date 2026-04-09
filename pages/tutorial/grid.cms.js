@@ -1,3 +1,5 @@
+import gridDoc from "./docs/grid.doc.js";
+
 const releaseMetrics = [
   { title: "Ordini a rischio", value: "184", note: "12 ticket sotto SLA", tone: "warning", progress: 72 },
   { title: "Deploy completati", value: "27", note: "Ultima build 08:42", tone: "success", progress: 91 },
@@ -350,17 +352,10 @@ const listSample = {
 };
 
 const grid = _.div({ class: "cms-panel cms-page" },
-  _.h1("Grid"),
-  _.p("Layout CSS Grid standardizzato per dashboard, board operative, template editoriali e raccolte card responsive. Oltre ai `children` ora supporta `items`, slot `item`, `empty`, `autoFit/autoFill`, `areas`, gap separati e width utilities."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("cols, columns, rows, areas: controlli template espliciti quando vuoi una griglia completamente disegnata"),
-    _.Item("min + autoFit/autoFill: genera layout fluidi senza media query manuali"),
-    _.Item("items, itemProps, slot item, empty: usa Grid in modo dichiarativo come lista di card"),
-    _.Item("gap, rowGap, columnGap, autoRows, dense: perfetto per board operative e composizioni irregolari")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Grid"),
+  _.ComponentDocs({
+    doc: gridDoc,
+    api: () => _.docTable("Grid")
+  }),
   _.h2("Esempi reali"),
   boxCode("Dashboard responsive a 12 colonne", listSample.responsive, 24),
   boxCode("Catalogo auto-fit con items + slot item", listSample.autoFit, 24),

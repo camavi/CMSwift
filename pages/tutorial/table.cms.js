@@ -1,3 +1,5 @@
+import tableDoc from "./docs/table.doc.js";
+
 const euro = new Intl.NumberFormat("it-IT", {
   style: "currency",
   currency: "EUR",
@@ -281,17 +283,10 @@ const listSample = {
 };
 
 const table = _.div({ class: "cms-panel cms-page" },
-  _.h1("Table"),
-  _.p("Componente tabellare standard per dati operativi: toolbar, ricerca, ordinamento, paginazione, stati, footer custom e rendering libero di celle e azioni."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("columns: definisce label, sorting, width, formatter e render custom per ogni colonna"),
-    _.Item("rows, loading, filter, searchModel: permettono una tabella reattiva e controllabile"),
-    _.Item("toolbarStart, toolbarEnd, footer, slots: estendono il layout senza forzare markup esterno"),
-    _.Item("dense, striped, hover, minTableWidth: rendono il componente adattabile a dashboard e backoffice")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Table"),
+  _.ComponentDocs({
+    doc: tableDoc,
+    api: () => _.docTable("Table")
+  }),
   _.h2("Esempio completo"),
   boxCode("CRM table con search, filtri e azioni", listSample.crm),
   boxCode("Tabella compatta per analytics operative", listSample.compact),

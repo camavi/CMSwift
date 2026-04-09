@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const globalLoadingBar = _.LoadingBar({
   height: 4,
   state: "primary",
@@ -187,17 +188,10 @@ const listSample = {
 };
 
 const loadingBar = _.div({ class: "cms-panel cms-page" },
-  _.h1("LoadingBar"),
-  _.p("Loading bar standardizzata costruita sopra `_.Progress`: puo essere globale, inline o montata dentro un container specifico, con controllo tramite `model` o API imperativa."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("`model`, `value`, `buffer`: controllo reattivo o imperativo dello stato"),
-    _.Item("`mount`, `target`, `position`, `top/right/bottom/left`: gestione del montaggio e del layout"),
-    _.Item("`start()`, `inc()`, `setBuffer()`, `done()`, `reset()`: API rapida per richieste, upload e sync"),
-    _.Item("eredita le props visive di `_.Progress`: `state`, `color`, `height`, `striped`, `animated`, `showValue`, `insideLabel`, `radius`")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("LoadingBar"),
+  _.ComponentDocs({
+    doc: getComponentDoc("LoadingBar"),
+    api: () => _.docTable("LoadingBar")
+  }),
   _.h2("Esempio completo"),
   boxCode("Global fixed loading bar", listSample.global),
   boxCode("Inline loading bar con model e buffer", listSample.inline),

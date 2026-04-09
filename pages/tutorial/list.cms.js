@@ -1,3 +1,5 @@
+import { getComponentDoc } from "./docs/catalog.js";
+
 const releaseQueue = [
   {
     icon: "rocket_launch",
@@ -239,18 +241,46 @@ const listSample = {
 };
 
 const list = _.div({ class: "cms-panel cms-page" },
-  _.h1("List"),
-  _.p("`_.List` e `_.Item` ora coprono sia il caso classico da elenco puntato sia liste strutturate per feed, queue operative, checklist e overview con azioni."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("`_.List`: `items`, `slots.item`, `empty`, `number|ordered`, `marker`, `gap`, `divider`, `dense`"),
-    _.Item("`_.Item`: `icon`, `title`, `subtitle`, `meta`, `aside`, `actions`, `body` e children come fallback"),
-    _.Item("`_.Item`: `clickable`, `to`, `active`, `disabled` per righe interattive o navigabili"),
-    _.Item("`_.Item`: `color/state`, `outline`, `shadow`, `glass`, `gradient`, `radius` per varianti visuali coerenti con gli altri componenti UI")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("List"),
-  _.docTable("Item"),
+  _.ComponentDocs({
+    doc: {
+      ...getComponentDoc("List"),
+      title: "List + Item",
+      summary: "`_.List` e `_.Item` coprono sia l'elenco classico sia liste strutturate per feed, queue operative, checklist e overview con azioni.",
+      quickFacts: [
+        {
+          label: "Best for",
+          value: "feed operativi, checklist, code di lavoro, elenchi leggibili con meta e azioni"
+        },
+        {
+          label: "Mental model",
+          value: "`List` orchestra la collezione, `Item` definisce la singola riga strutturata."
+        },
+        {
+          label: "Read together",
+          value: "Su questa pagina i due componenti vanno letti insieme, non come tutorial separati."
+        }
+      ],
+      essentialProps: [
+        {
+          name: "List.items / slots.item / empty",
+          description: "Usa `List` come collection dichiarativa oppure come wrapper puro di `Item`."
+        },
+        {
+          name: "Item.icon / title / subtitle / meta / aside / actions / body",
+          description: "Sono le leve che trasformano una riga semplice in una riga operativa completa."
+        },
+        {
+          name: "Item.clickable / to / active / disabled",
+          description: "Per rendere le righe navigabili o interattive senza perdere coerenza."
+        }
+      ]
+    },
+    api: () => _.div(
+      _.docTable("List"),
+      _.div({ style: { marginTop: "16px" } }),
+      _.docTable("Item")
+    )
+  }),
   _.h2("Esempio completo"),
   boxCode("Queue operativa con items object", listSample.structured),
   boxCode("Roadmap ordinata", listSample.ordered),

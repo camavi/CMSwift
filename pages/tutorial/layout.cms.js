@@ -1,3 +1,5 @@
+import layoutDoc from "./docs/layout.doc.js";
+
 const shellItems = [
   { label: "Overview", to: "#overview", icon: "dashboard" },
   { label: "Orders", to: "#orders", icon: "shopping_bag" },
@@ -417,20 +419,10 @@ const listSample = {
 };
 
 const layout = _.div({ class: "cms-panel cms-page" },
-  _.h1("Layout"),
-  _.p("Layout composabile per shell applicative con header, drawer, nav destro, page e footer. Il drawer e attivo di default quando presente, il nav destro resta opt-in, e la shell supporta alias, fallback dei children, responsive e update runtime delle aree."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("header, aside|drawer, nav|asideRight|drawerRight, page|main|content e footer per comporre le aree"),
-    _.Item("slots.header, slots.drawer, slots.page, slots.footer e slots.default per costruzioni dinamiche"),
-    _.Item("drawerEnabled controlla il rail sinistro ma di default e true, navEnabled abilita il rail destro"),
-    _.Item("drawerOpen, navOpen, drawerBreakpoint, navBreakpoint, drawerWidth, navWidth, overlayClose, escClose per controllare i rail"),
-    _.Item("drawerResizable, drawerMinWidth, drawerMaxWidth e navResizable, navMinWidth, navMaxWidth per il drag desktop dei rail inline"),
-    _.Item("stickyHeader, stickyAside, stickyNav, stickyFooter, gap, minHeight e classi dedicate alle singole aree"),
-    _.Item("API runtime: openAside(), closeAside(), toggleAside(), openNav(), closeNav(), toggleNav(), pageUpdate(), asideUpdate(), navUpdate(), footerUpdate()")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Layout"),
+  _.ComponentDocs({
+    doc: layoutDoc,
+    api: () => _.docTable("Layout")
+  }),
   _.h2("Esempi completi"),
   boxCode("Dashboard shell completa", listSample.basic, 24),
   boxCode("Drawer e page controllati via API", listSample.runtime, 24),

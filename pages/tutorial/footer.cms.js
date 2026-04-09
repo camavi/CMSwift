@@ -1,3 +1,4 @@
+import { getComponentDoc } from "./docs/catalog.js";
 const createSection = (code, sample) => ({
   code: Array.isArray(code) ? code : [code],
   sample: Array.isArray(sample) ? sample : [sample]
@@ -172,17 +173,10 @@ _.Footer({
 };
 
 const footer = _.div({ class: "cms-panel cms-page" },
-  _.h1("Footer"),
-  _.p("Footer standardizzato per chiudere pagine, shell applicative, card operative e barre azione. Ora supporta una struttura coerente con il resto della UI: aree `start/body/end`, copy tipizzata, meta, actions e slot dedicati."),
-  _.h2("Props principali"),
-  _.List(
-    _.Item("title, subtitle, eyebrow, icon, meta per costruire un footer strutturato senza markup ripetuto"),
-    _.Item("left, right, actions oppure slots.left/body/end/actions per gestire regioni stabili e layout custom"),
-    _.Item("sticky, dense, elevated, divider, align, justify, wrap, gap, minHeight per adattare il comportamento visivo"),
-    _.Item("children come fallback di `content`, quindi i casi semplici restano compatti e retrocompatibili")
-  ),
-  _.h2("Documentazione API"),
-  _.docTable("Footer"),
+  _.ComponentDocs({
+    doc: getComponentDoc("Footer"),
+    api: () => _.docTable("Footer")
+  }),
   _.h2("Esempi completi"),
   boxCode("Footer strutturato per handoff release", listSample.structured, 24),
   boxCode("Action bar per pricing e approvazioni", listSample.actionBar, 24),
