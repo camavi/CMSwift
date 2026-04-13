@@ -222,6 +222,12 @@
     };
   </script>
   <script type="module">
+    const htmlDemoRoutes = _.DOM_ELEMENTS.map((tag) => [
+      "/demo/html/" + tag,
+      "../tutorial/html/html-tags.cms.js",
+      "htmlTagPage",
+    ]);
+
     const demoRoutes = [
       [
         "/demo/component/color",
@@ -358,6 +364,7 @@
         "separator",
       ],
       ["/demo/component/spacer", "../tutorial/spacer.cms.js", "spacer"],
+      ...htmlDemoRoutes,
     ];
 
     const demoImportBase = new URL("/demo/", window.location.origin);
@@ -598,11 +605,11 @@
         ],
       },
       {
-        label: "Js Html",
+        label: "HTML",
         icon: "html",
         items: [
           ..._.DOM_ELEMENTS.map((tag) =>
-            createComponentItem(tag, "/demo/html/" + tag),
+            createComponentItem("_." + tag, "/demo/html/" + tag),
           ),
         ],
       },
@@ -705,9 +712,6 @@
 
     preloadDemoView(window.location.pathname);
     _.router.start();
-    /* */
     refreshCodeHighlight();
-    console.log(_.DOM_ELEMENTS);
   </script>
 </html>
-
