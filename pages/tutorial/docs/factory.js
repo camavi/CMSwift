@@ -1,4 +1,4 @@
-import descriptions from "../descriptions.js";
+import descriptions from "../ui/descriptions.js";
 
 const COMMON_META_PROPS = new Set([
   "children", "class", "style", "size", "color", "outline", "dense", "disabled",
