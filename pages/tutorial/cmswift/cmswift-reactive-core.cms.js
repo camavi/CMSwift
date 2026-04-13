@@ -18,15 +18,19 @@ const reactiveCorePage = _.component((props, ctx) => {
   const total = _.computed(() => getLeft() + getRight());
   const product = _.computed(() => getLeft() * getRight());
 
+  let effectRunCount = 0;
+  let cleanupRunCount = 0;
   let stopLiveEffect = null;
   const startEffect = () => {
     if (stopLiveEffect) return;
     stopLiveEffect = _.effect((onCleanup) => {
       const sum = getLeft() + getRight();
-      setEffectRuns(getEffectRuns() + 1);
+      effectRunCount += 1;
+      setEffectRuns(effectRunCount);
       setEffectState(`effect saw sum=${sum}`);
       onCleanup(() => {
-        setCleanupRuns(getCleanupRuns() + 1);
+        cleanupRunCount += 1;
+        setCleanupRuns(cleanupRunCount);
       });
     });
   };
