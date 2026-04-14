@@ -11,9 +11,12 @@
     "./min": "./dist/min-ui.js",
     "./css/base.css": "./dist/css/base.css",
     "./css/ui.css": "./dist/css/ui.css",
+    "./css/min-ui.css": "./dist/css/min-ui.css",
+    "./css/ui-components.css": "./dist/css/ui-components.css",
     "./css/responsive.css": "./dist/css/responsive.css",
     "./css/animation.css": "./dist/css/animation.css",
-    "./css/tabler-icons-out.css": "./dist/css/tabler-icons-out.css"
+    "./css/tabler-icons-out.css": "./dist/css/tabler-icons-out.css",
+    "./css/docs.css": "./dist/css/docs.css"
   },
   "files": [
     "dist",

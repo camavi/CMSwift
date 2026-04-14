@@ -35,6 +35,8 @@ Package dist:
 - `packages/core/dist/min-cms.js`
 - `packages/ui/dist/ui.js`
 - `packages/ui/dist/min-ui.js`
+- `packages/ui/dist/css/ui.css`
+- `packages/ui/dist/css/min-ui.css`
 - `packages/cmswift/dist/cmswift.js`
 - `packages/cmswift/dist/min-cmswift.js`
 
@@ -44,6 +46,8 @@ Mirror locale compatibile:
 - `pages/_cmswift-fe/js/min-cms.js`
 - `pages/_cmswift-fe/js/ui.js`
 - `pages/_cmswift-fe/js/min-ui.js`
+- `pages/_cmswift-fe/css/ui.css`
+- `pages/_cmswift-fe/css/min-ui.css`
 
 ## Comandi
 
