@@ -17,7 +17,7 @@ Da qui in avanti:
 
 - la source of truth del framework deve convergere in `packages/*/src`
 - gli output pubblicabili devono uscire in `packages/*/dist`
-- `pages/_cmswift-fe/` resta solo compatibilita legacy durante la migrazione
+- `pages/_cmswift-fe/` resta solo come mirror runtime compatibile per demo locali
 
 ## Documentazione
 

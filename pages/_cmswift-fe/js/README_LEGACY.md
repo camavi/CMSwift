@@ -1,6 +1,6 @@
-# Legacy JS Mirror
+# Runtime JS Mirror
 
-Questa cartella contiene solo gli output runtime legacy compatibili con il vecchio shell sotto `pages/`.
+Questa cartella contiene solo un mirror compatibile degli output runtime usati dalla demo locale sotto `pages/`.
 
 ## Source Of Truth
 

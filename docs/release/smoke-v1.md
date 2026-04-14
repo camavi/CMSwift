@@ -2,25 +2,29 @@
 
 Checklist manuale minima da eseguire prima di una release `v1`.
 
+Nota:
+- questo documento resta come baseline operativa della prima release pubblica
+- ultima verifica di riferimento chiusa il `2026-04-14`
+
 Regola:
 - se una voce fallisce, la release si ferma
 - il check va fatto almeno su build runtime corrente
 - preferibile verificare sia bundle standard sia minificato
 
-Stato preflight attuale:
-- preflight HTTP locale eseguito il `2026-04-08`
+Stato preflight di riferimento:
+- preflight HTTP locale eseguito il `2026-04-14`
 - verificati `200 OK` su:
   - `pages/index.html`
   - `pages/_cmswift-fe/js/cms.js`
   - `pages/_cmswift-fe/js/ui.js`
   - `pages/_cmswift-fe/js/min-cms.js`
   - `pages/_cmswift-fe/js/min-ui.js`
-- il check interattivo browser resta comunque obbligatorio
+- il check interattivo browser resta comunque obbligatorio per release future
 
-Stato manual smoke:
+Stato smoke di riferimento:
 - smoke browser manuale eseguita
-- demo core e UI principali verificate piu volte
-- esito: `PASS`
+- demo core e UI principali verificate
+- esito registrato: `PASS`
 
 ## 1. Runtime Files
 

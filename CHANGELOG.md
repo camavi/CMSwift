@@ -8,7 +8,28 @@ Il formato segue in modo pragmatico:
 - Fixed
 - Docs
 
-## [1.0.0] - draft
+## [1.0.1] - 2026-04-14
+
+### Added
+- publish npm di `@cmswift/core`
+- publish npm di `@cmswift/ui`
+- publish npm del package umbrella `cmswift`
+- documentazione README con percorsi npm e CDN
+- package `cmswift` reso autonomo con `dist/cmswift.js`, CSS e asset inclusi nel tarball
+
+### Fixed
+- bootstrap del core ora parte anche senza `window.CMSwift_setting`
+- configurazione HTTP del core ora usa fallback sicuri quando la config globale non esiste
+- consumo npm browser-first piu robusto nei progetti che importano `@cmswift/core` senza setup legacy
+- export CSS del package `cmswift` ora puntano a file interni al package
+- build del package umbrella riallineata con JS, CSS, font e immagini inclusi
+
+### Docs
+- quick start pubblico aggiornato per `@cmswift/core`, `@cmswift/ui` e `cmswift`
+- aggiunte note di release dedicate per `v1.0.1`
+- documentazione release `v1.0.0` riclassificata come archivio storico/pre-release
+
+## [1.0.0] - historical pre-release baseline
 
 ### Added
 - modularizzazione completa del core in `packages/core/src`
@@ -43,16 +64,7 @@ Il formato segue in modo pragmatico:
 - aggiunti `docs/reference/core.md` e `docs/reference/ui.md` come riferimenti tecnici
 - aggiunto `LICENSE`
 
-## [1.0.1] - 2026-04-14
-
-### Fixed
-- bootstrap del core ora parte anche senza `window.CMSwift_setting`
-- configurazione HTTP del core ora usa fallback sicuri quando la config globale non esiste
-- consumo npm browser-first piu robusto nei progetti che importano `@cmswift/core` senza setup legacy
-
 ## Note
 
-La release `1.0.0` resta draft finche non sono chiusi:
-- smoke test browser
-- versione ufficiale del package
-- release gate finale
+La release `1.0.0` resta come baseline storica di pre-release.
+La prima release pubblicata e consumata via npm nel repo e `1.0.1`.

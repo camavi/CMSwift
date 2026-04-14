@@ -1,5 +1,10 @@
 # CMSwift v1 Pre-release Checklist
 
+Nota storica:
+- questo documento descrive il gate originale verso `v1.0.0`
+- il primo publish npm effettivo del repo e stato chiuso su `v1.0.1`
+- usarlo come checklist storica e come base per i release gate successivi
+
 Documento operativo per decidere quando CMSwift puo essere pubblicato come `v1`.
 
 Obiettivo:
@@ -21,7 +26,7 @@ Valutazione rapida oggi:
 - documentazione tecnica interna: buona
 - demo/tutorial: buoni
 - test automatici core: buoni
-- readiness prodotto pubblico: non ancora chiusa
+- readiness prodotto pubblico: chiusa storicamente con il publish `1.0.1`
 
 Conclusione:
 - CMSwift oggi e un progetto serio e strutturato
@@ -31,8 +36,9 @@ Snapshot gate oggi:
 - README pubblico: presente
 - policy stabilita/compatibilita: presente
 - LICENSE: presente
-- versione package: `1.0.0`
-- changelog/release notes: presenti come draft
+- versione target originale: `1.0.0`
+- release pubblicata di riferimento: `1.0.1`
+- changelog/release notes: presenti
 - build runtime: verde
 - test automatici core: verdi
 - smoke browser release: passata
@@ -81,8 +87,8 @@ Serve prima di pubblicare:
 
 Aggiornamento:
 - policy iniziale definita in `docs/policy/stability.md`
-- package allineato a `1.0.0`
-- confine `stable` vs `unstable` chiuso per `v1.0.0`
+- package baseline iniziale allineato a `1.0.0`
+- confine `stable` vs `unstable` chiuso per la baseline `v1`
 
 ### 1.3 Smoke test browser di release
 
@@ -138,10 +144,10 @@ Serve prima di pubblicare:
 Aggiornamento:
 - `LICENSE` aggiunta con licenza `MIT`
 - ownership iniziale esplicitata come `Carlos Malleux`
-- `package.json` allineato a `1.0.0`
-- draft iniziale release notes creato in `docs/release/release-notes-v1.0.0.md`
+- `package.json` inizialmente allineato a `1.0.0`
+- release notes baseline create in `docs/release/release-notes-v1.0.0.md`
 - `CHANGELOG.md` iniziale creato
-- build runtime e test automatici passati su `1.0.0`
+- build runtime e test automatici passati sulla baseline `v1`
 
 ## 2. Unstable
 

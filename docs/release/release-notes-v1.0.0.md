@@ -1,8 +1,13 @@
 # CMSwift v1.0.0 Release Notes
 
 Stato:
-- draft iniziale
-- da pubblicare solo dopo chiusura checklist pre-release
+- baseline iniziale della release discipline
+- documento storico di pre-release
+- non corrisponde al primo publish npm effettivo
+
+Nota:
+- la prima release pubblicata su npm nel repo attuale e `v1.0.1`
+- questo documento resta utile come baseline della release discipline iniziale
 
 ## Summary
 
@@ -82,8 +87,8 @@ Legacy local mirror:
 
 ## Notes
 
-Questa release e pensata come base reale di lavoro e pubblicazione controllata.
-Il passo finale prima della pubblicazione e chiudere:
+Questa release resta la base storica della prima disciplina di rilascio.
+Il passaggio che ha chiuso la pubblicazione reale e poi confluito in `v1.0.1`, con:
 - smoke test browser
 - versione ufficiale
 - changelog/release gate finale
