@@ -9,6 +9,24 @@ The format is kept intentionally simple:
 - Fixed
 - Docs
 
+## [1.0.3] - 2026-04-15
+
+### Removed
+
+- removed the obsolete icon sprite CSS artifact from generated UI CSS outputs and package exports
+- removed Tabler icon sprite CSS from `ui.css`, `min-ui.css`, and `ui.min.css`
+- removed the same CSS from the umbrella `cmswift` package output
+
+### Changed
+
+- CSS build now keeps only the active generated CSS files and removes stale CSS outputs
+- package versions bumped to `1.0.3`
+
+### Docs
+
+- README CSS export list no longer references the removed icon sprite CSS artifact
+- added `v1.0.3` release notes
+
 ## [1.0.2] - 2026-04-15
 
 ### Added

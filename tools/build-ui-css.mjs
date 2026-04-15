@@ -14,7 +14,6 @@ const COPY_FILES = [
   "base.css",
   "responsive.css",
   "animation.css",
-  "tabler-icons-out.css",
   "docs.css",
   "ui-components.css",
 ];
@@ -24,7 +23,6 @@ const BUNDLE_FILES = [
   "responsive.css",
   "animation.css",
   "ui-components.css",
-  "tabler-icons-out.css",
 ];
 
 fs.mkdirSync(DIST_DIR, { recursive: true });
@@ -55,6 +53,13 @@ for (const output of outputs) {
   fs.writeFileSync(path.join(LEGACY_DIR, output.fileName), `${output.content.trim()}\n`, "utf8");
 }
 
+const allowedOutputFiles = new Set([
+  ...COPY_FILES,
+  ...outputs.map((output) => output.fileName),
+]);
+cleanupExtraCss(DIST_DIR, allowedOutputFiles);
+cleanupExtraCss(LEGACY_DIR, allowedOutputFiles);
+
 console.log(
   `ui-css: built ${BUNDLE_FILES.length} sources -> ${path.relative(ROOT, path.join(DIST_DIR, "ui.css"))}`,
 );
@@ -73,4 +78,11 @@ function minifyCss(css) {
     .replace(/\s*([{}:;,>])\s*/g, "$1")
     .replace(/;}/g, "}")
     .trim();
+}
+
+function cleanupExtraCss(dir, allowedFiles) {
+  for (const fileName of fs.readdirSync(dir)) {
+    if (!fileName.endsWith(".css") || allowedFiles.has(fileName)) continue;
+    fs.rmSync(path.join(dir, fileName), { force: true });
+  }
 }

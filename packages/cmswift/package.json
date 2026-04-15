@@ -1,6 +1,6 @@
 {
   "name": "cmswift",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Umbrella package for CMSwift core + UI",
   "license": "MIT",
   "type": "module",
@@ -17,7 +17,6 @@
     "./css/ui-components.css": "./dist/css/ui-components.css",
     "./css/responsive.css": "./dist/css/responsive.css",
     "./css/animation.css": "./dist/css/animation.css",
-    "./css/tabler-icons-out.css": "./dist/css/tabler-icons-out.css",
     "./css/docs.css": "./dist/css/docs.css"
   },
   "files": [
