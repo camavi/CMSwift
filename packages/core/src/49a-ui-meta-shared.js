@@ -50,7 +50,7 @@
     function renderTabGroupFallback(_, rows) {
       return _.div({ class: "cms-doc-fallback" },
         rows.map((row) => _.div({ class: "cms-doc-fallback-item" },
-          _.div({ class: "cms-doc-fallback-title" }, row.label || row.name),
+          _.h4({ class: "cms-doc-fallback-title" }, row.label || row.name),
           row.content
         ))
       );

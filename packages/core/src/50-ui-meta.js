@@ -145,7 +145,7 @@
         meta.signature ? _.div({ class: "cms-doc-table-signature" }, String(meta.signature).replaceAll("UI.", "_.")) : null
       ),
       taps.length
-        ? _.div({ class: "cms-doc-table-section-title" }, propsTab.length ? "Props" : "Documentation")
+        ? _.h4({ class: "cms-doc-table-section-title" }, propsTab.length ? "Props" : "Documentation")
         : _.p({ class: "cms-muted" }, "Nessuna documentazione strutturata disponibile."),
       taps.length
         ? (hasTabPanel ? _.TabPanel({

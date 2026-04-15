@@ -47,6 +47,7 @@ const minifiedBundle = minifyCss(bundle);
 const outputs = [
   { fileName: "ui.css", content: bundle },
   { fileName: "min-ui.css", content: minifiedBundle },
+  { fileName: "ui.min.css", content: minifiedBundle },
 ];
 
 for (const output of outputs) {
@@ -59,6 +60,9 @@ console.log(
 );
 console.log(
   `ui-css: built minified bundle -> ${path.relative(ROOT, path.join(DIST_DIR, "min-ui.css"))}`,
+);
+console.log(
+  `ui-css: built minified CDN alias -> ${path.relative(ROOT, path.join(DIST_DIR, "ui.min.css"))}`,
 );
 console.log(`ui-css: source directory -> ${path.relative(ROOT, SOURCE_DIR)}`);
 

@@ -8,6 +8,7 @@ const uiDistDir = path.resolve("packages/ui/dist");
 const cmswiftDistDir = path.resolve("packages/cmswift/dist");
 const outputFile = path.join(cmswiftDistDir, "cmswift.js");
 const minOutputFile = path.join(cmswiftDistDir, "min-cmswift.js");
+const minAliasOutputFile = path.join(cmswiftDistDir, "cmswift.min.js");
 
 async function main() {
   const [core, ui] = await Promise.all([
@@ -26,11 +27,12 @@ async function main() {
   await fs.mkdir(cmswiftDistDir, { recursive: true });
   await fs.writeFile(outputFile, output, "utf8");
   await fs.writeFile(minOutputFile, minified.code, "utf8");
+  await fs.writeFile(minAliasOutputFile, minified.code, "utf8");
   await copyDir(path.join(uiDistDir, "css"), path.join(cmswiftDistDir, "css"));
   await copyDir(path.join(uiDistDir, "fonts"), path.join(cmswiftDistDir, "fonts"));
   await copyDir(path.join(uiDistDir, "img"), path.join(cmswiftDistDir, "img"));
   process.stdout.write(
-    `[build:cmswift] wrote ${path.relative(process.cwd(), outputFile)} and ${path.relative(process.cwd(), minOutputFile)} (with css/fonts/img)\n`,
+    `[build:cmswift] wrote ${path.relative(process.cwd(), outputFile)}, ${path.relative(process.cwd(), minOutputFile)} and ${path.relative(process.cwd(), minAliasOutputFile)} (with css/fonts/img)\n`,
   );
 }
 

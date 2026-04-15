@@ -9,6 +9,28 @@ The format is kept intentionally simple:
 - Fixed
 - Docs
 
+## [1.0.2] - 2026-04-15
+
+### Added
+
+- conventional minified CDN aliases:
+  - `packages/core/dist/cms.min.js`
+  - `packages/ui/dist/ui.min.js`
+  - `packages/ui/dist/css/ui.min.css`
+  - `packages/cmswift/dist/cmswift.min.js`
+  - `packages/cmswift/dist/css/ui.min.css`
+- package exports for the new minified aliases
+- README CDN examples for readable and minified builds
+
+### Changed
+
+- bumped package versions to `1.0.2`
+- kept `const _ = window._;` explicit in the README quick start for tooling clarity
+
+### Docs
+
+- added `v1.0.2` release notes
+
 ## [1.0.1] - 2026-04-14
 
 ### Added

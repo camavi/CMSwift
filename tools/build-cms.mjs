@@ -5,9 +5,11 @@ import { transform } from "esbuild";
 const rootDir = path.resolve("packages/core/src");
 const outputFile = path.resolve("packages/core/dist/cms.js");
 const minOutputFile = path.resolve("packages/core/dist/min-cms.js");
+const minAliasOutputFile = path.resolve("packages/core/dist/cms.min.js");
 const manifestFile = path.join(rootDir, "modules.json");
 const legacyOutputFile = path.resolve("pages/_cmswift-fe/js/cms.js");
 const legacyMinOutputFile = path.resolve("pages/_cmswift-fe/js/min-cms.js");
+const legacyMinAliasOutputFile = path.resolve("pages/_cmswift-fe/js/cms.min.js");
 
 async function readModule(name) {
   const filename = path.join(rootDir, name);
@@ -31,9 +33,11 @@ async function main() {
   await fs.mkdir(path.dirname(legacyOutputFile), { recursive: true });
   await fs.writeFile(outputFile, output, "utf8");
   await fs.writeFile(minOutputFile, minified.code, "utf8");
+  await fs.writeFile(minAliasOutputFile, minified.code, "utf8");
   await fs.writeFile(legacyOutputFile, output, "utf8");
   await fs.writeFile(legacyMinOutputFile, minified.code, "utf8");
-  process.stdout.write(`[build:cms] wrote ${path.relative(process.cwd(), outputFile)} and ${path.relative(process.cwd(), minOutputFile)} from ${modules.length} modules (legacy mirror updated)\n`);
+  await fs.writeFile(legacyMinAliasOutputFile, minified.code, "utf8");
+  process.stdout.write(`[build:cms] wrote ${path.relative(process.cwd(), outputFile)}, ${path.relative(process.cwd(), minOutputFile)} and ${path.relative(process.cwd(), minAliasOutputFile)} from ${modules.length} modules (legacy mirror updated)\n`);
 }
 
 main().catch((error) => {

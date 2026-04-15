@@ -41,7 +41,7 @@
   CMSwift.uiSizes = ["xxs", "xs", "sm", "md", "lg", "xl", "xxl", "xxxl"];
   CMSwift.uiColors = ["primary", "secondary", "success", "warning", "danger", "info", "light", "dark"];
   CMSwift.meta = CMSwift.meta || {
-    version: "1.0.1",
+    version: "1.0.2",
     policy: {
       sourceOfTruth: "docs/reference/core.md",
       syncRule: "Quando cambia un modulo core, aggiornare sia questo meta sia docs/reference/core.md."
@@ -4347,7 +4347,7 @@ _.dynamic = function (renderFn) {
     function renderTabGroupFallback(_, rows) {
       return _.div({ class: "cms-doc-fallback" },
         rows.map((row) => _.div({ class: "cms-doc-fallback-item" },
-          _.div({ class: "cms-doc-fallback-title" }, row.label || row.name),
+          _.h4({ class: "cms-doc-fallback-title" }, row.label || row.name),
           row.content
         ))
       );
@@ -4558,7 +4558,7 @@ _.dynamic = function (renderFn) {
         meta.signature ? _.div({ class: "cms-doc-table-signature" }, String(meta.signature).replaceAll("UI.", "_.")) : null
       ),
       taps.length
-        ? _.div({ class: "cms-doc-table-section-title" }, propsTab.length ? "Props" : "Documentation")
+        ? _.h4({ class: "cms-doc-table-section-title" }, propsTab.length ? "Props" : "Documentation")
         : _.p({ class: "cms-muted" }, "Nessuna documentazione strutturata disponibile."),
       taps.length
         ? (hasTabPanel ? _.TabPanel({
