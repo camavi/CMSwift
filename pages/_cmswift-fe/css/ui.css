@@ -2585,6 +2585,17 @@
 }
 
 /* >>> ui-components.css */
+/* - NATIVE */
+
+input {
+  background-color: var(--cms-theme-color-1);
+  border-color: var(--cms-theme-color-2);
+  border-width: 1px;
+  border-radius: var(--cms-b-radius-default, 4px);
+  padding: 2px 8px;
+  min-height: calc(var(--cms-input-height-default, 32px) + 5px);
+}
+
 /* - CSS BASE */
 .cms-d-flex {
   display: flex;
@@ -8313,6 +8324,7 @@
 
 .cms-field>.cms-control {
   --set-border-color: var(--cms-border-color, #7a7a7a3d);
+  --set-background-color: var(--cms-theme-color-4);
 }
 
 .cms-grid-col-surface {

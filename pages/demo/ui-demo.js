@@ -33,6 +33,8 @@ CMSwift.ready(() => {
             options: ["developer", "designer", "operator"],
           }),
           _.Checkbox({ model: [getUpdates, setUpdates] }, t("updatesLabel")),
+          _.input({ placeholder: 'prova', name: "test" }),
+          _.Input({ placeholder: 'prova', name: "test" }),
           _.div(
 
             _.Btn(

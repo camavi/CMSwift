@@ -9,6 +9,22 @@ The format is kept intentionally simple:
 - Fixed
 - Docs
 
+## [1.0.5] - 2026-04-17
+
+### Added
+
+- baseline styling for native `input` elements in the generated UI CSS
+- demo coverage for both `_.input()` and `_.Input()` helpers
+
+### Changed
+
+- `.cms-field > .cms-control` now uses a theme surface background token for better visual separation
+- the home page primary CTA was visually aligned with the other entry buttons
+
+### Docs
+
+- added `v1.0.5` release notes
+
 ## [1.0.4] - 2026-04-16
 
 ### Added
