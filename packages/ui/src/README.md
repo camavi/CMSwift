@@ -20,11 +20,73 @@ Build command:
 npm run build:ui
 ```
 
+Responsive CSS command:
+
+```bash
+node cms-dev/make-responsive-css.mjs
+```
+
 Generated output:
 
 - `packages/ui/dist/ui.js`
 - `packages/ui/dist/min-ui.js`
 - CSS, font, and image assets in `packages/ui/dist/`
+
+Responsive source of truth:
+
+- responsive CSS is generated, not edited by hand
+- edit `cms-dev/make-responsive-css.mjs`
+- run `node cms-dev/make-responsive-css.mjs`
+- then run `npm run build:ui` and `npm run build:cmswift`
+- generated package files:
+  - `packages/ui/dist/css/responsive.css`
+  - `packages/cmswift/dist/css/responsive.css`
+
+Responsive component contract:
+
+- mobile/default values live at the root of the props object
+- `mobile`, `tablet`, and `pc` objects override only the props they contain
+- `tablet` starts at `768px`
+- `pc` starts at `1024px`
+- responsive props are omitted from DOM attributes by the shared `CMSwift.omit`
+  helper
+
+Examples:
+
+```js
+_.Row({
+  direction: "column",
+  gap: "sm",
+  tablet: { direction: "row", gap: "md" },
+  pc: { justify: "space-between" }
+})
+
+_.Col({
+  col: 24,
+  tablet: { col: 12 },
+  pc: { col: 6 }
+})
+
+_.Btn({
+  width: "100%",
+  tablet: { width: "220px" },
+  pc: { width: "320px" }
+})
+```
+
+Implementation notes:
+
+- token values become generated classes such as `cms-tablet-row`,
+  `cms-pc-col-6`, or `cms-tablet-gap-md`
+- arbitrary values become `.cms-rsp` custom properties such as
+  `--cms-rsp-tablet-width`
+- `.cms-rsp.cms-rsp.cms-rsp` selectors intentionally have enough specificity to
+  override defaults from `ui-components.css` even when responsive CSS is bundled
+  before component CSS
+- grid child rules use `.cms-grid.cms-grid > .cms-grid-col` for the same reason
+- layout primitives use `CMSwift.uiResponsiveStyleRules`
+- generic/shared props use `CMSwift.uiResponsiveCommonStyleRules` through
+  `setPropertyProps`
 
 Recommended module order:
 

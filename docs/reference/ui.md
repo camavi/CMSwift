@@ -86,6 +86,70 @@ Common defaults:
 - browser console: `CMSwift.ui.meta.Card`
 - helper: `CMSwift.ui.inspect("Card")`
 
+## Responsive System
+
+CMSwift UI components are responsive by default through a shared prop contract.
+
+Breakpoints:
+
+- mobile/default: base props outside a breakpoint object
+- `mobile`: explicit mobile override, applied without a media query
+- `tablet`: applied from `768px`
+- `pc`: applied from `1024px`
+
+The default rule is: write the mobile value at the root, then override only the
+values that change inside `tablet` or `pc`.
+
+```js
+_.Row({
+  gap: "sm",
+  direction: "column",
+  tablet: { direction: "row", gap: "md" },
+  pc: { justify: "space-between" }
+})
+
+_.Col({
+  col: 24,
+  tablet: { col: 12 },
+  pc: { col: 6 }
+})
+```
+
+The responsive engine supports both token classes and arbitrary CSS values.
+
+- token values map to generated utility classes, for example `cms-tablet-row`,
+  `cms-pc-col-6`, `cms-tablet-gap-md`
+- arbitrary values are stored as CSS custom properties on `.cms-rsp`, for
+  example `tablet: { width: "min(50vw, 420px)" }`
+- unsupported responsive props are ignored by the responsive engine and remain
+  available to the component implementation
+
+Common responsive props available across UI components:
+
+- layout: `display`, `direction`, `wrap`, `align`, `justify`, `place`, `items`
+- grid: `columns`, `rows`, `autoFlow`, `autoRows`, `gridColumn`, `gridRow`,
+  `gridArea`
+- spacing and sizing: `gap`, `rowGap`, `columnGap`, `width`, `minWidth`,
+  `maxWidth`, `height`, `minHeight`, `maxHeight`, `padding`, `margin`
+- typography and shape: `fontSize`, `fontWeight`, `lineHeight`,
+  `letterSpacing`, `radius`
+- behavior/layout order: `overflow`, `order`, `col`
+
+Layout primitives (`Row`, `Col`, `Container`, `Footer`, `Toolbar`, `Grid`, and
+`GridCol`) use the complete responsive rule set. Other components receive the
+common rule set through `setPropertyProps`, so controls such as `Btn`, `Card`,
+`Input`, and content components can still respond to sizing, spacing,
+typography, display, and layout props.
+
+CSS source rules:
+
+- edit `cms-dev/make-responsive-css.mjs`, not generated responsive CSS files
+- generated CSS entry: `packages/ui/dist/css/responsive.css`
+- umbrella generated CSS entry: `packages/cmswift/dist/css/responsive.css`
+- bundled UI CSS includes responsive rules before component rules; responsive
+  custom-property selectors use higher specificity so breakpoint props can
+  override defaults from `ui-components.css`
+
 ## Canonical Usage Patterns
 
 ### 1. App Shell Layout

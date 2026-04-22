@@ -1,14 +1,26 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const COL_COUNT = 24;
-const MEDIA_BREAKPOINTS = [
+const PRIMARY_MEDIA_BREAKPOINTS = [
+  { size: 768, key: "tablet", primary: true },
+  { size: 1024, key: "pc", primary: true },
+];
+const LEGACY_MEDIA_BREAKPOINTS = [
   { size: 400, key: "xs" },
   { size: 600, key: "sm" },
   { size: 900, key: "md" },
   { size: 1200, key: "lg" },
   { size: 1440, key: "xl" },
 ];
-const OUT_FILE = path.resolve("../pages/_cmswift-fe/css/responsive.css");
+const MEDIA_BREAKPOINTS = [...PRIMARY_MEDIA_BREAKPOINTS, ...LEGACY_MEDIA_BREAKPOINTS]
+  .sort((a, b) => a.size - b.size);
+const OUT_FILES = [
+  path.join(ROOT_DIR, "packages/ui/dist/css/responsive.css"),
+  path.join(ROOT_DIR, "packages/cmswift/dist/css/responsive.css"),
+];
 
 // prefisso classe
 const CLASS_PREFIX = "cms-";
@@ -295,6 +307,186 @@ const list_class = [
   { class: 'gutter-x', condition: '>*', name: 'margin-left', var: 'm' },
   { class: 'gutter-y', condition: '>*', name: 'margin-top', var: 'm' },
 ];
+
+const list_layout_class = [
+  {
+    class: "display",
+    name: "display",
+    values: {
+      none: "none",
+      block: "block",
+      flex: "flex",
+      "inline-flex": "inline-flex",
+      grid: "grid",
+      "inline-grid": "inline-grid",
+    },
+  },
+  {
+    class: "dir",
+    name: "flex-direction",
+    values: {
+      row: "row",
+      "row-reverse": "row-reverse",
+      column: "column",
+      col: "column",
+      "column-reverse": "column-reverse",
+      "col-reverse": "column-reverse",
+    },
+  },
+  {
+    class: "wrap",
+    name: "flex-wrap",
+    values: {
+      wrap: "wrap",
+      nowrap: "nowrap",
+      reverse: "wrap-reverse",
+      "wrap-reverse": "wrap-reverse",
+    },
+  },
+  {
+    class: "align",
+    name: "align-items",
+    values: {
+      stretch: "stretch",
+      start: "flex-start",
+      "flex-start": "flex-start",
+      center: "center",
+      end: "flex-end",
+      "flex-end": "flex-end",
+      baseline: "baseline",
+    },
+  },
+  {
+    class: "justify",
+    name: "justify-content",
+    values: {
+      start: "flex-start",
+      "flex-start": "flex-start",
+      center: "center",
+      end: "flex-end",
+      "flex-end": "flex-end",
+      between: "space-between",
+      "space-between": "space-between",
+      around: "space-around",
+      "space-around": "space-around",
+      evenly: "space-evenly",
+      "space-evenly": "space-evenly",
+    },
+  },
+  {
+    class: "self",
+    name: "align-self",
+    values: {
+      auto: "auto",
+      stretch: "stretch",
+      start: "flex-start",
+      "flex-start": "flex-start",
+      center: "center",
+      end: "flex-end",
+      "flex-end": "flex-end",
+      baseline: "baseline",
+    },
+  },
+  {
+    class: "justify-self",
+    name: "justify-self",
+    values: {
+      auto: "auto",
+      stretch: "stretch",
+      start: "start",
+      center: "center",
+      end: "end",
+    },
+  },
+  {
+    class: "place-self",
+    name: "place-self",
+    values: {
+      auto: "auto",
+      stretch: "stretch",
+      start: "start",
+      center: "center",
+      end: "end",
+    },
+  },
+  {
+    class: "items",
+    name: "justify-items",
+    values: {
+      stretch: "stretch",
+      start: "start",
+      center: "center",
+      end: "end",
+    },
+  },
+  {
+    class: "place",
+    name: "place-items",
+    values: {
+      stretch: "stretch",
+      start: "start",
+      center: "center",
+      end: "end",
+    },
+  },
+  {
+    class: "grid-flow",
+    name: "grid-auto-flow",
+    values: {
+      row: "row",
+      column: "column",
+      dense: "dense",
+      "row-dense": "row dense",
+      "column-dense": "column dense",
+    },
+  },
+];
+
+const RESPONSIVE_STYLE_PROPS = [
+  ["display", "display"],
+  ["flex-direction", "flex-direction"],
+  ["flex-wrap", "flex-wrap"],
+  ["align-items", "align-items"],
+  ["justify-content", "justify-content"],
+  ["align-self", "align-self"],
+  ["justify-self", "justify-self"],
+  ["place-items", "place-items"],
+  ["place-self", "place-self"],
+  ["grid-template-columns", "grid-template-columns"],
+  ["grid-template-rows", "grid-template-rows"],
+  ["grid-auto-flow", "grid-auto-flow"],
+  ["grid-auto-rows", "grid-auto-rows"],
+  ["grid-column", "grid-column"],
+  ["grid-row", "grid-row"],
+  ["grid-area", "grid-area"],
+  ["gap", "gap"],
+  ["row-gap", "row-gap"],
+  ["column-gap", "column-gap"],
+  ["width", "width"],
+  ["min-width", "min-width"],
+  ["max-width", "max-width"],
+  ["height", "height"],
+  ["min-height", "min-height"],
+  ["max-height", "max-height"],
+  ["padding", "padding"],
+  ["padding-left", "padding-left"],
+  ["padding-right", "padding-right"],
+  ["padding-top", "padding-top"],
+  ["padding-bottom", "padding-bottom"],
+  ["margin", "margin"],
+  ["margin-left", "margin-left"],
+  ["margin-right", "margin-right"],
+  ["margin-top", "margin-top"],
+  ["margin-bottom", "margin-bottom"],
+  ["font-size", "font-size"],
+  ["font-weight", "font-weight"],
+  ["line-height", "line-height"],
+  ["letter-spacing", "letter-spacing"],
+  ["border-radius", "border-radius"],
+  ["overflow", "overflow"],
+  ["order", "order"],
+];
+
 function buildClassTemplates(classes, sizes) {
   const templates = [];
   for (const c of classes) {
@@ -310,6 +502,19 @@ function buildClassTemplates(classes, sizes) {
       templates.push({
         suffix: `${c.class}-${size}` + (c.condition ? `${c.condition}` : ''),
         decl: decl,
+      });
+    }
+  }
+  return templates;
+}
+
+function buildLayoutClassTemplates(classes) {
+  const templates = [];
+  for (const c of classes) {
+    for (const [key, value] of Object.entries(c.values)) {
+      templates.push({
+        suffix: `${c.class}-${key}`,
+        decl: `${c.name}: ${value};`,
       });
     }
   }
@@ -332,10 +537,46 @@ function addClassLines(lines, prefix, indent, templates) {
   }
 }
 function addColumnLines(lines, prefix, indent, widths) {
+  lines.push(`${indent}.${prefix}col-auto { max-width: 100%; flex: 0 0 auto; width: auto; }`);
   for (let i = 0; i < widths.length; i++) {
     const n = i + 1;
     const w = widths[i];
     lines.push(`${indent}.${prefix}col-${n} { flex: 0 0 ${w}; max-width: ${w}; }`);
+  }
+}
+function addGridColumnLines(lines, prefix, indent, count) {
+  for (let i = 1; i <= count; i++) {
+    lines.push(`${indent}.${prefix}grid-cols-${i} { grid-template-columns: repeat(${i}, minmax(0, 1fr)); }`);
+  }
+}
+function addGridColResponsiveLines(lines, breakpoint, indent) {
+  if (!breakpoint?.primary) return;
+  const fallback = breakpoint.key === "tablet"
+    ? "var(--cms-grid-col-sm, var(--cms-grid-col-base, auto))"
+    : "var(--cms-grid-col-lg, var(--cms-grid-col-md, var(--cms-grid-col-tablet, var(--cms-grid-col-sm, var(--cms-grid-col-base, auto)))))";
+  lines.push(`${indent}.cms-grid.cms-grid > .cms-grid-col { grid-column: var(--cms-grid-col-${breakpoint.key}, ${fallback}); }`);
+}
+function addResponsiveStyleLines(lines) {
+  const selector = ".cms-rsp.cms-rsp.cms-rsp";
+  lines.push(`${selector} {`);
+  for (const [prop, key] of RESPONSIVE_STYLE_PROPS) {
+    lines.push(`  ${prop}: var(--cms-rsp-${key});`);
+  }
+  lines.push("}");
+  lines.push("");
+
+  for (const breakpoint of PRIMARY_MEDIA_BREAKPOINTS) {
+    lines.push(`@media (min-width: ${breakpoint.size}px) {`);
+    lines.push(`  ${selector} {`);
+    for (const [prop, key] of RESPONSIVE_STYLE_PROPS) {
+      const fallback = breakpoint.key === "tablet"
+        ? `var(--cms-rsp-${key})`
+        : `var(--cms-rsp-tablet-${key}, var(--cms-rsp-${key}))`;
+      lines.push(`    ${prop}: var(--cms-rsp-${breakpoint.key}-${key}, ${fallback});`);
+    }
+    lines.push("  }");
+    lines.push("}");
+    lines.push("");
   }
 }
 function main() {
@@ -355,7 +596,7 @@ function main() {
   lines.push("");
 
   lines.push(".cms-row { display: flex; align-items: stretch; flex-wrap: wrap; }");
-  lines.push(".cms-col { flex-direction: column; gap: var(--cms-s-md); box-sizing: border-box; }");
+  lines.push(".cms-col { flex-direction: column; gap: var(--cms-s-md); box-sizing: border-box; min-width: 0; }");
   lines.push(".cms-col-auto { max-width: 100%; flex: 0 0 auto; width: auto; }");
   lines.push(".cms-col-inline { display: inline-block; }");
   lines.push(".cms-col-flex { display: flex; flex-direction: column; gap: var(--cms-s-md); }");
@@ -366,30 +607,39 @@ function main() {
   lines.push('[class*="cms-col"] .cms-col-body { flex: 1 1 auto; }');
 
   lines.push("");
+  addResponsiveStyleLines(lines);
 
   const classTemplates = buildClassTemplates(list_class, UI_SIZES);
+  const layoutClassTemplates = buildLayoutClassTemplates(list_layout_class);
   const columnWidths = buildColumnWidths(COL_COUNT);
   addClassLines(lines, CLASS_PREFIX, "", classTemplates);
+  addClassLines(lines, CLASS_PREFIX, "", layoutClassTemplates);
 
   //creare i colonne da 24
   addColumnLines(lines, CLASS_PREFIX, "", columnWidths);
+  addGridColumnLines(lines, CLASS_PREFIX, "", COL_COUNT);
 
   // media queries
   for (const m of MEDIA_BREAKPOINTS) {
     lines.push(`@media (min-width: ${m.size}px) {`);
     const mediaPrefix = `${CLASS_PREFIX}${m.key}-`;
     addClassLines(lines, mediaPrefix, "  ", classTemplates);
+    addClassLines(lines, mediaPrefix, "  ", layoutClassTemplates);
     //medias colonne
     addColumnLines(lines, mediaPrefix, "  ", columnWidths);
+    addGridColumnLines(lines, mediaPrefix, "  ", COL_COUNT);
+    addGridColResponsiveLines(lines, m, "  ");
 
     lines.push("}");
     lines.push("");
   }
 
-  fs.mkdirSync(path.dirname(OUT_FILE), { recursive: true });
-  fs.writeFileSync(OUT_FILE, lines.join("\n"), "utf8");
+  for (const outFile of OUT_FILES) {
+    fs.mkdirSync(path.dirname(outFile), { recursive: true });
+    fs.writeFileSync(outFile, lines.join("\n"), "utf8");
+  }
 
-  console.log(`✅ CSS generato: ${OUT_FILE}`);
+  console.log(`✅ CSS generato: ${OUT_FILES.map((file) => path.relative(ROOT_DIR, file)).join(", ")}`);
   console.log(`   Classi create: ${lines.length}`);
 }
 main();

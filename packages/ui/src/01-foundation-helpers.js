@@ -48,6 +48,139 @@ CMSwift.isUIPlainObject = isUIPlainObject;
 CMSwift.isListItemNode = isListItemNode;
 CMSwift.asNodeArray = asNodeArray;
 
+const UI_RESPONSIVE_DEVICES = [
+  { key: "mobile", aliases: ["mobile", "mobil"], prefix: "cms-" },
+  { key: "tablet", aliases: ["tablet"], prefix: "cms-tablet-" },
+  { key: "pc", aliases: ["pc", "desktop"], prefix: "cms-pc-" }
+];
+const UI_RESPONSIVE_PROP_KEYS = UI_RESPONSIVE_DEVICES.flatMap((device) => device.aliases);
+const uiResponsiveHasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj || {}, key);
+const uiResponsivePropsFor = (props = {}, device) => {
+  if (!device) return null;
+  for (const alias of device.aliases) {
+    if (!uiResponsiveHasOwn(props, alias)) continue;
+    const value = uiUnwrap(props[alias]);
+    if (isUIPlainObject(value)) return value;
+  }
+  return null;
+};
+const uiResponsiveHasProp = (props = {}, names) => {
+  const list = Array.isArray(names) ? names : [names];
+  return UI_RESPONSIVE_DEVICES.some((device) => {
+    const deviceProps = uiResponsivePropsFor(props, device);
+    return !!deviceProps && list.some((name) => uiResponsiveHasOwn(deviceProps, name));
+  });
+};
+const uiResponsiveNormalizeToken = (value) => String(value).trim().toLowerCase().replace(/\s+/g, "-");
+const uiResponsiveClassList = (props = {}, rules = []) => {
+  const tokens = [];
+  for (const device of UI_RESPONSIVE_DEVICES) {
+    const deviceProps = uiResponsivePropsFor(props, device);
+    if (!deviceProps) continue;
+    for (const rule of rules) {
+      const propNames = Array.isArray(rule.prop) ? rule.prop : [rule.prop];
+      let hasValue = false;
+      let value;
+      let propName = "";
+      for (const name of propNames) {
+        if (!uiResponsiveHasOwn(deviceProps, name)) continue;
+        value = uiUnwrap(deviceProps[name]);
+        propName = name;
+        hasValue = true;
+        break;
+      }
+      if (!hasValue || value == null || value === "" || (value === false && !rule.allowFalse)) continue;
+      const resolved = typeof rule.map === "function"
+        ? rule.map(value, { propName, props: deviceProps, device, rule })
+        : `${rule.class}-${uiResponsiveNormalizeToken(value)}`;
+      const list = Array.isArray(resolved) ? resolved : [resolved];
+      for (const suffix of list) {
+        if (!suffix) continue;
+        tokens.push(String(suffix).startsWith("cms-") ? suffix : `${device.prefix}${suffix}`);
+      }
+    }
+  }
+  return tokens;
+};
+const uiResponsiveHasConfig = (props = {}) => {
+  return UI_RESPONSIVE_DEVICES.some((device) => !!uiResponsivePropsFor(props, device));
+};
+const uiResponsiveFirstValue = (props = {}, propNames = []) => {
+  for (const propName of propNames) {
+    if (!uiResponsiveHasOwn(props, propName)) continue;
+    const value = uiUnwrap(props[propName]);
+    if (value == null || value === "") continue;
+    return value;
+  }
+  return undefined;
+};
+const uiResponsiveDefaultValue = (value, rule = {}) => {
+  if (value == null || value === "" || (value === false && !rule.allowFalse)) return "";
+  if (typeof rule.mapValue === "function") return rule.mapValue(value, rule);
+  if (typeof value === "number") return rule.number === "raw" ? String(value) : `${value}px`;
+  if (rule.token && typeof value === "string" && CMSwift.uiSizes?.includes(value)) {
+    return `var(--cms-${rule.token}-${value})`;
+  }
+  return String(value);
+};
+const uiResponsiveSetStyle = (style, name, value) => {
+  if (!style || value == null || value === "") return;
+  if (typeof style.setProperty === "function") style.setProperty(name, value);
+  else style[name] = value;
+};
+const uiResponsiveAddClass = (target, className) => {
+  if (!target || !className) return;
+  if (target.classList?.add) {
+    target.classList.add(className);
+    return;
+  }
+  target.class = uiClass([target.class, className]);
+};
+const uiApplyResponsiveProps = (target, props = {}, rules = []) => {
+  if (!target || !props || !uiResponsiveHasConfig(props)) return target;
+  const style = target.style || {};
+  let hasResponsiveVars = false;
+
+  for (const rule of rules) {
+    const propNames = Array.isArray(rule.prop) ? rule.prop : [rule.prop];
+    const setVar = (deviceKey, sourceProps) => {
+      const rawValue = uiResponsiveFirstValue(sourceProps, propNames);
+      const value = uiResponsiveDefaultValue(rawValue, rule);
+      if (!value) return;
+      const prefix = deviceKey === "mobile" ? "--cms-rsp-" : `--cms-rsp-${deviceKey}-`;
+      uiResponsiveSetStyle(style, `${prefix}${rule.var || rule.css}`, value);
+      hasResponsiveVars = true;
+    };
+
+    setVar("mobile", props);
+    for (const device of UI_RESPONSIVE_DEVICES) {
+      const deviceProps = uiResponsivePropsFor(props, device);
+      if (deviceProps) setVar(device.key, deviceProps);
+    }
+  }
+
+  if (hasResponsiveVars) {
+    if (!target.nodeType) target.style = style;
+    uiResponsiveAddClass(target, "cms-rsp");
+  }
+  return target;
+};
+
+CMSwift.uiResponsiveDevices = UI_RESPONSIVE_DEVICES;
+CMSwift.uiResponsiveOmitProps = UI_RESPONSIVE_PROP_KEYS;
+CMSwift.uiResponsivePropsFor = uiResponsivePropsFor;
+CMSwift.uiResponsiveHasProp = uiResponsiveHasProp;
+CMSwift.uiResponsiveClasses = uiResponsiveClassList;
+CMSwift.uiApplyResponsiveProps = uiApplyResponsiveProps;
+
+const uiOmitBase = CMSwift.omit;
+CMSwift.omit = (obj, keys = []) => {
+  const allKeys = Array.isArray(keys)
+    ? keys.concat(UI_RESPONSIVE_PROP_KEYS)
+    : UI_RESPONSIVE_PROP_KEYS;
+  return uiOmitBase(obj, allKeys);
+};
+
 const applyCommonProps = (props = {}) => {
   const classTokens = [];
   const style = {};
@@ -282,6 +415,7 @@ const META_PROP_DESCRIPTIONS = {
   md: "Column span at medium breakpoint.",
   message: "Message text shown in banners/alerts.",
   min: "Minimum value for range-based controls.",
+  mobile: "Responsive overrides applied at the base/mobile viewport.",
   model: "Two-way bound value (alias to value in some components).",
   multi: "Enables multi-selection behavior.",
   multiple: "Allows selecting multiple values.",
@@ -310,6 +444,7 @@ const META_PROP_DESCRIPTIONS = {
   pageSize: "Number of items per page.",
   padding: "Padding applied to the component root element.",
   persistent: "Prevents closing via outside click or Escape.",
+  pc: "Responsive overrides applied from the desktop breakpoint upward.",
   placeholder: "Placeholder text for inputs.",
   placement: "Overlay placement relative to the target/anchor.",
   prefix: "Content rendered before the main control.",
@@ -349,6 +484,7 @@ const META_PROP_DESCRIPTIONS = {
   success: "Marks the component with success state styling.",
   suffix: "Content rendered after the main control.",
   tableClass: "Additional CSS classes applied to the table element.",
+  tablet: "Responsive overrides applied from the tablet breakpoint upward.",
   tabs: "Tab definitions array.",
   tagPage: "Query parameter name used to read/write the current page.",
   target: "Target element or anchor used for positioning.",
@@ -467,6 +603,9 @@ const META_PROP_CATEGORIES = {
   height: "layout",
   minHeight: "layout",
   maxHeight: "layout",
+  mobile: "layout",
+  tablet: "layout",
+  pc: "layout",
   dense: "layout",
   flat: "style",
   elevated: "style",
@@ -560,6 +699,9 @@ const normalizeMetaEntry = (componentName, meta) => {
     radius: meta.props.radius || "string|number",
     borderRadius: meta.props.borderRadius || "string|number",
     shadow: meta.props.shadow || "string|boolean",
+    mobile: meta.props.mobile || "object",
+    tablet: meta.props.tablet || "object",
+    pc: meta.props.pc || "object",
     class: meta.props.class || "string",
     style: meta.props.style || "object"
   };
@@ -646,6 +788,75 @@ const STYLE_PROP_TOKEN_MAP = {
   minHeight: "h",
   maxHeight: "h"
 };
+const uiResponsiveWrapValue = (value) => {
+  if (value === true) return "wrap";
+  if (value === false) return "nowrap";
+  return String(value);
+};
+const uiResponsiveGridColsValue = (value) => {
+  if (typeof value === "number") return `repeat(${Math.max(1, Math.round(value))}, minmax(0, 1fr))`;
+  return String(value);
+};
+const uiResponsiveGridFlowValue = (value) => {
+  const flow = String(value).trim().toLowerCase().replace("-", " ");
+  return flow;
+};
+const UI_RESPONSIVE_STYLE_RULES = [
+  { prop: "display", css: "display", var: "display" },
+  { prop: "direction", css: "flex-direction", var: "flex-direction" },
+  { prop: "wrap", css: "flex-wrap", var: "flex-wrap", allowFalse: true, mapValue: uiResponsiveWrapValue },
+  { prop: "align", css: "align-items", var: "align-items" },
+  { prop: "justify", css: "justify-content", var: "justify-content" },
+  { prop: "self", css: "align-self", var: "align-self" },
+  { prop: "justifySelf", css: "justify-self", var: "justify-self" },
+  { prop: "place", css: "place-items", var: "place-items" },
+  { prop: "placeSelf", css: "place-self", var: "place-self" },
+  { prop: ["cols", "columns"], css: "grid-template-columns", var: "grid-template-columns", mapValue: uiResponsiveGridColsValue },
+  { prop: "rows", css: "grid-template-rows", var: "grid-template-rows", mapValue: uiResponsiveGridColsValue },
+  { prop: "flow", css: "grid-auto-flow", var: "grid-auto-flow", mapValue: uiResponsiveGridFlowValue },
+  { prop: "autoRows", css: "grid-auto-rows", var: "grid-auto-rows" },
+  { prop: ["span", "gridColumn"], css: "grid-column", var: "grid-column", number: "raw" },
+  { prop: ["row", "rowSpan"], css: "grid-row", var: "grid-row", number: "raw" },
+  { prop: "area", css: "grid-area", var: "grid-area" },
+  { prop: "gap", css: "gap", var: "gap", token: "gap" },
+  { prop: "rowGap", css: "row-gap", var: "row-gap", token: "gap" },
+  { prop: ["columnGap", "colGap"], css: "column-gap", var: "column-gap", token: "gap" },
+  { prop: "width", css: "width", var: "width", token: "w" },
+  { prop: "minWidth", css: "min-width", var: "min-width", token: "min-w" },
+  { prop: "maxWidth", css: "max-width", var: "max-width", token: "max-w" },
+  { prop: "height", css: "height", var: "height", token: "h" },
+  { prop: "minHeight", css: "min-height", var: "min-height", token: "min-h" },
+  { prop: "maxHeight", css: "max-height", var: "max-height", token: "max-h" },
+  { prop: "padding", css: "padding", var: "padding", token: "p" },
+  { prop: "paddingLeft", css: "padding-left", var: "padding-left", token: "p" },
+  { prop: "paddingRight", css: "padding-right", var: "padding-right", token: "p" },
+  { prop: "paddingTop", css: "padding-top", var: "padding-top", token: "p" },
+  { prop: "paddingBottom", css: "padding-bottom", var: "padding-bottom", token: "p" },
+  { prop: "margin", css: "margin", var: "margin", token: "m" },
+  { prop: "marginLeft", css: "margin-left", var: "margin-left", token: "m" },
+  { prop: "marginRight", css: "margin-right", var: "margin-right", token: "m" },
+  { prop: "marginTop", css: "margin-top", var: "margin-top", token: "m" },
+  { prop: "marginBottom", css: "margin-bottom", var: "margin-bottom", token: "m" },
+  { prop: "fontSize", css: "font-size", var: "font-size", token: "f" },
+  { prop: "fontWeight", css: "font-weight", var: "font-weight", token: "fw", number: "raw" },
+  { prop: "lineHeight", css: "line-height", var: "line-height", token: "lh", number: "raw" },
+  { prop: "letterSpacing", css: "letter-spacing", var: "letter-spacing", token: "ls" },
+  { prop: ["borderRadius", "radius"], css: "border-radius", var: "border-radius", token: "r" },
+  { prop: "overflow", css: "overflow", var: "overflow" },
+  { prop: "order", css: "order", var: "order", number: "raw" },
+];
+const UI_RESPONSIVE_COMMON_STYLE_RULES = UI_RESPONSIVE_STYLE_RULES.filter((rule) => {
+  const props = Array.isArray(rule.prop) ? rule.prop : [rule.prop];
+  return props.some((prop) => Object.prototype.hasOwnProperty.call(STYLE_PROP_TOKEN_MAP, prop))
+    || props.includes("fontSize")
+    || props.includes("fontWeight")
+    || props.includes("lineHeight")
+    || props.includes("letterSpacing")
+    || props.includes("borderRadius")
+    || props.includes("radius");
+});
+CMSwift.uiResponsiveStyleRules = UI_RESPONSIVE_STYLE_RULES;
+CMSwift.uiResponsiveCommonStyleRules = UI_RESPONSIVE_COMMON_STYLE_RULES;
 const camelToCssProperty = (name) => name.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
 const applyStyleProp = (obj, value, name, tokenName) => {
   if (value == null || value === false || value === "") return;
@@ -661,8 +872,10 @@ function setPropertyProps(obj, props) {
   }
 
   Object.entries(STYLE_PROP_TOKEN_MAP).forEach(([name, tokenName]) => {
+    if (uiResponsiveHasProp(props, name)) return;
     applyStyleProp(obj, props[name], name, tokenName);
   });
+  uiApplyResponsiveProps(obj, props, UI_RESPONSIVE_COMMON_STYLE_RULES);
 
   // gradient
   if (props.gradient) {

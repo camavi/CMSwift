@@ -1,3 +1,87 @@
+  const uiResponsiveToken = (className, tokenSet = CMSwift.uiSizes) => (value) => {
+    const key = String(value).trim();
+    return tokenSet?.includes(key) ? `${className}-${key}` : "";
+  };
+  const uiResponsiveRaw = (className) => (value) => `${className}-${String(value).trim().toLowerCase().replace(/\s+/g, "-")}`;
+  const uiResponsiveWrap = (value) => {
+    if (value === true) return "wrap-wrap";
+    if (value === false) return "wrap-nowrap";
+    const key = String(value).trim().toLowerCase();
+    if (key === "false" || key === "no" || key === "none") return "wrap-nowrap";
+    if (key === "reverse") return "wrap-reverse";
+    return `wrap-${key}`;
+  };
+  const uiResponsiveBoolDisplay = (value, inlineClass, blockClass) => value ? inlineClass : blockClass;
+  const uiResponsiveSpan = (value) => {
+    const raw = uiUnwrap(value);
+    if (raw == null || raw === "") return "";
+    if (raw === "auto") return "col-auto";
+    if (raw === true) return "col-24";
+    const n = Number(raw);
+    if (Number.isFinite(n) && n > 0) return `col-${Math.max(1, Math.min(24, Math.round(n)))}`;
+    if (typeof raw === "string") {
+      const normalized = raw.trim();
+      if (/^\d+$/.test(normalized)) return `col-${Math.max(1, Math.min(24, Number(normalized)))}`;
+    }
+    return "";
+  };
+  const uiResponsiveGridCols = (value) => {
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0 ? `grid-cols-${Math.max(1, Math.min(24, Math.round(n)))}` : "";
+  };
+  const uiHasResponsiveOverride = (props, names) => {
+    const list = Array.isArray(names) ? names : [names];
+    return CMSwift.uiResponsiveDevices.some((device) => {
+      const deviceProps = CMSwift.uiResponsivePropsFor(props, device);
+      return !!deviceProps && list.some((name) => Object.prototype.hasOwnProperty.call(deviceProps, name));
+    });
+  };
+  const uiResponsiveDevice = (key) => CMSwift.uiResponsiveDevices.find((device) => device.key === key);
+  const uiResponsiveLayoutRules = [
+    { prop: "gap", class: "gap", map: uiResponsiveToken("gap") },
+    { prop: "rowGap", class: "gap-y", map: uiResponsiveToken("gap-y") },
+    { prop: ["columnGap", "colGap"], class: "gap-x", map: uiResponsiveToken("gap-x") },
+    { prop: "direction", class: "dir", map: uiResponsiveRaw("dir") },
+    { prop: "wrap", class: "wrap", allowFalse: true, map: uiResponsiveWrap },
+    { prop: "align", class: "align", map: uiResponsiveRaw("align") },
+    { prop: "justify", class: "justify", map: uiResponsiveRaw("justify") },
+    { prop: "width", class: "w", map: uiResponsiveToken("w") },
+    { prop: "minWidth", class: "min-w", map: uiResponsiveToken("min-w") },
+    { prop: "maxWidth", class: "max-w", map: uiResponsiveToken("max-w") },
+    { prop: "height", class: "h", map: uiResponsiveToken("h") },
+    { prop: "minHeight", class: "min-h", map: uiResponsiveToken("min-h") },
+    { prop: "maxHeight", class: "max-h", map: uiResponsiveToken("max-h") },
+    { prop: "padding", class: "p", map: uiResponsiveToken("p") },
+    { prop: "margin", class: "m", map: uiResponsiveToken("m") },
+  ];
+  const uiResponsiveBoxRules = uiResponsiveLayoutRules.filter((rule) => {
+    const props = Array.isArray(rule.prop) ? rule.prop : [rule.prop];
+    return !props.includes("align") && !props.includes("justify");
+  });
+  const uiResponsiveColRules = [
+    { prop: ["col", "span"], class: "col", map: uiResponsiveSpan },
+    { prop: "auto", class: "col", map: (value) => value ? "col-auto" : "" },
+    { prop: "inline", class: "display", allowFalse: true, map: (value) => uiResponsiveBoolDisplay(value, "display-inline-flex", "display-flex") },
+    { prop: "self", class: "self", map: uiResponsiveRaw("self") },
+    ...uiResponsiveLayoutRules
+  ];
+  const uiResponsiveGridRules = [
+    { prop: ["cols", "columns"], class: "grid-cols", map: uiResponsiveGridCols },
+    { prop: "inline", class: "display", allowFalse: true, map: (value) => uiResponsiveBoolDisplay(value, "display-inline-grid", "display-grid") },
+    { prop: "flow", class: "grid-flow", map: (value) => `grid-flow-${String(value).trim().toLowerCase().replace(/\s+/g, "-")}` },
+    ...uiResponsiveLayoutRules
+  ];
+  const uiResponsiveGridColRules = [
+    { prop: "inline", class: "display", allowFalse: true, map: (value) => uiResponsiveBoolDisplay(value, "display-inline-flex", "display-flex") },
+    { prop: "direction", class: "dir", map: uiResponsiveRaw("dir") },
+    { prop: "contentAlign", class: "align", map: uiResponsiveRaw("align") },
+    { prop: "contentJustify", class: "justify", map: uiResponsiveRaw("justify") },
+    { prop: "align", class: "self", map: uiResponsiveRaw("self") },
+    { prop: "justify", class: "justify-self", map: uiResponsiveRaw("justify-self") },
+    { prop: "place", class: "place-self", map: uiResponsiveRaw("place-self") },
+    ...uiResponsiveBoxRules
+  ];
+
   UI.Row = (...args) => {
     const { props, children } = CMSwift.uiNormalizeArgs(args);
     const slots = props.slots || {};
@@ -30,9 +114,15 @@
       "body", "center", "bodyClass", "centerClass",
       "end", "right", "endClass",
       "align", "justify", "wrap", "gap", "rowGap", "columnGap",
-      "direction", "reverse", "inline", "full", "width", "minWidth", "maxWidth"
+      "direction", "reverse", "inline", "full", "width", "minWidth", "maxWidth",
+      ...CMSwift.uiResponsiveOmitProps
     ]);
-    p.class = uiClass(["cms-row", props.class]);
+    p.class = uiClass([
+      "cms-row",
+      CMSwift.uiResponsiveClasses({ mobile: props }, uiResponsiveLayoutRules),
+      CMSwift.uiResponsiveClasses(props, uiResponsiveLayoutRules),
+      props.class
+    ]);
 
     const style = { ...(props.style || {}) };
     const direction = uiComputed([props.direction, props.reverse], () => {
@@ -59,20 +149,21 @@
       return "max-content";
     });
 
-    if (direction != null) style.flexDirection = direction;
-    if (align != null) style.alignItems = align;
-    if (justify != null) style.justifyContent = justify;
-    if (wrap != null) style.flexWrap = wrap;
-    if (gap != null) style.gap = gap;
-    if (rowGap != null) style.rowGap = rowGap;
-    if (columnGap != null) style.columnGap = columnGap;
+    if (direction != null && !uiHasResponsiveOverride(props, "direction")) style.flexDirection = direction;
+    if (align != null && !uiHasResponsiveOverride(props, "align")) style.alignItems = align;
+    if (justify != null && !uiHasResponsiveOverride(props, "justify")) style.justifyContent = justify;
+    if (wrap != null && !uiHasResponsiveOverride(props, "wrap")) style.flexWrap = wrap;
+    if (gap != null && !uiHasResponsiveOverride(props, "gap")) style.gap = gap;
+    if (rowGap != null && !uiHasResponsiveOverride(props, "rowGap")) style.rowGap = rowGap;
+    if (columnGap != null && !uiHasResponsiveOverride(props, "columnGap")) style.columnGap = columnGap;
     if (display != null) style.display = display;
     if (inlineWidth != null) style.width = inlineWidth;
-    if (width != null) style.width = width;
-    if (minWidth != null) style.minWidth = minWidth;
-    if (maxWidth != null) style.maxWidth = maxWidth;
+    if (width != null && !uiHasResponsiveOverride(props, "width")) style.width = width;
+    if (minWidth != null && !uiHasResponsiveOverride(props, "minWidth")) style.minWidth = minWidth;
+    if (maxWidth != null && !uiHasResponsiveOverride(props, "maxWidth")) style.maxWidth = maxWidth;
     if (full != null) style.width = full;
     if (Object.keys(style).length) p.style = style;
+    CMSwift.uiApplyResponsiveProps(p, props, CMSwift.uiResponsiveStyleRules);
 
     const ctx = { props };
     const startNodes = renderArea(["start", "left"], props.start ?? props.left, ctx);
@@ -153,6 +244,9 @@
         width: "string|number",
         minWidth: "string|number",
         maxWidth: "string|number",
+        mobile: "{ gap?, direction?, wrap?, align?, justify?, width?, minWidth?, maxWidth? }",
+        tablet: "{ gap?, direction?, wrap?, align?, justify?, width?, minWidth?, maxWidth? }",
+        pc: "{ gap?, direction?, wrap?, align?, justify?, width?, minWidth?, maxWidth? }",
         startClass: "string",
         bodyClass: "string",
         centerClass: "Alias di bodyClass",
@@ -349,10 +443,12 @@
       "self", "order", "scroll",
       "start", "top", "header", "before", "startClass", "topClass", "headerClass",
       "body", "content", "bodyClass", "contentClass",
-      "end", "bottom", "footer", "after", "endClass", "bottomClass", "footerClass"
+      "end", "bottom", "footer", "after", "endClass", "bottomClass", "footerClass",
+      ...CMSwift.uiResponsiveOmitProps
     ]);
 
-    const style = { minWidth: 0, ...(rawProps.style || {}) };
+    const style = { ...(rawProps.style || {}) };
+    if (!uiHasResponsiveOverride(rawProps, "minWidth") && style.minWidth == null) style.minWidth = 0;
     const gap = uiStyleValue(rawProps.gap, resolveSpaceValue);
     const rowGap = uiStyleValue(rawProps.rowGap, resolveSpaceValue);
     const columnGap = uiStyleValue(rawProps.columnGap, resolveSpaceValue);
@@ -377,20 +473,20 @@
         && (uiUnwrap(rawProps.justify) == null || uiUnwrap(rawProps.justify) === "");
     });
     if (flexValue != null && flexValue !== "") style.flex = flexValue;
-    if (self != null) style.alignSelf = self;
+    if (self != null && !uiHasResponsiveOverride(rawProps, "self")) style.alignSelf = self;
     if (order != null) style.order = order;
     if (scroll != null && scroll !== "") style.overflow = scroll;
-    if (width != null && width !== "") {
+    if (width != null && width !== "" && !uiHasResponsiveOverride(rawProps, ["width", "size"])) {
       style.width = width;
       if (!hasOwn("flex") && !hasOwn("fill") && !hasOwn("grow") && !hasOwn("shrink") && !hasOwn("basis")) {
         style.flex = "0 0 auto";
       }
     }
-    if (minWidth != null) style.minWidth = minWidth;
-    if (maxWidth != null) style.maxWidth = maxWidth;
-    if (height != null) style.height = height;
-    if (minHeight != null) style.minHeight = minHeight;
-    if (maxHeight != null) style.maxHeight = maxHeight;
+    if (minWidth != null && !uiHasResponsiveOverride(rawProps, "minWidth")) style.minWidth = minWidth;
+    if (maxWidth != null && !uiHasResponsiveOverride(rawProps, "maxWidth")) style.maxWidth = maxWidth;
+    if (height != null && !uiHasResponsiveOverride(rawProps, "height")) style.height = height;
+    if (minHeight != null && !uiHasResponsiveOverride(rawProps, "minHeight")) style.minHeight = minHeight;
+    if (maxHeight != null && !uiHasResponsiveOverride(rawProps, "maxHeight")) style.maxHeight = maxHeight;
     if (Object.keys(style).length) p.style = style;
 
     const ctx = { props: rawProps };
@@ -448,19 +544,22 @@
       uiComputed(rawProps.sm, () => resolveSpanClass(rawProps.sm, "cms-sm-col-")),
       uiComputed(rawProps.md, () => resolveSpanClass(rawProps.md, "cms-md-col-")),
       uiComputed(rawProps.lg, () => resolveSpanClass(rawProps.lg, "cms-lg-col-")),
+      CMSwift.uiResponsiveClasses({ mobile: rawProps }, uiResponsiveColRules),
+      CMSwift.uiResponsiveClasses(rawProps, uiResponsiveColRules),
       uiWhen(useFlexLayout, "cms-col-flex"),
       uiWhen(rawProps.inline, "cms-col-inline"),
       rawProps.class
     ]);
 
-    if (gap != null) style.gap = gap;
-    if (rowGap != null) style.rowGap = rowGap;
-    if (columnGap != null) style.columnGap = columnGap;
-    if (align != null) style.alignItems = align;
+    if (gap != null && !uiHasResponsiveOverride(rawProps, "gap")) style.gap = gap;
+    if (rowGap != null && !uiHasResponsiveOverride(rawProps, "rowGap")) style.rowGap = rowGap;
+    if (columnGap != null && !uiHasResponsiveOverride(rawProps, "columnGap")) style.columnGap = columnGap;
+    if (align != null && !uiHasResponsiveOverride(rawProps, "align")) style.alignItems = align;
     else if (center != null && center !== "") style.alignItems = center ? "center" : "";
-    if (justify != null) style.justifyContent = justify;
+    if (justify != null && !uiHasResponsiveOverride(rawProps, "justify")) style.justifyContent = justify;
     else if (center != null && center !== "") style.justifyContent = center ? "center" : "";
     if (Object.keys(style).length) p.style = style;
+    CMSwift.uiApplyResponsiveProps(p, rawProps, CMSwift.uiResponsiveStyleRules);
 
     if (!hasStructuredContent) {
       const el = _.div(p, ...renderSlotToArray(slots, "default", ctx, children));
@@ -533,6 +632,9 @@
         self: "string",
         order: "number|string",
         scroll: "boolean",
+        mobile: "{ col?, span?, gap?, direction?, align?, justify?, width?, height? }",
+        tablet: "{ col?, span?, gap?, direction?, align?, justify?, width?, height? }",
+        pc: "{ col?, span?, gap?, direction?, align?, justify?, width?, height? }",
         start: "Node|Function|Array",
         top: "Alias di start",
         header: "Alias di start",
@@ -748,6 +850,7 @@
       props.class
     ]);
     p.style = rootStyle;
+    CMSwift.uiApplyResponsiveProps(p, rawProps, CMSwift.uiResponsiveStyleRules);
 
     const createSection = (name, nodes, extraClass) => {
       if (!nodes.length) return null;
@@ -3264,6 +3367,7 @@
     if (wrap != null) p.style.flexWrap = wrap;
     if (rawProps.gap != null) p.style["--cms-footer-gap"] = toCssSize(uiUnwrap(rawProps.gap));
     if (rawProps.minHeight != null) p.style.minHeight = toCssSize(uiUnwrap(rawProps.minHeight));
+    CMSwift.uiApplyResponsiveProps(p, rawProps, CMSwift.uiResponsiveStyleRules);
 
     const el = _.footer(
       p,
@@ -3432,6 +3536,7 @@
       if (wrap != null) style.flexWrap = wrap;
     }
     if (Object.keys(style).length) p.style = style;
+    CMSwift.uiApplyResponsiveProps(p, props, CMSwift.uiResponsiveStyleRules);
 
     if (!hasStructuredContent) {
       const content = renderSlotToArray(slots, "default", ctx, children);
@@ -3648,6 +3753,8 @@
 
     const cls = uiClass([
       "cms-grid",
+      CMSwift.uiResponsiveClasses({ mobile: rawProps }, uiResponsiveGridRules),
+      CMSwift.uiResponsiveClasses(rawProps, uiResponsiveGridRules),
       uiWhen(rawProps.dense, "dense"),
       uiWhen(rawProps.inline, "cms-grid-inline"),
       uiWhen(rawProps.debug, "cms-grid-debug"),
@@ -3658,20 +3765,21 @@
       "gap", "rowGap", "columnGap", "colGap", "cols", "columns", "rows", "areas", "align", "justify",
       "alignItems", "justifyItems", "placeItems", "placeContent", "dense", "flow", "inline", "debug",
       "autoFit", "autoFill", "min", "max", "autoRows", "items", "itemClass", "itemStyle", "itemProps",
-      "empty", "slots", "full", "width", "minWidth", "maxWidth", "padding"
+      "empty", "slots", "full", "width", "minWidth", "maxWidth", "padding",
+      ...CMSwift.uiResponsiveOmitProps
     ]);
     p.class = cls;
 
     const style = { ...(rawProps.style || {}) };
     const gap = uiStyleValue(rawProps.gap, toCssSize);
-    if (gap != null) {
+    if (gap != null && !uiHasResponsiveOverride(rawProps, "gap")) {
       style["--cms-grid-gap"] = gap;
       style.gap = gap;
     }
     const rowGap = uiStyleValue(rawProps.rowGap, toCssSize);
-    if (rowGap != null) style.rowGap = rowGap;
+    if (rowGap != null && !uiHasResponsiveOverride(rawProps, "rowGap")) style.rowGap = rowGap;
     const columnGap = uiStyleValue(rawProps.columnGap ?? rawProps.colGap, toCssSize);
-    if (columnGap != null) style.columnGap = columnGap;
+    if (columnGap != null && !uiHasResponsiveOverride(rawProps, ["columnGap", "colGap"])) style.columnGap = columnGap;
 
     const trackMax = uiStyleValue(rawProps.max, toCssSize, "1fr");
     const min = uiStyleValue(rawProps.min, toCssSize);
@@ -3683,7 +3791,7 @@
         ? `repeat(${v}, minmax(0, 1fr))`
         : String(v)
       );
-      if (cols != null) style.gridTemplateColumns = cols;
+      if (cols != null && !uiHasResponsiveOverride(rawProps, ["cols", "columns"])) style.gridTemplateColumns = cols;
     }
 
     const rows = uiStyleValue(rawProps.rows, (v) => typeof v === "number"
@@ -3699,7 +3807,7 @@
       const value = String(v);
       return rawProps.dense && !value.includes("dense") ? `${value} dense` : value;
     });
-    if (flow != null) style.gridAutoFlow = flow;
+    if (flow != null && !uiHasResponsiveOverride(rawProps, "flow")) style.gridAutoFlow = flow;
 
     const areas = uiStyleValue(rawProps.areas, (value) => {
       if (Array.isArray(value)) {
@@ -3710,9 +3818,9 @@
     if (areas != null) style.gridTemplateAreas = areas;
 
     const align = uiStyleValue(rawProps.align ?? rawProps.alignItems);
-    if (align != null) style.alignItems = align;
+    if (align != null && !uiHasResponsiveOverride(rawProps, ["align", "alignItems"])) style.alignItems = align;
     const justify = uiStyleValue(rawProps.justify);
-    if (justify != null) style.justifyContent = justify;
+    if (justify != null && !uiHasResponsiveOverride(rawProps, "justify")) style.justifyContent = justify;
     const justifyItems = uiStyleValue(rawProps.justifyItems);
     if (justifyItems != null) style.justifyItems = justifyItems;
     const placeItems = uiStyleValue(rawProps.placeItems);
@@ -3720,15 +3828,16 @@
     const placeContent = uiStyleValue(rawProps.placeContent);
     if (placeContent != null) style.placeContent = placeContent;
     const width = uiStyleValue(rawProps.width, toCssSize);
-    if (width != null) style.width = width;
+    if (width != null && !uiHasResponsiveOverride(rawProps, "width")) style.width = width;
     if (uiUnwrap(rawProps.full) === true) style.width = "100%";
     const minWidth = uiStyleValue(rawProps.minWidth, toCssSize);
-    if (minWidth != null) style.minWidth = minWidth;
+    if (minWidth != null && !uiHasResponsiveOverride(rawProps, "minWidth")) style.minWidth = minWidth;
     const maxWidth = uiStyleValue(rawProps.maxWidth, toCssSize);
-    if (maxWidth != null) style.maxWidth = maxWidth;
+    if (maxWidth != null && !uiHasResponsiveOverride(rawProps, "maxWidth")) style.maxWidth = maxWidth;
     const padding = uiStyleValue(rawProps.padding, toCssSize);
-    if (padding != null) style.padding = padding;
+    if (padding != null && !uiHasResponsiveOverride(rawProps, "padding")) style.padding = padding;
     if (Object.keys(style).length) p.style = style;
+    CMSwift.uiApplyResponsiveProps(p, rawProps, CMSwift.uiResponsiveStyleRules);
 
     const el = _.div(p, ...content);
     setPropertyProps(el, rawProps);
@@ -3767,6 +3876,9 @@
         minWidth: "string|number",
         maxWidth: "string|number",
         padding: "string|number",
+        mobile: "{ cols?, gap?, flow?, width?, padding? }",
+        tablet: "{ cols?, gap?, flow?, width?, padding? }",
+        pc: "{ cols?, gap?, flow?, width?, padding? }",
         items: "Array<Node|Object|string>",
         itemClass: "string",
         itemStyle: "object",
@@ -3838,6 +3950,12 @@
     const sm = uiStyleValue(props.sm, toGridSpan);
     const md = uiStyleValue(props.md, toGridSpan);
     const lg = uiStyleValue(props.lg, toGridSpan);
+    const tabletProps = CMSwift.uiResponsivePropsFor(props, uiResponsiveDevice("tablet")) || {};
+    const pcProps = CMSwift.uiResponsivePropsFor(props, uiResponsiveDevice("pc")) || {};
+    const tabletSpanSource = tabletProps.span ?? tabletProps.col;
+    const pcSpanSource = pcProps.span ?? pcProps.col;
+    const tabletSpan = uiStyleValue(tabletSpanSource, toGridSpan);
+    const pcSpan = uiStyleValue(pcSpanSource, toGridSpan);
     const rowSpan = uiStyleValue(props.rowSpan, toGridRow);
     const row = uiStyleValue(props.row, toGridRow);
     const area = uiStyleValue(props.area);
@@ -3927,6 +4045,8 @@
     const cls = uiClass([
       "cms-grid-col",
       surfaceClasses,
+      CMSwift.uiResponsiveClasses({ mobile: props }, uiResponsiveGridColRules),
+      CMSwift.uiResponsiveClasses(props, uiResponsiveGridColRules),
       uiWhen(props.panel, "cms-grid-col-panel"),
       uiWhen(props.auto, "is-auto"),
       uiWhen(useStackLayout, "cms-grid-col-stack"),
@@ -3948,7 +4068,8 @@
       "slots", "style",
       "clickable", "dense", "flat", "border", "glossy", "glow", "glass", "shadow",
       "outline", "rounded", "gradient", "textGradient", "lightShadow", "color", "textColor",
-      "size", "radius"
+      "size", "radius",
+      ...CMSwift.uiResponsiveOmitProps
     ]);
     p.class = cls;
 
@@ -3957,28 +4078,31 @@
     if (sm != null) style["--cms-grid-col-sm"] = sm;
     if (md != null) style["--cms-grid-col-md"] = md;
     if (lg != null) style["--cms-grid-col-lg"] = lg;
+    if (tabletSpan != null) style["--cms-grid-col-tablet"] = tabletSpan;
+    if (pcSpan != null) style["--cms-grid-col-pc"] = pcSpan;
     if (rowSpan != null) style.gridRow = rowSpan;
     else if (row != null) style.gridRow = row;
     if (area != null) style.gridArea = area;
-    if (align != null) style.alignSelf = align;
-    if (justify != null) style.justifySelf = justify;
-    if (place != null) style.placeSelf = place;
-    if (gap != null) style.gap = gap;
-    if (rowGap != null) style.rowGap = rowGap;
-    if (columnGap != null) style.columnGap = columnGap;
-    if (padding != null) style.padding = padding;
-    if (width != null) style.width = width;
+    if (align != null && !uiHasResponsiveOverride(props, "align")) style.alignSelf = align;
+    if (justify != null && !uiHasResponsiveOverride(props, "justify")) style.justifySelf = justify;
+    if (place != null && !uiHasResponsiveOverride(props, "place")) style.placeSelf = place;
+    if (gap != null && !uiHasResponsiveOverride(props, "gap")) style.gap = gap;
+    if (rowGap != null && !uiHasResponsiveOverride(props, "rowGap")) style.rowGap = rowGap;
+    if (columnGap != null && !uiHasResponsiveOverride(props, "columnGap")) style.columnGap = columnGap;
+    if (padding != null && !uiHasResponsiveOverride(props, "padding")) style.padding = padding;
+    if (width != null && !uiHasResponsiveOverride(props, "width")) style.width = width;
     if (fullHeight != null && fullHeight !== "") style.height = fullHeight;
-    else if (height != null) style.height = height;
-    if (minHeight != null) style.minHeight = minHeight;
-    if (maxHeight != null) style.maxHeight = maxHeight;
-    if (direction != null) style.flexDirection = direction;
-    if (contentAlign != null) style.alignItems = contentAlign;
+    else if (height != null && !uiHasResponsiveOverride(props, "height")) style.height = height;
+    if (minHeight != null && !uiHasResponsiveOverride(props, "minHeight")) style.minHeight = minHeight;
+    if (maxHeight != null && !uiHasResponsiveOverride(props, "maxHeight")) style.maxHeight = maxHeight;
+    if (direction != null && !uiHasResponsiveOverride(props, "direction")) style.flexDirection = direction;
+    if (contentAlign != null && !uiHasResponsiveOverride(props, "contentAlign")) style.alignItems = contentAlign;
     else if (centerContent != null && centerContent !== "") style.alignItems = centerContent ? "center" : "";
-    if (contentJustify != null) style.justifyContent = contentJustify;
+    if (contentJustify != null && !uiHasResponsiveOverride(props, "contentJustify")) style.justifyContent = contentJustify;
     else if (centerContent != null && centerContent !== "") style.justifyContent = centerContent ? "center" : "";
     if (scroll != null && scroll !== "") style.overflow = scroll;
     if (Object.keys(style).length) p.style = style;
+    CMSwift.uiApplyResponsiveProps(p, props, CMSwift.uiResponsiveStyleRules);
 
     const userOnClick = props.onClick;
     const userOnKeydown = props.onKeydown;
@@ -4079,6 +4203,9 @@
         panel: "boolean",
         clickable: "boolean",
         to: "string",
+        mobile: "{ span?, col?, gap?, direction?, contentAlign?, contentJustify? }",
+        tablet: "{ span?, col?, gap?, direction?, contentAlign?, contentJustify? }",
+        pc: "{ span?, col?, gap?, direction?, contentAlign?, contentJustify? }",
         start: "Node|Function|Array",
         body: "Node|Function|Array",
         end: "Node|Function|Array",
