@@ -277,6 +277,7 @@ npm run gen:ui-dts
 - [Stability Policy](docs/policy/stability.md)
 - [Release Notes v1.0.10](docs/release/release-notes-v1.0.10.md)
 - [Release Notes v1.0.9](docs/release/release-notes-v1.0.9.md)
+- [Release Notes v1.0.8](docs/release/release-notes-v1.0.8.md)
 - [Release Notes v1.0.7](docs/release/release-notes-v1.0.7.md)
 - [Release Notes v1.0.5](docs/release/release-notes-v1.0.5.md)
 - [Release Notes v1.0.4](docs/release/release-notes-v1.0.4.md)
