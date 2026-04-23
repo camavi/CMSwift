@@ -33,7 +33,7 @@ const runChrome = (chromePath, htmlFile, options = {}) => new Promise((resolve, 
     "--disable-dev-shm-usage",
     "--allow-file-access-from-files",
     `--window-size=${width},${height}`,
-    "--virtual-time-budget=3000",
+    "--virtual-time-budget=5000",
     "--dump-dom",
     pathToFileURL(htmlFile).href
   ], { maxBuffer: 1024 * 1024 * 4 }, (error, stdout, stderr) => {
@@ -251,6 +251,163 @@ test("GridCol col alias uses grid vars without generic grid-column vars", {
   assert.ok(result.toolbarWidth <= result.colWidth + 2, JSON.stringify(result));
 });
 
+test("Avatar applies common responsive props", {
+  skip: findChrome() ? false : "Chrome/Chromium is not available"
+}, async () => {
+  const chromePath = findChrome();
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "cmswift-avatar-responsive-"));
+  const htmlFile = path.join(tmpDir, "index.html");
+  const coreUrl = pathToFileURL(path.join(ROOT_DIR, "packages/core/dist/cms.js")).href;
+  const uiUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/ui.js")).href;
+  const cssUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/css/ui.css")).href;
+
+  await writeFile(htmlFile, `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="${cssUrl}">
+  <style>
+    body { margin: 0; padding: 24px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="${coreUrl}"></script>
+  <script src="${uiUrl}"></script>
+  <script>
+    const finish = (result) => {
+      document.body.setAttribute("data-result", encodeURIComponent(JSON.stringify(result)));
+    };
+
+    try {
+      const UI = window._ || window.CMSwift?.ui;
+      const avatar = UI.Avatar({
+        label: "Probe",
+        width: "40px",
+        tablet: { width: "80px" }
+      });
+
+      document.getElementById("root").appendChild(avatar);
+
+      const style = getComputedStyle(avatar);
+      finish({
+        className: avatar.className,
+        width: style.width,
+        rspWidth: avatar.style.getPropertyValue("--cms-rsp-width"),
+        rspTabletWidth: avatar.style.getPropertyValue("--cms-rsp-tablet-width")
+      });
+    } catch (error) {
+      finish({ error: String(error?.stack || error) });
+    }
+  </script>
+</body>
+</html>`, "utf8");
+
+  const mobile = readBrowserResult(await runChrome(chromePath, htmlFile, { width: 390, height: 844 }));
+  const tablet = readBrowserResult(await runChrome(chromePath, htmlFile, { width: 800, height: 900 }));
+
+  assert.equal(mobile.error, undefined);
+  assert.equal(tablet.error, undefined);
+  assert.equal(mobile.className.includes("cms-rsp"), true);
+  assert.equal(mobile.className.includes("cms-rsp-width"), true);
+  assert.equal(mobile.className.includes("cms-rsp-tablet-width"), true);
+  assert.equal(mobile.rspWidth, "40px");
+  assert.equal(mobile.rspTabletWidth, "80px");
+  assert.equal(mobile.width, "40px");
+  assert.equal(tablet.width, "80px");
+});
+
+test("Nested GridCol does not inherit span variables from parent GridCol", {
+  skip: findChrome() ? false : "Chrome/Chromium is not available"
+}, async () => {
+  const chromePath = findChrome();
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "cmswift-nested-gridcol-responsive-"));
+  const htmlFile = path.join(tmpDir, "index.html");
+  const coreUrl = pathToFileURL(path.join(ROOT_DIR, "packages/core/dist/cms.js")).href;
+  const uiUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/ui.js")).href;
+  const cssUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/css/ui.css")).href;
+
+  await writeFile(htmlFile, `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="${cssUrl}">
+  <style>
+    body { margin: 0; padding: 24px; }
+    #root { width: 960px; }
+    .inner-cell { min-height: 34px; border: 1px solid #777; box-sizing: border-box; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="${coreUrl}"></script>
+  <script src="${uiUrl}"></script>
+  <script>
+    const finish = (result) => {
+      document.body.setAttribute("data-result", encodeURIComponent(JSON.stringify(result)));
+    };
+
+    try {
+      const UI = window._ || window.CMSwift?.ui;
+      const childA = UI.GridCol({ class: "inner-cell inner-a" }, "A");
+      const childB = UI.GridCol({ class: "inner-cell inner-b" }, "B");
+      const innerGrid = UI.Grid({
+        cols: 1,
+        tablet: { cols: 2 },
+        pc: { cols: 2 }
+      }, childA, childB);
+      const parentCol = UI.GridCol({ pc: { col: 7 } }, innerGrid);
+      const outerGrid = UI.Grid({ cols: 1, pc: { cols: 12 } }, parentCol);
+
+      document.getElementById("root").appendChild(outerGrid);
+
+      requestAnimationFrame(() => {
+        const parentStyle = getComputedStyle(parentCol);
+        const innerStyle = getComputedStyle(innerGrid);
+        const childAStyle = getComputedStyle(childA);
+        const childBStyle = getComputedStyle(childB);
+        const childARect = childA.getBoundingClientRect();
+        const childBRect = childB.getBoundingClientRect();
+        finish({
+          parentGridColumn: parentStyle.gridColumn,
+          innerDisplay: innerStyle.display,
+          innerTracks: innerStyle.gridTemplateColumns.split(" ").filter(Boolean).length,
+          childAGridColumn: childAStyle.gridColumn,
+          childBGridColumn: childBStyle.gridColumn,
+          childABase: childA.style.getPropertyValue("--cms-grid-col-base"),
+          childATablet: childA.style.getPropertyValue("--cms-grid-col-tablet"),
+          childAPc: childA.style.getPropertyValue("--cms-grid-col-pc"),
+          childBBase: childB.style.getPropertyValue("--cms-grid-col-base"),
+          sameRow: Math.abs(childARect.top - childBRect.top) <= 2,
+          secondAfterFirst: childBRect.left > childARect.left,
+          childAWidth: Math.round(childARect.width),
+          childBWidth: Math.round(childBRect.width)
+        });
+      });
+    } catch (error) {
+      finish({ error: String(error?.stack || error) });
+    }
+  </script>
+</body>
+</html>`, "utf8");
+
+  const result = readBrowserResult(await runChrome(chromePath, htmlFile, { width: 1440, height: 900 }));
+
+  assert.equal(result.error, undefined);
+  assert.match(result.parentGridColumn, /span 7/);
+  assert.equal(result.innerDisplay, "grid");
+  assert.equal(result.innerTracks, 2);
+  assert.doesNotMatch(result.childAGridColumn, /span 7/);
+  assert.doesNotMatch(result.childBGridColumn, /span 7/);
+  assert.equal(result.childABase, "auto");
+  assert.match(result.childATablet, /--cms-grid-col-base/);
+  assert.match(result.childAPc, /--cms-grid-col-tablet/);
+  assert.equal(result.childBBase, "auto");
+  assert.equal(result.sameRow, true, JSON.stringify(result));
+  assert.equal(result.secondAfterFirst, true, JSON.stringify(result));
+  assert.ok(Math.abs(result.childAWidth - result.childBWidth) <= 2, JSON.stringify(result));
+});
+
 test("Toolbar responsive gap and direction apply across mobile tablet and pc", {
   skip: findChrome() ? false : "Chrome/Chromium is not available"
 }, async () => {
@@ -385,28 +542,26 @@ test("Card sections apply responsive gap padding justify and direction", {
 
       document.getElementById("root").appendChild(card);
 
-      requestAnimationFrame(() => {
-        const rootStyle = getComputedStyle(document.documentElement);
-        const headerStyle = getComputedStyle(header);
-        const bodyStyle = getComputedStyle(body);
-        const footerStyle = getComputedStyle(footer);
-        const cardStyle = getComputedStyle(card);
-        finish({
-          headerClassName: header.className,
-          headerStyleGap: header.style.gap,
-          headerGap: headerStyle.gap,
-          headerJustify: headerStyle.justifyContent,
-          bodyStylePadding: body.style.padding,
-          bodyPaddingTop: bodyStyle.paddingTop,
-          footerStyleDirection: footer.style.flexDirection,
-          footerDirection: footerStyle.flexDirection,
-          cardDisplay: cardStyle.display,
-          cardGap: cardStyle.gap,
-          gapSm: rootStyle.getPropertyValue("--cms-gap-sm").trim(),
-          gapMd: rootStyle.getPropertyValue("--cms-gap-md").trim(),
-          pSm: rootStyle.getPropertyValue("--cms-p-sm").trim(),
-          pLg: rootStyle.getPropertyValue("--cms-p-lg").trim()
-        });
+      const rootStyle = getComputedStyle(document.documentElement);
+      const headerStyle = getComputedStyle(header);
+      const bodyStyle = getComputedStyle(body);
+      const footerStyle = getComputedStyle(footer);
+      const cardStyle = getComputedStyle(card);
+      finish({
+        headerClassName: header.className,
+        headerStyleGap: header.style.gap,
+        headerGap: headerStyle.gap,
+        headerJustify: headerStyle.justifyContent,
+        bodyStylePadding: body.style.padding,
+        bodyPaddingTop: bodyStyle.paddingTop,
+        footerStyleDirection: footer.style.flexDirection,
+        footerDirection: footerStyle.flexDirection,
+        cardDisplay: cardStyle.display,
+        cardGap: cardStyle.gap,
+        gapSm: rootStyle.getPropertyValue("--cms-gap-sm").trim(),
+        gapMd: rootStyle.getPropertyValue("--cms-gap-md").trim(),
+        pSm: rootStyle.getPropertyValue("--cms-p-sm").trim(),
+        pLg: rootStyle.getPropertyValue("--cms-p-lg").trim()
       });
     } catch (error) {
       finish({ error: String(error?.stack || error) });

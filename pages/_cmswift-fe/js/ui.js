@@ -5619,6 +5619,9 @@ const unitCover = (v, name = 'size') => {
     ]);
     p.class = cls;
 
+    if (style["--cms-grid-col-base"] == null) style["--cms-grid-col-base"] = "auto";
+    if (style["--cms-grid-col-tablet"] == null) style["--cms-grid-col-tablet"] = "var(--cms-grid-col-base, auto)";
+    if (style["--cms-grid-col-pc"] == null) style["--cms-grid-col-pc"] = "var(--cms-grid-col-tablet, var(--cms-grid-col-base, auto))";
     if (uiUnwrap(props.auto) === true) style["--cms-grid-col-base"] = "auto";
     else if (span != null) style["--cms-grid-col-base"] = span;
     if (sm != null) style["--cms-grid-col-sm"] = sm;
@@ -6275,6 +6278,7 @@ const unitCover = (v, name = 'size') => {
       avatarRenderAnchor("cms-avatar-anchor-bottom-left", bottomLeftNodes),
       avatarRenderAnchor("cms-avatar-anchor-bottom-right", bottomRightNodes)
     );
+    setPropertyProps(wrap, props);
     return wrap;
   };
   if (CMSwift.isDev?.()) {
@@ -6310,6 +6314,9 @@ const unitCover = (v, name = 'size') => {
         bottomLeft: "Node|Function|Array",
         bottomRight: "Node|Function|Array",
         slots: "{ media?, default?, fallback?, label?, icon?, badge?, status?, topLeft?, topRight?, bottomLeft?, bottomRight? }",
+        mobile: "{ width?, height?, minWidth?, maxWidth?, padding?, margin?, radius? }",
+        tablet: "{ width?, height?, minWidth?, maxWidth?, padding?, margin?, radius? }",
+        pc: "{ width?, height?, minWidth?, maxWidth?, padding?, margin?, radius? }",
         class: "string",
         style: "object"
       },

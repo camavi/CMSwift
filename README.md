@@ -275,6 +275,7 @@ npm run gen:ui-dts
 - [Core Reference](docs/reference/core.md)
 - [UI Reference](docs/reference/ui.md)
 - [Stability Policy](docs/policy/stability.md)
+- [Release Notes v1.0.14](docs/release/release-notes-v1.0.14.md)
 - [Release Notes v1.0.13](docs/release/release-notes-v1.0.13.md)
 - [Release Notes v1.0.12](docs/release/release-notes-v1.0.12.md)
 - [Release Notes v1.0.11](docs/release/release-notes-v1.0.11.md)
