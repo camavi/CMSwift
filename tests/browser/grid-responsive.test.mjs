@@ -333,3 +333,121 @@ test("Toolbar responsive gap and direction apply across mobile tablet and pc", {
   assert.equal(tablet.gap, tablet.gapMd);
   assert.equal(pc.gap, pc.gapLg);
 });
+
+test("Card sections apply responsive gap padding justify and direction", {
+  skip: findChrome() ? false : "Chrome/Chromium is not available"
+}, async () => {
+  const chromePath = findChrome();
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "cmswift-card-section-responsive-"));
+  const htmlFile = path.join(tmpDir, "index.html");
+  const coreUrl = pathToFileURL(path.join(ROOT_DIR, "packages/core/dist/cms.js")).href;
+  const uiUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/ui.js")).href;
+  const cssUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/css/ui.css")).href;
+
+  await writeFile(htmlFile, `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="${cssUrl}">
+  <style>
+    body { margin: 0; padding: 24px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="${coreUrl}"></script>
+  <script src="${uiUrl}"></script>
+  <script>
+    const finish = (result) => {
+      document.body.setAttribute("data-result", encodeURIComponent(JSON.stringify(result)));
+    };
+
+    try {
+      const UI = window._ || window.CMSwift?.ui;
+      const header = UI.cardHeader({
+        gap: "sm",
+        tablet: { gap: "md", justify: "space-between" }
+      }, UI.span("Title"), UI.Btn({ label: "Action" }));
+      const body = UI.cardBody({
+        padding: "sm",
+        tablet: { padding: "lg" }
+      }, "Body");
+      const footer = UI.cardFooter({
+        direction: "column",
+        tablet: { direction: "row" }
+      }, UI.Btn({ label: "Cancel" }), UI.Btn({ label: "Save" }));
+      const card = UI.Card({
+        display: "flex",
+        direction: "column",
+        gap: "sm",
+        tablet: { gap: "md" }
+      }, header, body, footer);
+
+      document.getElementById("root").appendChild(card);
+
+      requestAnimationFrame(() => {
+        const rootStyle = getComputedStyle(document.documentElement);
+        const headerStyle = getComputedStyle(header);
+        const bodyStyle = getComputedStyle(body);
+        const footerStyle = getComputedStyle(footer);
+        const cardStyle = getComputedStyle(card);
+        finish({
+          headerClassName: header.className,
+          headerStyleGap: header.style.gap,
+          headerGap: headerStyle.gap,
+          headerJustify: headerStyle.justifyContent,
+          bodyStylePadding: body.style.padding,
+          bodyPaddingTop: bodyStyle.paddingTop,
+          footerStyleDirection: footer.style.flexDirection,
+          footerDirection: footerStyle.flexDirection,
+          cardDisplay: cardStyle.display,
+          cardGap: cardStyle.gap,
+          gapSm: rootStyle.getPropertyValue("--cms-gap-sm").trim(),
+          gapMd: rootStyle.getPropertyValue("--cms-gap-md").trim(),
+          pSm: rootStyle.getPropertyValue("--cms-p-sm").trim(),
+          pLg: rootStyle.getPropertyValue("--cms-p-lg").trim()
+        });
+      });
+    } catch (error) {
+      finish({ error: String(error?.stack || error) });
+    }
+  </script>
+</body>
+</html>`, "utf8");
+
+  const mobile = readBrowserResult(await runChrome(chromePath, htmlFile, { width: 390, height: 844 }));
+  const tablet = readBrowserResult(await runChrome(chromePath, htmlFile, { width: 800, height: 900 }));
+  const pc = readBrowserResult(await runChrome(chromePath, htmlFile, { width: 1440, height: 900 }));
+
+  assert.equal(mobile.error, undefined);
+  assert.equal(tablet.error, undefined);
+  assert.equal(pc.error, undefined);
+
+  assert.equal(mobile.headerStyleGap, "");
+  assert.equal(tablet.headerStyleGap, "");
+  assert.equal(pc.headerStyleGap, "");
+  assert.equal(mobile.headerGap, mobile.gapSm);
+  assert.equal(tablet.headerGap, tablet.gapMd);
+  assert.equal(pc.headerGap, pc.gapMd);
+  assert.equal(tablet.headerJustify, "space-between");
+  assert.equal(pc.headerJustify, "space-between");
+
+  assert.equal(mobile.bodyStylePadding, "");
+  assert.equal(tablet.bodyStylePadding, "");
+  assert.equal(pc.bodyStylePadding, "");
+  assert.equal(mobile.bodyPaddingTop, mobile.pSm);
+  assert.equal(tablet.bodyPaddingTop, tablet.pLg);
+  assert.equal(pc.bodyPaddingTop, pc.pLg);
+
+  assert.equal(mobile.footerStyleDirection, "");
+  assert.equal(tablet.footerStyleDirection, "");
+  assert.equal(pc.footerStyleDirection, "");
+  assert.equal(mobile.footerDirection, "column");
+  assert.equal(tablet.footerDirection, "row");
+  assert.equal(pc.footerDirection, "row");
+
+  assert.equal(mobile.cardDisplay, "flex");
+  assert.equal(mobile.cardGap, mobile.gapSm);
+  assert.equal(tablet.cardGap, tablet.gapMd);
+  assert.equal(pc.cardGap, pc.gapMd);
+});

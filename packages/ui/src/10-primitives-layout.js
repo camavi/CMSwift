@@ -1064,7 +1064,9 @@
       "coverHeight", "dense", "eyebrow", "eyebrowClass", "flat", "footer", "footerClass", "header",
       "headerAside", "headerClass", "headerContentClass", "icon", "iconSize", "identifier",
       "identifierClass", "image", "imageAlt", "imageClass", "imageStyle", "kicker", "media",
-      "mediaClass", "slots", "subtitle", "subtitleClass", "title", "titleClass", "to"
+      "mediaClass", "slots", "subtitle", "subtitleClass", "title", "titleClass", "to",
+      "display", "direction", "wrap", "align", "justify", "gap", "rowGap", "columnGap",
+      "cols", "columns"
     ]);
     p.class = uiClass([
       "cms-panel",
@@ -1082,6 +1084,7 @@
     if (rawProps.coverHeight != null) {
       p.style["--cms-card-cover-height"] = toCssSize(uiUnwrap(rawProps.coverHeight));
     }
+    CMSwift.uiApplyResponsiveProps(p, rawProps, CMSwift.uiResponsiveStyleRules);
 
     const userOnClick = rawProps.onClick;
     const userOnKeydown = rawProps.onKeydown;
@@ -1153,6 +1156,13 @@
         to: "string",
         dense: "boolean",
         flat: "boolean",
+        display: "string",
+        direction: "row|column|string",
+        gap: "string|number",
+        cols: "number|string",
+        mobile: "{ display?, direction?, gap?, cols? }",
+        tablet: "{ display?, direction?, gap?, cols? }",
+        pc: "{ display?, direction?, gap?, cols? }",
         headerClass: "string",
         bodyClass: "string",
         footerClass: "string",

@@ -321,49 +321,65 @@
     const { props, children } = CMSwift.uiNormalizeArgs(args);
     const slots = props.slots || {};
     const cls = uiClass(["cms-card-header", uiWhen(props.divider, "divider"), props.class]);
-    const p = CMSwift.omit(props, ["divider", "align", "justify", "gap", "wrap", "slots"]);
+    const p = CMSwift.omit(props, ["divider", "align", "justify", "gap", "wrap", "direction", "slots"]);
     p.class = cls;
 
     const style = { ...(props.style || {}) };
     const align = uiStyleValue(props.align);
-    if (align != null) style.alignItems = align;
+    if (align != null && !uiHasResponsiveOverride(props, "align")) style.alignItems = align;
     const justify = uiStyleValue(props.justify);
-    if (justify != null) style.justifyContent = justify;
+    if (justify != null && !uiHasResponsiveOverride(props, "justify")) style.justifyContent = justify;
     const wrap = uiStyleValue(props.wrap, (v) => v ? "wrap" : "nowrap");
-    if (wrap != null) style.flexWrap = wrap;
+    if (wrap != null && !uiHasResponsiveOverride(props, "wrap")) style.flexWrap = wrap;
+    const direction = uiStyleValue(props.direction);
+    if (direction != null && !uiHasResponsiveOverride(props, "direction")) style.flexDirection = direction;
     const gap = uiStyleValue(props.gap, toCssSize);
-    if (gap != null) style.gap = gap;
+    if (gap != null && !uiHasResponsiveOverride(props, "gap")) style.gap = gap;
     if (Object.keys(style).length) p.style = style;
+    CMSwift.uiApplyResponsiveProps(p, props, CMSwift.uiResponsiveStyleRules);
 
-    return _.div(p, ...renderSlotToArray(slots, "default", {}, children));
+    const el = _.div(p, ...renderSlotToArray(slots, "default", {}, children));
+    setPropertyProps(el, props);
+    return el;
   };
   UI.cardBody = (...args) => {
     const { props, children } = CMSwift.uiNormalizeArgs(args);
     const slots = props.slots || {};
     const cls = uiClass(["cms-card-body", props.class]);
-    const p = CMSwift.omit(props, ["slots"]);
+    const p = CMSwift.omit(props, [
+      "slots", "display", "direction", "wrap", "align", "justify", "gap",
+      "rowGap", "columnGap", "padding", "width"
+    ]);
     p.class = cls;
-    return _.div(p, ...renderSlotToArray(slots, "default", {}, children));
+    CMSwift.uiApplyResponsiveProps(p, props, CMSwift.uiResponsiveStyleRules);
+    const el = _.div(p, ...renderSlotToArray(slots, "default", {}, children));
+    setPropertyProps(el, props);
+    return el;
   };
   UI.cardFooter = (...args) => {
     const { props, children } = CMSwift.uiNormalizeArgs(args);
     const slots = props.slots || {};
     const cls = uiClass(["cms-card-footer", uiWhen(props.divider, "divider"), props.class]);
-    const p = CMSwift.omit(props, ["divider", "align", "justify", "gap", "wrap", "slots"]);
+    const p = CMSwift.omit(props, ["divider", "align", "justify", "gap", "wrap", "direction", "slots"]);
     p.class = cls;
 
     const style = { ...(props.style || {}) };
     const align = uiStyleValue(props.align);
-    if (align != null) style.alignItems = align;
+    if (align != null && !uiHasResponsiveOverride(props, "align")) style.alignItems = align;
     const justify = uiStyleValue(props.justify);
-    if (justify != null) style.justifyContent = justify;
+    if (justify != null && !uiHasResponsiveOverride(props, "justify")) style.justifyContent = justify;
     const wrap = uiStyleValue(props.wrap, (v) => v ? "wrap" : "nowrap");
-    if (wrap != null) style.flexWrap = wrap;
+    if (wrap != null && !uiHasResponsiveOverride(props, "wrap")) style.flexWrap = wrap;
+    const direction = uiStyleValue(props.direction);
+    if (direction != null && !uiHasResponsiveOverride(props, "direction")) style.flexDirection = direction;
     const gap = uiStyleValue(props.gap, toCssSize);
-    if (gap != null) style.gap = gap;
+    if (gap != null && !uiHasResponsiveOverride(props, "gap")) style.gap = gap;
     if (Object.keys(style).length) p.style = style;
+    CMSwift.uiApplyResponsiveProps(p, props, CMSwift.uiResponsiveStyleRules);
 
-    return _.div(p, ...renderSlotToArray(slots, "default", {}, children));
+    const el = _.div(p, ...renderSlotToArray(slots, "default", {}, children));
+    setPropertyProps(el, props);
+    return el;
   };
   if (CMSwift.isDev?.()) {
     UI.meta = UI.meta || {};
@@ -374,7 +390,11 @@
         align: `stretch|flex-start|center|flex-end|baseline`,
         justify: `flex-start|center|flex-end|space-between|space-around|space-evenly`,
         wrap: "boolean",
+        direction: "row|column|string",
         gap: "string|number",
+        mobile: "{ gap?, align?, justify?, wrap?, direction? }",
+        tablet: "{ gap?, align?, justify?, wrap?, direction? }",
+        pc: "{ gap?, align?, justify?, wrap?, direction? }",
         slots: "{ default? }",
         class: "string",
         style: "object"
@@ -388,6 +408,12 @@
     UI.meta.cardBody = {
       signature: "UI.cardBody(...children) | UI.cardBody(props, ...children)",
       props: {
+        padding: "string|number",
+        gap: "string|number",
+        direction: "row|column|string",
+        mobile: "{ padding?, gap?, direction?, width? }",
+        tablet: "{ padding?, gap?, direction?, width? }",
+        pc: "{ padding?, gap?, direction?, width? }",
         slots: "{ default? }",
         class: "string",
         style: "object"
@@ -405,7 +431,11 @@
         align: `stretch|flex-start|center|flex-end|baseline`,
         justify: `flex-start|center|flex-end|space-between|space-around|space-evenly`,
         wrap: "boolean",
+        direction: "row|column|string",
         gap: "string|number",
+        mobile: "{ gap?, align?, justify?, wrap?, direction? }",
+        tablet: "{ gap?, align?, justify?, wrap?, direction? }",
+        pc: "{ gap?, align?, justify?, wrap?, direction? }",
         slots: "{ default? }",
         class: "string",
         style: "object"
