@@ -23,14 +23,16 @@ const findChrome = () => {
   return candidates.find((candidate) => existsSync(candidate)) || "";
 };
 
-const runChrome = (chromePath, htmlFile) => new Promise((resolve, reject) => {
+const runChrome = (chromePath, htmlFile, options = {}) => new Promise((resolve, reject) => {
+  const width = options.width || 1440;
+  const height = options.height || 900;
   execFile(chromePath, [
     "--headless=new",
     "--disable-gpu",
     "--no-sandbox",
     "--disable-dev-shm-usage",
     "--allow-file-access-from-files",
-    "--window-size=1440,900",
+    `--window-size=${width},${height}`,
     "--virtual-time-budget=3000",
     "--dump-dom",
     pathToFileURL(htmlFile).href
@@ -247,4 +249,87 @@ test("GridCol col alias uses grid vars without generic grid-column vars", {
   assert.notEqual(result.toolbarGap, "normal");
   assert.ok(result.colWidth > 250 && result.colWidth < 360, JSON.stringify(result));
   assert.ok(result.toolbarWidth <= result.colWidth + 2, JSON.stringify(result));
+});
+
+test("Toolbar responsive gap and direction apply across mobile tablet and pc", {
+  skip: findChrome() ? false : "Chrome/Chromium is not available"
+}, async () => {
+  const chromePath = findChrome();
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "cmswift-toolbar-responsive-"));
+  const htmlFile = path.join(tmpDir, "index.html");
+  const coreUrl = pathToFileURL(path.join(ROOT_DIR, "packages/core/dist/cms.js")).href;
+  const uiUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/ui.js")).href;
+  const cssUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/css/ui.css")).href;
+
+  await writeFile(htmlFile, `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="${cssUrl}">
+  <style>
+    body { margin: 0; padding: 24px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="${coreUrl}"></script>
+  <script src="${uiUrl}"></script>
+  <script>
+    const finish = (result) => {
+      document.body.setAttribute("data-result", encodeURIComponent(JSON.stringify(result)));
+    };
+
+    try {
+      const UI = window._ || window.CMSwift?.ui;
+      const toolbar = UI.Toolbar({
+        gap: "sm",
+        direction: "column",
+        tablet: { direction: "row", gap: "md" },
+        pc: { gap: "lg" }
+      }, UI.Btn({ label: "A" }), UI.Btn({ label: "B" }));
+
+      document.getElementById("root").appendChild(toolbar);
+
+      requestAnimationFrame(() => {
+        const style = getComputedStyle(toolbar);
+        const rootStyle = getComputedStyle(document.documentElement);
+        finish({
+          className: toolbar.className,
+          styleGap: toolbar.style.gap,
+          gap: style.gap,
+          flexDirection: style.flexDirection,
+          gapSm: rootStyle.getPropertyValue("--cms-gap-sm").trim(),
+          gapMd: rootStyle.getPropertyValue("--cms-gap-md").trim(),
+          gapLg: rootStyle.getPropertyValue("--cms-gap-lg").trim(),
+          rspGap: toolbar.style.getPropertyValue("--cms-rsp-gap"),
+          rspTabletGap: toolbar.style.getPropertyValue("--cms-rsp-tablet-gap"),
+          rspPcGap: toolbar.style.getPropertyValue("--cms-rsp-pc-gap")
+        });
+      });
+    } catch (error) {
+      finish({ error: String(error?.stack || error) });
+    }
+  </script>
+</body>
+</html>`, "utf8");
+
+  const mobile = readBrowserResult(await runChrome(chromePath, htmlFile, { width: 390, height: 844 }));
+  const tablet = readBrowserResult(await runChrome(chromePath, htmlFile, { width: 800, height: 900 }));
+  const pc = readBrowserResult(await runChrome(chromePath, htmlFile, { width: 1440, height: 900 }));
+
+  assert.equal(mobile.error, undefined);
+  assert.equal(tablet.error, undefined);
+  assert.equal(pc.error, undefined);
+
+  assert.equal(mobile.styleGap, "");
+  assert.equal(tablet.styleGap, "");
+  assert.equal(pc.styleGap, "");
+
+  assert.equal(mobile.flexDirection, "column");
+  assert.equal(tablet.flexDirection, "row");
+  assert.equal(pc.flexDirection, "row");
+
+  assert.equal(mobile.gap, mobile.gapSm);
+  assert.equal(tablet.gap, tablet.gapMd);
+  assert.equal(pc.gap, pc.gapLg);
 });

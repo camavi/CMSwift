@@ -3518,8 +3518,9 @@
     const justify = uiStyleValue(props.justify);
     const wrap = uiStyleValue(props.wrap, (v) => typeof v === "boolean" ? (v ? "wrap" : "nowrap") : String(v), "wrap");
     const gap = uiStyleValue(props.gap, toCssSize, "var(--cms-s-md)");
+    const hasResponsiveGap = uiHasResponsiveOverride(props, "gap");
     style["--cms-toolbar-gap"] = gap != null ? gap : "var(--cms-s-md)";
-    style.gap = style.gap || "var(--cms-toolbar-gap)";
+    if (!hasResponsiveGap) style.gap = style.gap || "var(--cms-toolbar-gap)";
     const sizePadding = {
       xxs: "4px 6px",
       xs: "6px 8px",
