@@ -140,3 +140,111 @@ test("Grid responsive columns keep display:grid and render four desktop tracks",
   assert.equal(result.firstFourIncrease, true, JSON.stringify(result.rects));
   assert.equal(result.fifthIsNextRow, true, JSON.stringify(result.rects));
 });
+
+test("GridCol col alias uses grid vars without generic grid-column vars", {
+  skip: findChrome() ? false : "Chrome/Chromium is not available"
+}, async () => {
+  const chromePath = findChrome();
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "cmswift-gridcol-responsive-"));
+  const htmlFile = path.join(tmpDir, "index.html");
+  const coreUrl = pathToFileURL(path.join(ROOT_DIR, "packages/core/dist/cms.js")).href;
+  const uiUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/ui.js")).href;
+  const cssUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/css/ui.css")).href;
+
+  await writeFile(htmlFile, `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="${cssUrl}">
+  <style>
+    body { margin: 0; padding: 24px; }
+    #root { width: 960px; }
+    .probe-shell { min-height: 48px; box-sizing: border-box; border: 1px solid #777; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="${coreUrl}"></script>
+  <script src="${uiUrl}"></script>
+  <script>
+    const finish = (result) => {
+      document.body.setAttribute("data-result", encodeURIComponent(JSON.stringify(result)));
+    };
+
+    try {
+      const UI = window._ || window.CMSwift?.ui;
+      const toolbar = UI.Toolbar({
+        class: "probe-toolbar",
+        gap: "sm",
+        start: UI.Btn({ label: "A" }),
+        end: UI.Btn({ label: "B" })
+      });
+      const col = UI.GridCol({
+        class: "probe-shell",
+        span: 12,
+        tablet: { col: 5 },
+        pc: { col: 4 },
+        gap: "md"
+      }, toolbar);
+      const grid = UI.Grid({
+        cols: 12,
+        gap: "md",
+        tablet: { cols: 12, gap: "lg" },
+        pc: { cols: 12 }
+      }, col, UI.GridCol({ col: 8 }, "side"));
+
+      document.getElementById("root").appendChild(grid);
+
+      requestAnimationFrame(() => {
+        const gridStyle = getComputedStyle(grid);
+        const colStyle = getComputedStyle(col);
+        const toolbarStyle = getComputedStyle(toolbar);
+        const gridRect = grid.getBoundingClientRect();
+        const colRect = col.getBoundingClientRect();
+        const toolbarRect = toolbar.getBoundingClientRect();
+        finish({
+          gridDisplay: gridStyle.display,
+          gridGap: gridStyle.gap,
+          gridTemplateColumns: gridStyle.gridTemplateColumns,
+          colClassName: col.className,
+          colAttr: col.getAttribute("col"),
+          colGridColumn: colStyle.gridColumn,
+          colBase: col.style.getPropertyValue("--cms-grid-col-base"),
+          colTablet: col.style.getPropertyValue("--cms-grid-col-tablet"),
+          colPc: col.style.getPropertyValue("--cms-grid-col-pc"),
+          rspGridColumn: col.style.getPropertyValue("--cms-rsp-grid-column"),
+          rspPcGridColumn: col.style.getPropertyValue("--cms-rsp-pc-grid-column"),
+          toolbarDisplay: toolbarStyle.display,
+          toolbarGap: toolbarStyle.gap,
+          gridWidth: Math.round(gridRect.width),
+          colWidth: Math.round(colRect.width),
+          toolbarWidth: Math.round(toolbarRect.width)
+        });
+      });
+    } catch (error) {
+      finish({ error: String(error?.stack || error) });
+    }
+  </script>
+</body>
+</html>`, "utf8");
+
+  const dom = await runChrome(chromePath, htmlFile);
+  const result = readBrowserResult(dom);
+
+  assert.equal(result.error, undefined);
+  assert.equal(result.gridDisplay, "grid");
+  assert.notEqual(result.gridGap, "normal");
+  assert.equal(result.colAttr, null);
+  assert.match(result.colGridColumn, /span 4/);
+  assert.match(result.colBase, /span 12/);
+  assert.match(result.colTablet, /span 5/);
+  assert.match(result.colPc, /span 4/);
+  assert.equal(result.rspGridColumn, "");
+  assert.equal(result.rspPcGridColumn, "");
+  assert.equal(result.colClassName.includes("cms-rsp-grid-column"), false);
+  assert.equal(result.colClassName.includes("cms-rsp-pc-grid-column"), false);
+  assert.equal(result.toolbarDisplay, "flex");
+  assert.notEqual(result.toolbarGap, "normal");
+  assert.ok(result.colWidth > 250 && result.colWidth < 360, JSON.stringify(result));
+  assert.ok(result.toolbarWidth <= result.colWidth + 2, JSON.stringify(result));
+});

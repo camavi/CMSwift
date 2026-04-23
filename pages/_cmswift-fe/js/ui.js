@@ -1603,6 +1603,10 @@ const unitCover = (v, name = 'size') => {
     { prop: "place", class: "place-self", map: uiResponsiveRaw("place-self") },
     ...uiResponsiveBoxRules
   ];
+  const uiResponsiveGridColStyleRules = (CMSwift.uiResponsiveStyleRules || []).filter((rule) => {
+    const props = Array.isArray(rule.prop) ? rule.prop : [rule.prop];
+    return !props.includes("span") && !props.includes("gridColumn");
+  });
 
   UI.Row = (...args) => {
     const { props, children } = CMSwift.uiNormalizeArgs(args);
@@ -5476,7 +5480,8 @@ const unitCover = (v, name = 'size') => {
       return String(value);
     };
 
-    const span = uiStyleValue(props.span, toGridSpan);
+    const spanSource = hasOwn("span") ? props.span : props.col;
+    const span = uiStyleValue(spanSource, toGridSpan);
     const sm = uiStyleValue(props.sm, toGridSpan);
     const md = uiStyleValue(props.md, toGridSpan);
     const lg = uiStyleValue(props.lg, toGridSpan);
@@ -5586,7 +5591,7 @@ const unitCover = (v, name = 'size') => {
     ]);
 
     const p = CMSwift.omit(props, [
-      "span", "sm", "md", "lg", "auto",
+      "span", "col", "sm", "md", "lg", "auto",
       "row", "rowSpan", "area", "align", "justify", "place",
       "gap", "rowGap", "columnGap", "padding",
       "width", "height", "minHeight", "maxHeight", "fullHeight",
@@ -5632,7 +5637,7 @@ const unitCover = (v, name = 'size') => {
     else if (centerContent != null && centerContent !== "") style.justifyContent = centerContent ? "center" : "";
     if (scroll != null && scroll !== "") style.overflow = scroll;
     if (Object.keys(style).length) p.style = style;
-    CMSwift.uiApplyResponsiveProps(p, props, CMSwift.uiResponsiveStyleRules);
+    CMSwift.uiApplyResponsiveProps(p, props, uiResponsiveGridColStyleRules);
 
     const userOnClick = props.onClick;
     const userOnKeydown = props.onKeydown;
@@ -5704,6 +5709,7 @@ const unitCover = (v, name = 'size') => {
       signature: "UI.GridCol(...children) | UI.GridCol(props, ...children)",
       props: {
         span: "number|string",
+        col: "alias di span",
         sm: "number|string",
         md: "number|string",
         lg: "number|string",
