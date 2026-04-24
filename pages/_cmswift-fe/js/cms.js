@@ -461,8 +461,19 @@
 
       const anchorRect = opts.anchorEl.getBoundingClientRect();
       const panelRect = panel.getBoundingClientRect();
-      const viewportWidth = Math.max(window.innerWidth || 0, document.documentElement?.clientWidth || 0);
-      const viewportHeight = Math.max(window.innerHeight || 0, document.documentElement?.clientHeight || 0);
+      const visualViewport = window.visualViewport || null;
+      const viewportOffsetLeft = Math.max(0, Number(visualViewport?.offsetLeft) || 0);
+      const viewportOffsetTop = Math.max(0, Number(visualViewport?.offsetTop) || 0);
+      const viewportWidth = Math.max(
+        Number(visualViewport?.width) || 0,
+        window.innerWidth || 0,
+        document.documentElement?.clientWidth || 0
+      );
+      const viewportHeight = Math.max(
+        Number(visualViewport?.height) || 0,
+        window.innerHeight || 0,
+        document.documentElement?.clientHeight || 0
+      );
       const rawGutter = Number(opts.viewportGutter ?? opts.gutter ?? 8);
       const gutter = Number.isFinite(rawGutter) ? Math.max(0, rawGutter) : 8;
       const rawOffsetX = Number(opts.offsetX ?? 0);
@@ -523,10 +534,10 @@
         : side;
       const resolvedPosition = computePosition(resolvedSide);
 
-      const minLeft = gutter;
-      const minTop = gutter;
-      const maxLeft = Math.max(gutter, viewportWidth - panelWidth - gutter);
-      const maxTop = Math.max(gutter, viewportHeight - panelHeight - gutter);
+      const minLeft = viewportOffsetLeft + gutter;
+      const minTop = viewportOffsetTop + gutter;
+      const maxLeft = Math.max(minLeft, viewportOffsetLeft + viewportWidth - panelWidth - gutter);
+      const maxTop = Math.max(minTop, viewportOffsetTop + viewportHeight - panelHeight - gutter);
       const left = clamp(resolvedPosition.left, minLeft, maxLeft);
       const top = clamp(resolvedPosition.top, minTop, maxTop);
 
@@ -592,6 +603,7 @@
         reposition: null,
         _positionCleanup: null,
         _positionFrame: null,
+        _panelResizeObserver: null,
         _cleanup: null
       };
 
@@ -652,14 +664,25 @@
         const onResize = () => position();
         window.addEventListener("resize", onResize);
         window.addEventListener("scroll", onResize, true);
+        window.visualViewport?.addEventListener?.("resize", onResize);
+        window.visualViewport?.addEventListener?.("scroll", onResize);
+        if (typeof ResizeObserver === "function") {
+          const panelResizeObserver = new ResizeObserver(() => position());
+          panelResizeObserver.observe(panel);
+          entry._panelResizeObserver = panelResizeObserver;
+        }
         entry._positionCleanup = () => {
           const caf = globalThis.cancelAnimationFrame || clearTimeout;
           if (entry._positionFrame != null) {
             caf(entry._positionFrame);
             entry._positionFrame = null;
           }
+          entry._panelResizeObserver?.disconnect?.();
+          entry._panelResizeObserver = null;
           window.removeEventListener("resize", onResize);
           window.removeEventListener("scroll", onResize, true);
+          window.visualViewport?.removeEventListener?.("resize", onResize);
+          window.visualViewport?.removeEventListener?.("scroll", onResize);
         };
       }
 

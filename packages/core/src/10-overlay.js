@@ -48,6 +48,7 @@
         reposition: null,
         _positionCleanup: null,
         _positionFrame: null,
+        _panelResizeObserver: null,
         _cleanup: null
       };
 
@@ -108,14 +109,25 @@
         const onResize = () => position();
         window.addEventListener("resize", onResize);
         window.addEventListener("scroll", onResize, true);
+        window.visualViewport?.addEventListener?.("resize", onResize);
+        window.visualViewport?.addEventListener?.("scroll", onResize);
+        if (typeof ResizeObserver === "function") {
+          const panelResizeObserver = new ResizeObserver(() => position());
+          panelResizeObserver.observe(panel);
+          entry._panelResizeObserver = panelResizeObserver;
+        }
         entry._positionCleanup = () => {
           const caf = globalThis.cancelAnimationFrame || clearTimeout;
           if (entry._positionFrame != null) {
             caf(entry._positionFrame);
             entry._positionFrame = null;
           }
+          entry._panelResizeObserver?.disconnect?.();
+          entry._panelResizeObserver = null;
           window.removeEventListener("resize", onResize);
           window.removeEventListener("scroll", onResize, true);
+          window.visualViewport?.removeEventListener?.("resize", onResize);
+          window.visualViewport?.removeEventListener?.("scroll", onResize);
         };
       }
 

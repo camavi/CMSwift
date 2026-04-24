@@ -617,6 +617,7 @@ test("Menu responsive width stays clamped inside mobile viewport", {
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="${cssUrl}">
   <style>
     body { margin: 0; }
@@ -692,6 +693,7 @@ test("ContextMenu responsive width stays clamped inside mobile viewport", {
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="${cssUrl}">
   <style>
     body { margin: 0; }
@@ -751,6 +753,78 @@ test("ContextMenu responsive width stays clamped inside mobile viewport", {
   assert.equal(result.className.includes("cms-rsp-tablet-width"), true);
   assert.equal(result.className.includes("cms-rsp-pc-width"), true);
   assert.equal(result.menuWidth, "calc(100vw - 32px)");
+  assert.ok(result.panelWidth >= 300 && result.panelWidth < result.viewportWidth, JSON.stringify(result));
+  assert.ok(result.left >= 8, JSON.stringify(result));
+  assert.ok(result.right <= result.viewportWidth - 8, JSON.stringify(result));
+});
+
+test("Menu repositions when panel width grows after open", {
+  skip: findChrome() ? false : "Chrome/Chromium is not available"
+}, async () => {
+  const chromePath = findChrome();
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "cmswift-menu-resize-clamp-"));
+  const htmlFile = path.join(tmpDir, "index.html");
+  const coreUrl = pathToFileURL(path.join(ROOT_DIR, "packages/core/dist/cms.js")).href;
+  const uiUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/ui.js")).href;
+  const cssUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/css/ui.css")).href;
+
+  await writeFile(htmlFile, `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="${cssUrl}">
+  <style>
+    body { margin: 0; }
+    #root { padding: 16px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="${coreUrl}"></script>
+  <script src="${uiUrl}"></script>
+  <script>
+    const finish = (result) => {
+      document.body.setAttribute("data-result", encodeURIComponent(JSON.stringify(result)));
+    };
+
+    try {
+      const UI = window._ || window.CMSwift?.ui;
+      const menu = UI.Menu({
+        width: "220px",
+        items: [
+          { label: "Apri preview", icon: "visibility" }
+        ]
+      });
+      const btn = UI.Btn("Azioni release");
+      document.getElementById("root").appendChild(btn);
+      menu.bind(btn);
+      const entry = menu.open(btn);
+      const panel = entry?.panel;
+
+      requestAnimationFrame(() => {
+        panel.style.width = "calc(100vw - 32px)";
+        panel.style.maxWidth = "calc(100vw - 32px)";
+        requestAnimationFrame(() => {
+          const rect = panel.getBoundingClientRect();
+          finish({
+            viewportWidth: window.visualViewport ? window.visualViewport.width : window.innerWidth,
+            panelWidth: Math.round(rect.width),
+            left: Number(rect.left.toFixed(2)),
+            right: Number(rect.right.toFixed(2))
+          });
+        });
+      });
+    } catch (error) {
+      finish({ error: String(error?.stack || error) });
+    }
+  </script>
+</body>
+</html>`, "utf8");
+
+  const result = readBrowserResult(await runChrome(chromePath, htmlFile, { width: 390, height: 844 }));
+
+  assert.equal(result.error, undefined);
   assert.ok(result.panelWidth >= 300 && result.panelWidth < result.viewportWidth, JSON.stringify(result));
   assert.ok(result.left >= 8, JSON.stringify(result));
   assert.ok(result.right <= result.viewportWidth - 8, JSON.stringify(result));
