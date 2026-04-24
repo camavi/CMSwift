@@ -15766,6 +15766,44 @@ if (CMSwift.isDev?.()) {
       }
       target.style.setProperty(name, formatter(value));
     };
+    const syncFullscreenViewport = (currentEntry) => {
+      if (!currentEntry?.panel) return;
+      const vv = window.visualViewport;
+      const left = vv?.offsetLeft ?? 0;
+      const top = vv?.offsetTop ?? 0;
+      const width = vv?.width ?? window.innerWidth;
+      const height = vv?.height ?? window.innerHeight;
+      setStyleValue(currentEntry.panel, "--cms-dialog-fullscreen-left", left, (v) => `${v}px`);
+      setStyleValue(currentEntry.panel, "--cms-dialog-fullscreen-top", top, (v) => `${v}px`);
+      setStyleValue(currentEntry.panel, "--cms-dialog-fullscreen-width", width, (v) => `${v}px`);
+      setStyleValue(currentEntry.panel, "--cms-dialog-fullscreen-height", height, (v) => `${v}px`);
+    };
+    const clearFullscreenViewport = (currentEntry) => {
+      if (!currentEntry?.panel) return;
+      setStyleValue(currentEntry.panel, "--cms-dialog-fullscreen-left", null);
+      setStyleValue(currentEntry.panel, "--cms-dialog-fullscreen-top", null);
+      setStyleValue(currentEntry.panel, "--cms-dialog-fullscreen-width", null);
+      setStyleValue(currentEntry.panel, "--cms-dialog-fullscreen-height", null);
+    };
+    const ensureFullscreenViewportTracking = (currentEntry, enabled) => {
+      if (!currentEntry) return;
+      currentEntry._dialogViewportCleanup?.();
+      currentEntry._dialogViewportCleanup = null;
+      if (!enabled) {
+        clearFullscreenViewport(currentEntry);
+        return;
+      }
+      const sync = () => syncFullscreenViewport(currentEntry);
+      sync();
+      window.addEventListener("resize", sync);
+      window.visualViewport?.addEventListener?.("resize", sync);
+      window.visualViewport?.addEventListener?.("scroll", sync);
+      currentEntry._dialogViewportCleanup = () => {
+        window.removeEventListener("resize", sync);
+        window.visualViewport?.removeEventListener?.("resize", sync);
+        window.visualViewport?.removeEventListener?.("scroll", sync);
+      };
+    };
     const getOptions = () => currentProps;
     const getStateClass = (opts) => {
       const value = uiUnwrap(opts.state ?? opts.color);
@@ -15907,6 +15945,7 @@ if (CMSwift.isDev?.()) {
       setStyleValue(currentEntry.panel, "--cms-dialog-body-max-height", uiUnwrap(opts.bodyMaxHeight ?? opts.contentMaxHeight), toCssSize);
       if (opts.style) Object.assign(currentEntry.panel.style, opts.style);
       setPropertyProps(currentEntry.panel, opts);
+      ensureFullscreenViewportTracking(currentEntry, uiUnwrap(opts.fullscreen));
       currentEntry.panel.setAttribute("role", opts.role || "dialog");
       currentEntry.panel.setAttribute("aria-modal", opts.modal === false ? "false" : "true");
       if (opts.ariaLabel) currentEntry.panel.setAttribute("aria-label", opts.ariaLabel);
@@ -15945,6 +15984,7 @@ if (CMSwift.isDev?.()) {
         closeOnEsc: opts.closeOnEsc ?? !persistent,
         className: uiClassStatic(["cms-dialog"]),
         onClose: () => {
+          entry?._dialogViewportCleanup?.();
           entry?.panel?.removeEventListener("click", onPanelClick);
           entry = null;
           getOptions().onClose?.();

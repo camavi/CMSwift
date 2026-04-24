@@ -197,7 +197,7 @@ test("GridCol col alias uses grid vars without generic grid-column vars", {
 
       document.getElementById("root").appendChild(grid);
 
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         const gridStyle = getComputedStyle(grid);
         const colStyle = getComputedStyle(col);
         const toolbarStyle = getComputedStyle(toolbar);
@@ -222,7 +222,7 @@ test("GridCol col alias uses grid vars without generic grid-column vars", {
           colWidth: Math.round(colRect.width),
           toolbarWidth: Math.round(toolbarRect.width)
         });
-      });
+      }, 50);
     } catch (error) {
       finish({ error: String(error?.stack || error) });
     }
@@ -878,27 +878,28 @@ test("Dialog fullscreen stays inside the mobile viewport without overscan", {
 
       dialog.open();
 
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          const panel = document.querySelector(".cms-overlay-panel.cms-dialog");
-          const rect = panel.getBoundingClientRect();
-          const style = getComputedStyle(panel);
-          finish({
-            className: panel.className,
-            left: Number(rect.left.toFixed(2)),
-            right: Number(rect.right.toFixed(2)),
-            top: Number(rect.top.toFixed(2)),
-            bottom: Number(rect.bottom.toFixed(2)),
-            width: Math.round(rect.width),
-            height: Math.round(rect.height),
-            viewportWidth: window.innerWidth,
-            viewportHeight: window.innerHeight,
-            position: style.position,
-            boxSizing: style.boxSizing,
-            transform: style.transform
-          });
+      setTimeout(() => {
+        const panel = document.querySelector(".cms-overlay-panel.cms-dialog");
+        const rect = panel.getBoundingClientRect();
+        const style = getComputedStyle(panel);
+        const vv = window.visualViewport;
+        finish({
+          className: panel.className,
+          left: Number(rect.left.toFixed(2)),
+          right: Number(rect.right.toFixed(2)),
+          top: Number(rect.top.toFixed(2)),
+          bottom: Number(rect.bottom.toFixed(2)),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+          viewportWidth: Math.round((vv && vv.width) || window.innerWidth),
+          viewportHeight: Math.round((vv && vv.height) || window.innerHeight),
+          position: style.position,
+          boxSizing: style.boxSizing,
+          transform: style.transform,
+          borderTopWidth: style.borderTopWidth,
+          borderBottomWidth: style.borderBottomWidth
         });
-      });
+      }, 300);
     } catch (error) {
       finish({ error: String(error?.stack || error) });
     }
@@ -912,6 +913,8 @@ test("Dialog fullscreen stays inside the mobile viewport without overscan", {
   assert.equal(result.className.includes("fullscreen"), true);
   assert.equal(result.position, "fixed");
   assert.equal(result.boxSizing, "border-box");
+  assert.equal(result.borderTopWidth, "0px");
+  assert.equal(result.borderBottomWidth, "0px");
   assert.equal(result.left >= 0, true, JSON.stringify(result));
   assert.equal(result.top >= 0, true, JSON.stringify(result));
   assert.equal(result.right <= result.viewportWidth, true, JSON.stringify(result));
