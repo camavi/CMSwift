@@ -359,8 +359,15 @@
     const update = (nextProps = {}) => {
       if (nextProps && typeof nextProps === "object") currentProps = { ...currentProps, ...nextProps };
       if (entry) {
+        const opts = getOptions();
         applyEntryOptions(entry);
         renderOpenContent();
+        entry.reposition?.({
+          anchorEl: entry._anchorEl,
+          placement: getPlacement(opts),
+          offsetX: opts.offsetX ?? 0,
+          offsetY: opts.offsetY ?? opts.offset ?? 8
+        });
         focusInitialItem();
       }
       return api;
@@ -373,8 +380,15 @@
       const anchor = getAnchor(anchorEl);
       if (!anchor || uiUnwrap(opts.disabled)) return null;
       if (entry && entry._anchorEl === anchor) {
+        const nextOpts = getOptions();
         applyEntryOptions(entry);
         renderOpenContent();
+        entry.reposition?.({
+          anchorEl: entry._anchorEl,
+          placement: getPlacement(nextOpts),
+          offsetX: nextOpts.offsetX ?? 0,
+          offsetY: nextOpts.offsetY ?? nextOpts.offset ?? 8
+        });
         focusInitialItem();
         return entry;
       }
@@ -473,6 +487,12 @@
         current.panel?.removeEventListener("focusout", scheduleHide);
       };
       applyEntryOptions(current);
+      current.reposition?.({
+        anchorEl: anchor,
+        placement: getPlacement(opts),
+        offsetX: opts.offsetX ?? 0,
+        offsetY: opts.offsetY ?? opts.offset ?? 8
+      });
       overlayEnter(current);
       getOptions().onOpen?.(current);
       focusInitialItem();

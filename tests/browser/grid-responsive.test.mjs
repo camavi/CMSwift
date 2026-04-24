@@ -361,28 +361,26 @@ test("Nested GridCol does not inherit span variables from parent GridCol", {
 
       document.getElementById("root").appendChild(outerGrid);
 
-      requestAnimationFrame(() => {
-        const parentStyle = getComputedStyle(parentCol);
-        const innerStyle = getComputedStyle(innerGrid);
-        const childAStyle = getComputedStyle(childA);
-        const childBStyle = getComputedStyle(childB);
-        const childARect = childA.getBoundingClientRect();
-        const childBRect = childB.getBoundingClientRect();
-        finish({
-          parentGridColumn: parentStyle.gridColumn,
-          innerDisplay: innerStyle.display,
-          innerTracks: innerStyle.gridTemplateColumns.split(" ").filter(Boolean).length,
-          childAGridColumn: childAStyle.gridColumn,
-          childBGridColumn: childBStyle.gridColumn,
-          childABase: childA.style.getPropertyValue("--cms-grid-col-base"),
-          childATablet: childA.style.getPropertyValue("--cms-grid-col-tablet"),
-          childAPc: childA.style.getPropertyValue("--cms-grid-col-pc"),
-          childBBase: childB.style.getPropertyValue("--cms-grid-col-base"),
-          sameRow: Math.abs(childARect.top - childBRect.top) <= 2,
-          secondAfterFirst: childBRect.left > childARect.left,
-          childAWidth: Math.round(childARect.width),
-          childBWidth: Math.round(childBRect.width)
-        });
+      const parentStyle = getComputedStyle(parentCol);
+      const innerStyle = getComputedStyle(innerGrid);
+      const childAStyle = getComputedStyle(childA);
+      const childBStyle = getComputedStyle(childB);
+      const childARect = childA.getBoundingClientRect();
+      const childBRect = childB.getBoundingClientRect();
+      finish({
+        parentGridColumn: parentStyle.gridColumn,
+        innerDisplay: innerStyle.display,
+        innerTracks: innerStyle.gridTemplateColumns.split(" ").filter(Boolean).length,
+        childAGridColumn: childAStyle.gridColumn,
+        childBGridColumn: childBStyle.gridColumn,
+        childABase: childA.style.getPropertyValue("--cms-grid-col-base"),
+        childATablet: childA.style.getPropertyValue("--cms-grid-col-tablet"),
+        childAPc: childA.style.getPropertyValue("--cms-grid-col-pc"),
+        childBBase: childB.style.getPropertyValue("--cms-grid-col-base"),
+        sameRow: Math.abs(childARect.top - childBRect.top) <= 2,
+        secondAfterFirst: childBRect.left > childARect.left,
+        childAWidth: Math.round(childARect.width),
+        childBWidth: Math.round(childBRect.width)
       });
     } catch (error) {
       finish({ error: String(error?.stack || error) });
@@ -447,21 +445,19 @@ test("Toolbar responsive gap and direction apply across mobile tablet and pc", {
 
       document.getElementById("root").appendChild(toolbar);
 
-      requestAnimationFrame(() => {
-        const style = getComputedStyle(toolbar);
-        const rootStyle = getComputedStyle(document.documentElement);
-        finish({
-          className: toolbar.className,
-          styleGap: toolbar.style.gap,
-          gap: style.gap,
-          flexDirection: style.flexDirection,
-          gapSm: rootStyle.getPropertyValue("--cms-gap-sm").trim(),
-          gapMd: rootStyle.getPropertyValue("--cms-gap-md").trim(),
-          gapLg: rootStyle.getPropertyValue("--cms-gap-lg").trim(),
-          rspGap: toolbar.style.getPropertyValue("--cms-rsp-gap"),
-          rspTabletGap: toolbar.style.getPropertyValue("--cms-rsp-tablet-gap"),
-          rspPcGap: toolbar.style.getPropertyValue("--cms-rsp-pc-gap")
-        });
+      const style = getComputedStyle(toolbar);
+      const rootStyle = getComputedStyle(document.documentElement);
+      finish({
+        className: toolbar.className,
+        styleGap: toolbar.style.gap,
+        gap: style.gap,
+        flexDirection: style.flexDirection,
+        gapSm: rootStyle.getPropertyValue("--cms-gap-sm").trim(),
+        gapMd: rootStyle.getPropertyValue("--cms-gap-md").trim(),
+        gapLg: rootStyle.getPropertyValue("--cms-gap-lg").trim(),
+        rspGap: toolbar.style.getPropertyValue("--cms-rsp-gap"),
+        rspTabletGap: toolbar.style.getPropertyValue("--cms-rsp-tablet-gap"),
+        rspPcGap: toolbar.style.getPropertyValue("--cms-rsp-pc-gap")
       });
     } catch (error) {
       finish({ error: String(error?.stack || error) });
@@ -605,4 +601,157 @@ test("Card sections apply responsive gap padding justify and direction", {
   assert.equal(mobile.cardGap, mobile.gapSm);
   assert.equal(tablet.cardGap, tablet.gapMd);
   assert.equal(pc.cardGap, pc.gapMd);
+});
+
+test("Menu responsive width stays clamped inside mobile viewport", {
+  skip: findChrome() ? false : "Chrome/Chromium is not available"
+}, async () => {
+  const chromePath = findChrome();
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "cmswift-menu-mobile-clamp-"));
+  const htmlFile = path.join(tmpDir, "index.html");
+  const coreUrl = pathToFileURL(path.join(ROOT_DIR, "packages/core/dist/cms.js")).href;
+  const uiUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/ui.js")).href;
+  const cssUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/css/ui.css")).href;
+
+  await writeFile(htmlFile, `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="${cssUrl}">
+  <style>
+    body { margin: 0; }
+    #root { padding: 16px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="${coreUrl}"></script>
+  <script src="${uiUrl}"></script>
+  <script>
+    const finish = (result) => {
+      document.body.setAttribute("data-result", encodeURIComponent(JSON.stringify(result)));
+    };
+
+    try {
+      const UI = window._ || window.CMSwift?.ui;
+      const menu = UI.Menu({
+        width: "calc(100vw - 32px)",
+        tablet: { width: "320px" },
+        pc: { width: "320px" },
+        items: [
+          { label: "Apri preview", icon: "visibility" }
+        ]
+      });
+      const btn = UI.Btn({ width: "100%", tablet: { width: "auto" } }, "Azioni release");
+      document.getElementById("root").appendChild(btn);
+      menu.bind(btn);
+      const entry = menu.open(btn);
+
+      requestAnimationFrame(() => {
+        const panel = entry?.panel;
+        const rect = panel.getBoundingClientRect();
+        finish({
+          className: panel.className,
+          menuWidth: panel.style.getPropertyValue("--cms-menu-width"),
+          panelWidth: Math.round(rect.width),
+          left: Number(rect.left.toFixed(2)),
+          right: Number(rect.right.toFixed(2)),
+          viewportWidth: window.innerWidth
+        });
+      });
+    } catch (error) {
+      finish({ error: String(error?.stack || error) });
+    }
+  </script>
+</body>
+</html>`, "utf8");
+
+  const result = readBrowserResult(await runChrome(chromePath, htmlFile, { width: 390, height: 844 }));
+
+  assert.equal(result.error, undefined);
+  assert.equal(result.className.includes("cms-rsp-width"), true);
+  assert.equal(result.className.includes("cms-rsp-tablet-width"), true);
+  assert.equal(result.className.includes("cms-rsp-pc-width"), true);
+  assert.equal(result.menuWidth, "calc(100vw - 32px)");
+  assert.ok(result.panelWidth >= 300 && result.panelWidth < result.viewportWidth, JSON.stringify(result));
+  assert.ok(result.left >= 8, JSON.stringify(result));
+  assert.ok(result.right <= result.viewportWidth - 8, JSON.stringify(result));
+});
+
+test("ContextMenu responsive width stays clamped inside mobile viewport", {
+  skip: findChrome() ? false : "Chrome/Chromium is not available"
+}, async () => {
+  const chromePath = findChrome();
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "cmswift-context-menu-mobile-clamp-"));
+  const htmlFile = path.join(tmpDir, "index.html");
+  const coreUrl = pathToFileURL(path.join(ROOT_DIR, "packages/core/dist/cms.js")).href;
+  const uiUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/ui.js")).href;
+  const cssUrl = pathToFileURL(path.join(ROOT_DIR, "packages/ui/dist/css/ui.css")).href;
+
+  await writeFile(htmlFile, `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="${cssUrl}">
+  <style>
+    body { margin: 0; }
+    #root { padding: 16px; }
+    #surface { min-height: 120px; border: 1px solid #999; }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div id="surface"></div>
+  </div>
+  <script src="${coreUrl}"></script>
+  <script src="${uiUrl}"></script>
+  <script>
+    const finish = (result) => {
+      document.body.setAttribute("data-result", encodeURIComponent(JSON.stringify(result)));
+    };
+
+    try {
+      const UI = window._ || window.CMSwift?.ui;
+      const surface = document.getElementById("surface");
+      const ctx = UI.ContextMenu({
+        width: "calc(100vw - 32px)",
+        tablet: { width: "320px" },
+        pc: { width: "320px" },
+        items: [
+          { label: "Apri preview", icon: "visibility" }
+        ]
+      });
+      ctx.bind(surface);
+      const entry = ctx.openAt(85, 80);
+
+      requestAnimationFrame(() => {
+        const panel = entry?.panel;
+        const rect = panel.getBoundingClientRect();
+        finish({
+          className: panel.className,
+          menuWidth: panel.style.getPropertyValue("--cms-menu-width"),
+          panelWidth: Math.round(rect.width),
+          left: Number(rect.left.toFixed(2)),
+          right: Number(rect.right.toFixed(2)),
+          viewportWidth: window.innerWidth
+        });
+      });
+    } catch (error) {
+      finish({ error: String(error?.stack || error) });
+    }
+  </script>
+</body>
+</html>`, "utf8");
+
+  const result = readBrowserResult(await runChrome(chromePath, htmlFile, { width: 390, height: 844 }));
+
+  assert.equal(result.error, undefined);
+  assert.equal(result.className.includes("cms-context-menu-panel"), true);
+  assert.equal(result.className.includes("cms-rsp-width"), true);
+  assert.equal(result.className.includes("cms-rsp-tablet-width"), true);
+  assert.equal(result.className.includes("cms-rsp-pc-width"), true);
+  assert.equal(result.menuWidth, "calc(100vw - 32px)");
+  assert.ok(result.panelWidth >= 300 && result.panelWidth < result.viewportWidth, JSON.stringify(result));
+  assert.ok(result.left >= 8, JSON.stringify(result));
+  assert.ok(result.right <= result.viewportWidth - 8, JSON.stringify(result));
 });

@@ -45,7 +45,9 @@
         overlay: null,
         panel: null,
         backdrop: null,
+        reposition: null,
         _positionCleanup: null,
+        _positionFrame: null,
         _cleanup: null
       };
 
@@ -84,16 +86,34 @@
       if (opts.autoFocus !== false) setTimeout(() => focusFirst(panel), 0);
 
       // positioning (for menus/tooltips)
-      const position = () => {
-        applyAnchoredPosition(panel, opts);
+      const position = (nextOpts = null) => {
+        if (nextOpts && typeof nextOpts === "object") Object.assign(entry.opts, nextOpts);
+        applyAnchoredPosition(panel, entry.opts);
       };
+      const schedulePosition = () => {
+        if (!opts.anchorEl) return;
+        const raf = globalThis.requestAnimationFrame || ((fn) => setTimeout(() => fn(Date.now()), 0));
+        const caf = globalThis.cancelAnimationFrame || clearTimeout;
+        if (entry._positionFrame != null) caf(entry._positionFrame);
+        entry._positionFrame = raf(() => {
+          entry._positionFrame = null;
+          position();
+        });
+      };
+      entry.reposition = position;
 
       if (opts.anchorEl) {
         position();
+        schedulePosition();
         const onResize = () => position();
         window.addEventListener("resize", onResize);
         window.addEventListener("scroll", onResize, true);
         entry._positionCleanup = () => {
+          const caf = globalThis.cancelAnimationFrame || clearTimeout;
+          if (entry._positionFrame != null) {
+            caf(entry._positionFrame);
+            entry._positionFrame = null;
+          }
           window.removeEventListener("resize", onResize);
           window.removeEventListener("scroll", onResize, true);
         };
@@ -142,7 +162,8 @@
         id,
         close: () => close(id),
         panel,
-        overlay
+        overlay,
+        reposition: position
       };
     };
 

@@ -68,16 +68,78 @@
 
       const anchorRect = opts.anchorEl.getBoundingClientRect();
       const panelRect = panel.getBoundingClientRect();
+      const viewportWidth = Math.max(window.innerWidth || 0, document.documentElement?.clientWidth || 0);
+      const viewportHeight = Math.max(window.innerHeight || 0, document.documentElement?.clientHeight || 0);
+      const rawGutter = Number(opts.viewportGutter ?? opts.gutter ?? 8);
+      const gutter = Number.isFinite(rawGutter) ? Math.max(0, rawGutter) : 8;
+      const rawOffsetX = Number(opts.offsetX ?? 0);
+      const rawOffsetY = Number(opts.offsetY ?? 8);
+      const offsetX = Number.isFinite(rawOffsetX) ? rawOffsetX : 0;
+      const offsetY = Number.isFinite(rawOffsetY) ? rawOffsetY : 8;
 
-      let top = anchorRect.bottom + (opts.offsetY ?? 8);
-      let left = anchorRect.left + (opts.offsetX ?? 0);
+      const clamp = (value, min, max) => {
+        if (!Number.isFinite(value)) return min;
+        if (!Number.isFinite(min)) min = 0;
+        if (!Number.isFinite(max)) max = min;
+        if (max < min) return min;
+        return Math.min(Math.max(value, min), max);
+      };
 
-      if (opts.placement?.startsWith("top")) top = anchorRect.top - panelRect.height - (opts.offsetY ?? 8);
-      if (opts.placement?.includes("end")) left = anchorRect.right - panelRect.width;
+      const rawPlacement = String(opts.placement || "bottom-start").toLowerCase();
+      const [rawSide, rawAlign] = rawPlacement.split("-");
+      const side = ["top", "bottom", "left", "right"].includes(rawSide) ? rawSide : "bottom";
+      const align = ["start", "end", "center"].includes(rawAlign) ? rawAlign : "start";
+      const oppositeSide = { top: "bottom", bottom: "top", left: "right", right: "left" }[side] || "top";
+      const isVertical = side === "top" || side === "bottom";
+      const panelWidth = panelRect.width;
+      const panelHeight = panelRect.height;
+
+      const computePosition = (targetSide) => {
+        let left = anchorRect.left + offsetX;
+        let top = anchorRect.top + offsetY;
+
+        if (targetSide === "top" || targetSide === "bottom") {
+          if (align === "center") left = anchorRect.left + ((anchorRect.width - panelWidth) / 2) + offsetX;
+          else if (align === "end") left = anchorRect.right - panelWidth + offsetX;
+          top = targetSide === "top"
+            ? anchorRect.top - panelHeight - offsetY
+            : anchorRect.bottom + offsetY;
+        } else {
+          if (align === "center") top = anchorRect.top + ((anchorRect.height - panelHeight) / 2) + offsetY;
+          else if (align === "end") top = anchorRect.bottom - panelHeight + offsetY;
+          left = targetSide === "left"
+            ? anchorRect.left - panelWidth - offsetX
+            : anchorRect.right + offsetX;
+        }
+
+        return { left, top };
+      };
+
+      const availableSpace = (targetSide) => {
+        if (targetSide === "top") return anchorRect.top - offsetY - gutter;
+        if (targetSide === "bottom") return viewportHeight - anchorRect.bottom - offsetY - gutter;
+        if (targetSide === "left") return anchorRect.left - offsetX - gutter;
+        return viewportWidth - anchorRect.right - offsetX - gutter;
+      };
+
+      const preferredSpace = availableSpace(side);
+      const oppositeSpace = availableSpace(oppositeSide);
+      const requiredSpace = isVertical ? panelHeight : panelWidth;
+      const resolvedSide = (requiredSpace > preferredSpace && oppositeSpace > preferredSpace)
+        ? oppositeSide
+        : side;
+      const resolvedPosition = computePosition(resolvedSide);
+
+      const minLeft = gutter;
+      const minTop = gutter;
+      const maxLeft = Math.max(gutter, viewportWidth - panelWidth - gutter);
+      const maxTop = Math.max(gutter, viewportHeight - panelHeight - gutter);
+      const left = clamp(resolvedPosition.left, minLeft, maxLeft);
+      const top = clamp(resolvedPosition.top, minTop, maxTop);
 
       panel.style.position = "fixed";
-      panel.style.top = `${Math.max(8, Math.min(top, window.innerHeight - panelRect.height - 8))}px`;
-      panel.style.left = `${Math.max(8, Math.min(left, window.innerWidth - panelRect.width - 8))}px`;
+      panel.style.left = `${left}px`;
+      panel.style.top = `${top}px`;
     }
 
     return {
