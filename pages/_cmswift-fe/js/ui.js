@@ -3524,8 +3524,15 @@ const unitCover = (v, name = 'size') => {
       setOpen(false);
       setActive(-1);
     };
+    const hasPanelContent = () => {
+      if (getLoading() || getError() || getResults().length) return true;
+      const query = getQuery().trim();
+      if (query.length >= minLength()) return !!(props.emptyText || CMSwift.ui.getSlot(slots, "empty") != null);
+      return !!(props.startText || CMSwift.ui.getSlot(slots, "empty") != null);
+    };
     const open = () => {
       if (isDisabled()) return;
+      if (!hasPanelContent()) return;
       setOpen(true);
       scheduleMenuPosition();
     };
@@ -3547,7 +3554,8 @@ const unitCover = (v, name = 'size') => {
       if (q.length < minLength()) {
         setLoading(false);
         clearResults();
-        if (options.open) open();
+        if (options.open && hasPanelContent()) open();
+        else if (!hasPanelContent()) close();
         return;
       }
 
@@ -3793,8 +3801,8 @@ const unitCover = (v, name = 'size') => {
       syncPlaceholder();
       props.onFocus?.(event);
       if (props.openOnFocus !== false) {
-        open();
         if (props.searchOnFocus && !getResults().length) scheduleSearch(input.value, { immediate: true, open: true });
+        else open();
       }
     });
     input.addEventListener("blur", (event) => {
@@ -3896,7 +3904,7 @@ const unitCover = (v, name = 'size') => {
         }
       } else {
         results.forEach((item, index) => {
-          const selected = index === getActive();
+          const selected = false;
           const label = getLabel(item);
           const value = getValue(item);
           const select = (event) => selectResult(item, event);
@@ -3922,6 +3930,7 @@ const unitCover = (v, name = 'size') => {
           resultNodes[index] = node;
         });
       }
+      if (!hasPanelContent()) close();
       scheduleMenuPosition();
     }, "UI.Search:render");
 

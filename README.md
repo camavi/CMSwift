@@ -17,6 +17,10 @@ Published packages:
 - `@cmswift/ui`
 - `cmswift`
 
+Official site:
+
+- https://www.cmswift.com/
+
 ## Which Package To Use
 
 - `@cmswift/core`
@@ -53,9 +57,9 @@ Single package via jsDelivr:
 ```html
 <link
   rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/cmswift@1.0.5/dist/css/ui.css"
+  href="https://cdn.jsdelivr.net/npm/cmswift@1.0.22/dist/css/ui.css"
 />
-<script src="https://cdn.jsdelivr.net/npm/cmswift@1.0.5/dist/cmswift.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cmswift@1.0.22/dist/cmswift.js"></script>
 ```
 
 Minified single package:
@@ -63,9 +67,9 @@ Minified single package:
 ```html
 <link
   rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/cmswift@1.0.5/dist/css/ui.min.css"
+  href="https://cdn.jsdelivr.net/npm/cmswift@1.0.22/dist/css/ui.min.css"
 />
-<script src="https://cdn.jsdelivr.net/npm/cmswift@1.0.5/dist/cmswift.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cmswift@1.0.22/dist/cmswift.min.js"></script>
 ```
 
 Split core + UI via jsDelivr:
@@ -73,10 +77,10 @@ Split core + UI via jsDelivr:
 ```html
 <link
   rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/@cmswift/ui@1.0.5/dist/css/ui.css"
+  href="https://cdn.jsdelivr.net/npm/@cmswift/ui@1.0.22/dist/css/ui.css"
 />
-<script src="https://cdn.jsdelivr.net/npm/@cmswift/core@1.0.5/dist/cms.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@cmswift/ui@1.0.5/dist/ui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@cmswift/core@1.0.22/dist/cms.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@cmswift/ui@1.0.22/dist/ui.js"></script>
 ```
 
 Minified split core + UI:
@@ -84,15 +88,15 @@ Minified split core + UI:
 ```html
 <link
   rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/@cmswift/ui@1.0.5/dist/css/ui.min.css"
+  href="https://cdn.jsdelivr.net/npm/@cmswift/ui@1.0.22/dist/css/ui.min.css"
 />
-<script src="https://cdn.jsdelivr.net/npm/@cmswift/core@1.0.5/dist/cms.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@cmswift/ui@1.0.5/dist/ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@cmswift/core@1.0.22/dist/cms.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@cmswift/ui@1.0.22/dist/ui.min.js"></script>
 ```
 
 For production:
 
-- pin explicit versions, for example `@1.0.5`
+- pin explicit versions, for example `@1.0.22`
 - prefer minified bundles when you do not need readable builds
 - use `dist/cmswift.min.js` or `dist/min-cmswift.js` for `cmswift`
 - use `dist/cms.min.js` and `dist/ui.min.js` for split core and UI
@@ -275,6 +279,8 @@ npm run gen:ui-dts
 - [Core Reference](docs/reference/core.md)
 - [UI Reference](docs/reference/ui.md)
 - [Stability Policy](docs/policy/stability.md)
+- [Release Notes v1.0.22](docs/release/release-notes-v1.0.22.md)
+- [Release Notes v1.0.21](docs/release/release-notes-v1.0.21.md)
 - [Release Notes v1.0.20](docs/release/release-notes-v1.0.20.md)
 - [Release Notes v1.0.19](docs/release/release-notes-v1.0.19.md)
 - [Release Notes v1.0.18](docs/release/release-notes-v1.0.18.md)

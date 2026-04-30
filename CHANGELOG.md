@@ -9,6 +9,45 @@ The format is kept intentionally simple:
 - Fixed
 - Docs
 
+## [1.0.22] - 2026-04-30
+
+### Fixed
+
+- `UI.Search` result mouse clicks now select the clicked item reliably.
+- `UI.Search` no longer opens an empty result panel on input focus when no loading, error, result, empty, or start content exists.
+
+### Changed
+
+- package versions bumped to `1.0.22`
+- README CDN examples now pin `1.0.22`
+
+### Docs
+
+- added `v1.0.22` release notes
+
+## [1.0.21] - 2026-04-30
+
+### Added
+
+- `UI.Search` / `_.Search` with reactive model support, GET search, debounce, result overlay, and keyboard navigation
+- local search source support through `items`, `options`, or `suggestions`
+- search demo coverage in the UI playground
+
+### Changed
+
+- package versions bumped to `1.0.21`
+- README CDN examples now pin `1.0.21`
+- README now links the official site at `https://www.cmswift.com/`
+
+### Fixed
+
+- search floating label and placeholder overlap
+- default search field styling
+
+### Docs
+
+- added `v1.0.21` release notes
+
 ## [1.0.7] - 2026-04-22
 
 ### Added
