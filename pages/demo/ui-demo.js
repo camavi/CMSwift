@@ -6,6 +6,13 @@ CMSwift.ready(() => {
 
   const nameModel = _.rod("Carlos");
   const roleModel = _.rod("developer");
+  const searchModel = _.rod("");
+  const searchItems = [
+    { title: "Dashboard", description: "Panoramica e metriche principali", value: "dashboard" },
+    { title: "Utenti", description: "Gestione account e ruoli", value: "users" },
+    { title: "Componenti UI", description: "Catalogo dei componenti CMSwift", value: "ui-components" },
+    { title: "Impostazioni", description: "Preferenze e configurazione", value: "settings" },
+  ];
   const [getUpdates, setUpdates] = _.signal(true);
   const Themes = _.rod(_.getTheme() === "dark");
   Themes.action((v) => {
@@ -31,6 +38,18 @@ CMSwift.ready(() => {
             label: t("roleLabel"),
             model: roleModel,
             options: ["developer", "designer", "operator"],
+            icon: "account_box",
+          }),
+          _.Search({
+            label: "Search",
+            model: searchModel,
+            items: searchItems,
+            getLabel: item => item.title,
+            getValue: item => item.value,
+            clearable: true,
+            minLength: 0,
+            shortcode: "cmd+k",
+            placeholder: "Cerca pagine...",
           }),
           _.Checkbox({ model: [getUpdates, setUpdates] }, t("updatesLabel")),
           _.input({ placeholder: 'prova', name: "test" }),
@@ -57,6 +76,7 @@ CMSwift.ready(() => {
           _.h3(t("liveState")),
           _.p(() => t("liveName", { value: nameModel.value })),
           _.p(() => t("liveRole", { value: roleModel.value })),
+          _.p(() => `Search: ${searchModel.value || "-"}`),
           _.p(() => (getUpdates() ? t("liveUpdatesOn") : t("liveUpdatesOff"))),
         ),
       ),

@@ -6585,6 +6585,142 @@ select {
   cursor: not-allowed;
 }
 
+.cms-search {
+  position: relative;
+  width: 100%;
+  font-family: var(--cms-font);
+}
+
+.cms-search-field>.cms-control:focus-within {
+  background: color-mix(in srgb, var(--cms-panel) 20%, var(--cms-theme-color-1));
+}
+
+.cms-search-field>.cms-control .cms-addon-left {
+  min-width: calc(var(--cms-input-height-default, 32px) + 8px);
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+  background: transparent;
+}
+
+.cms-search-field>.cms-control .cms-addon-right {
+  background: transparent;
+}
+
+.cms-search.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.cms-search-input::-webkit-search-decoration,
+.cms-search-input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.cms-search-menu {
+  overflow: hidden;
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin-top: 6px;
+  background: var(--cms-panel);
+  border: 1px solid var(--cms-border-color);
+  border-radius: var(--cms-b-radius-default);
+  box-shadow: var(--cms-shadow-sm);
+  display: none;
+  z-index: 20;
+}
+
+.cms-search-menu.portal {
+  position: fixed;
+  display: block;
+  z-index: 2000;
+  background-color: var(--cms-select-bg-default);
+  border-color: var(--set-border-color, var(--cms-border-color) rgba(93, 95, 100, 0.35));
+}
+
+.cms-search.open .cms-search-menu {
+  display: block;
+}
+
+.cms-search-results {
+  max-height: 320px;
+  overflow: auto;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cms-search-result {
+  padding: 9px 10px;
+  border-radius: var(--cms-r-md);
+  cursor: pointer;
+  border: 1px solid transparent;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--cms-text);
+}
+
+.cms-search-result:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.cms-search-result.active {
+  outline: 2px solid rgba(79, 124, 255, 0.35);
+  background: rgba(79, 124, 255, 0.10);
+}
+
+.cms-search-result-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cms-search-result-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.cms-search-result-description {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--cms-muted);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.cms-search-highlight {
+  background: rgba(79, 124, 255, 0.22);
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+.cms-search-empty {
+  padding: 14px 12px;
+  color: var(--cms-muted);
+  font-size: 13px;
+}
+
+.cms-search-empty.is-error {
+  color: rgba(255, 79, 109, 0.9);
+}
+
+.cms-search-empty.is-loading {
+  color: var(--cms-muted);
+}
+
 .cms-date-display {
   cursor: pointer;
   min-height: var(--cms-date-input-height, 40px);
@@ -11100,6 +11236,7 @@ a.cms-breadcrumb {
   cursor: pointer;
   box-sizing: border-box;
   user-select: none;
+  border-color: transparent;
 }
 
 .cms-choice-wrap.is-disabled {
@@ -11141,6 +11278,8 @@ a.cms-breadcrumb {
 
 .cms-choice-wrap .cms-choice-mark .cms-icon {
   margin: 0;
+  border-color: transparent;
+  color: color-mix(in srgb, var(--set-hover), var(--cms-theme-color-5) 50%);
 }
 
 .cms-toggle-wrap {
@@ -11177,7 +11316,7 @@ a.cms-breadcrumb {
 }
 
 .cms-toggle-wrap.toggle-default .cms-toggle-thumb {
-  background: color-mix(in srgb, var(--set-background-color, var(--cms-surface-2)) 30%, grayscale);
+  background: color-mix(in srgb, var(--set-background-color, var(--cms-surface-2)) 40%, transparent);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
   transition: all 180ms ease;
 }
@@ -11754,7 +11893,7 @@ a.cms-breadcrumb {
 .cms-state-warning>.cms-control {
   --set-border-color: var(--cms-warning-hover);
   --set-color: var(--cms-warning-text);
-  --set-background-color: var(--cms-warning);
+  --set-background-color: color-mix(in srgb, var(--cms-warning) 40%, var(--cms-theme-color-1));
   --set-shadow: 0 3px 6px color-mix(in srgb, var(--cms-warning-950) 40%, transparent);
   --set-hover: var(--cms-warning-hover);
   --set-color-0: var(--cms-warning-50);
@@ -12052,7 +12191,9 @@ a.cms-breadcrumb {
   --set-color: var(--set-color-1);
 }
 
-.cms-singularity-check.cms-choice-wrap.is-checked .cms-choice-mark {}
+.cms-singularity-check.cms-choice-wrap.is-checked .cms-choice-mark .cms-icon {
+  color: color-mix(in srgb, var(--set-hover), var(--cms-theme-color-9) 50%);
+}
 
 .cms-singularity-field.cms-field-fill>.cms-control {
   background-color: var(--set-background-color);
@@ -12086,7 +12227,7 @@ a.cms-breadcrumb {
 }
 
 .cms-singularity-field>.cms-control .cms-addon {
-  background-color: color-mix(in srgb, var(--set-background-color) 80%, var(--cms-theme-color-2));
+  background-color: color-mix(in srgb, var(--set-background-color) 50%, var(--cms-theme-color-2));
   background-image: var(--set-glossy-active, none), var(--set-gradient-active, none);
   color: var(--set-color);
 }
