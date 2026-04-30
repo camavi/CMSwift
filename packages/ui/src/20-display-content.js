@@ -115,7 +115,7 @@
         default: "Custom icon content"
       },
       returns: "HTMLSpanElement",
-      description: "Icona basata su sprite o testo, con size/color configurabili."
+      description: "Sprite- or text-based icon with configurable size/color."
     };
   }
   // Esempio: CMSwift.ui.Icon({ name: "home", size: 18 })
@@ -296,7 +296,7 @@
         right: "Icon anchored right"
       },
       returns: "HTMLSpanElement",
-      description: "Badge inline con notification reattiva e 6 slot icona posizionabili."
+      description: "Inline badge with reactive notification and 6 positionable icon slots."
     };
   }
   // Esempio: CMSwift.ui.Badge({ label: "New" })
@@ -536,20 +536,20 @@
         style: "object"
       },
       slots: {
-        media: "Media principale custom",
-        default: "Contenuto principale custom al posto di immagine o fallback",
+        media: "Custom main media",
+        default: "Custom main content instead of image or fallback",
         fallback: "Fallback custom quando non c'e immagine",
         label: "Fallback testuale / initials",
-        icon: "Icona fallback",
+        icon: "Fallback icon",
         badge: "Badge overlay, di default top-right",
-        status: "Presence dot o contenuto overlay, di default bottom-right",
-        topLeft: "Contenuto overlay top-left",
-        topRight: "Contenuto overlay top-right",
-        bottomLeft: "Contenuto overlay bottom-left",
-        bottomRight: "Contenuto overlay bottom-right"
+        status: "Presence dot or overlay content, bottom-right by default",
+        topLeft: "Top-left overlay content",
+        topRight: "Top-right overlay content",
+        bottomLeft: "Bottom-left overlay content",
+        bottomRight: "Bottom-right overlay content"
       },
       returns: "HTMLDivElement",
-      description: "Avatar flessibile con immagine, fallback intelligenti, stati, badge e slot overlay."
+      description: "Flexible avatar with image, smart fallbacks, states, badge, and overlay slots."
     };
   }
   // Esempio: CMSwift.ui.Avatar({ label: "CM" })
@@ -627,7 +627,7 @@
         onRemove: "MouseEvent"
       },
       returns: "HTMLSpanElement",
-      description: "Chip con icona opzionale e rimozione."
+      description: "Chip with optional icon and removal."
     };
   }
   // Esempio: CMSwift.ui.Chip({ label: "Tag", removable: true })
@@ -776,7 +776,7 @@
         default: "Extra body content"
       },
       returns: "HTMLElement",
-      description: "Surface compatta per metriche singole, trend e metadata operative."
+      description: "Compact surface for single metrics, trends, and operational metadata."
     };
   }
   // Esempio: CMSwift.ui.Stat({ label: "Revenue", value: "€ 128k", delta: "+18%" })
@@ -923,7 +923,7 @@
         default: "Extra body content"
       },
       returns: "HTMLElement",
-      description: "Surface piu ricca per KPI, metriche headline e mini dashboard summary."
+      description: "Richer surface for KPIs, headline metrics, and mini dashboard summaries."
     };
   }
   // Esempio: CMSwift.ui.Kpi({ title: "Orders", value: "342", delta: "+12%" })

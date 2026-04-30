@@ -477,27 +477,27 @@
         style: "object"
       },
       slots: {
-        default: "Contenuto introduttivo sopra la tabella",
-        toolbarStart: "Area sinistra toolbar",
-        toolbar: "Toolbar centrale/custom",
-        toolbarEnd: "Area destra toolbar",
-        search: "Sostituisce la search box built-in",
-        header: "Header custom per colonna",
-        cell: "Render globale celle",
-        actions: "Render globale azioni riga",
-        actionsHeader: "Header colonna azioni",
-        caption: "Caption sopra la tabella",
-        status: "Contenuto extra nella status row",
-        loading: "Stato loading",
-        empty: "Stato empty",
-        footer: "Contenuto extra nel footer"
+        default: "Introductory content above the table",
+        toolbarStart: "Toolbar left area",
+        toolbar: "Central/custom toolbar",
+        toolbarEnd: "Toolbar right area",
+        search: "Replaces the built-in search box",
+        header: "Custom column header",
+        cell: "Global cell renderer",
+        actions: "Global row actions renderer",
+        actionsHeader: "Actions column header",
+        caption: "Caption above the table",
+        status: "Extra content in the status row",
+        loading: "Loading state",
+        empty: "Empty state",
+        footer: "Extra content in the footer"
       },
       events: {
         onRowClick: "(row, ctx, event) => void",
         onRowDblClick: "(row, ctx, event) => void"
       },
       returns: "HTMLDivElement",
-      description: "Tabella standardizzata con toolbar, ricerca, sorting, paginazione, stati e rendering flessibile."
+      description: "Standardized table with toolbar, search, sorting, pagination, states, and flexible rendering."
     };
   }
 

@@ -223,9 +223,9 @@
         checked: "boolean|null",
         model: "[get,set] signal",
         icon: "String|Node|Function|Array",
-        iconOn: "Alias di icon/checkedIcon",
-        iconOff: "Alias di uncheckedIcon",
-        iconStandby: "Icona per stato null/indeterminate",
+        iconOn: "Alias of icon/checkedIcon",
+        iconOff: "Alias of uncheckedIcon",
+        iconStandby: "Icon for null/indeterminate state",
         checkedIcon: "String|Node|Function|Array",
         uncheckedIcon: "String|Node|Function|Array",
         color: "string",
@@ -268,8 +268,8 @@
         checked: "boolean|null",
         model: "[get,set] signal",
         icon: "String|Node|Function|Array",
-        iconOn: "Alias di icon/checkedIcon",
-        iconOff: "Alias di uncheckedIcon",
+        iconOn: "Alias of icon/checkedIcon",
+        iconOff: "Alias of uncheckedIcon",
         checkedIcon: "String|Node|Function|Array",
         uncheckedIcon: "String|Node|Function|Array",
         color: "string",
@@ -318,15 +318,15 @@
       props: {
         label: "String|Node|Function|Array",
         behavior: "\"checkbox\"|\"radio\"",
-        mode: "Alias di behavior",
+        mode: "Alias of behavior",
         value: "any",
         name: "string",
         checked: "boolean",
         model: "[get,set] signal",
         icon: "String|Node|Function|Array",
-        iconOn: "Alias di icon/checkedIcon",
-        iconOff: "Alias di uncheckedIcon",
-        iconStandby: "Icona per stato null/indeterminate",
+        iconOn: "Alias of icon/checkedIcon",
+        iconOff: "Alias of uncheckedIcon",
+        iconStandby: "Icon for null/indeterminate state",
         checkedIcon: "String|Node|Function|Array",
         uncheckedIcon: "String|Node|Function|Array",
         color: "string",
@@ -782,22 +782,22 @@
         icon: "String|Node|Function|Array",
         iconRight: "String|Node|Function|Array",
         thumbIcon: "String|Node|Function|Array",
-        iconThumb: "Alias di thumbIcon",
-        pointIcon: "Alias di thumbIcon",
+        iconThumb: "Alias of thumbIcon",
+        pointIcon: "Alias of thumbIcon",
         thumbLabel: "String|Node|Function|Array",
         showValue: "boolean",
         labelValue: "String|Node|Function|Array",
         markers: "boolean|number|Array|Object",
         markerLabels: "boolean",
-        labelMarks: "Alias di markerLabels",
+        labelMarks: "Alias of markerLabels",
         startLabel: "String|Node|Function|Array",
         endLabel: "String|Node|Function|Array",
-        leftLabel: "Alias di startLabel",
-        rightLabel: "Alias di endLabel",
-        minLabel: "Alias di startLabel",
-        maxLabel: "Alias di endLabel",
+        leftLabel: "Alias of startLabel",
+        rightLabel: "Alias of endLabel",
+        minLabel: "Alias of startLabel",
+        maxLabel: "Alias of endLabel",
         withQItem: "boolean",
-        qitem: "Alias di withQItem",
+        qitem: "Alias of withQItem",
         item: "boolean",
         itemClass: "string",
         itemStyle: "object",
@@ -820,15 +820,15 @@
         thumbLabel: "Thumb label content",
         marker: "Marker content",
         markerLabel: "Marker label content",
-        startLabel: "Label a sinistra/inizio track",
-        endLabel: "Label a destra/fine track"
+        startLabel: "Label on the left/start of the track",
+        endLabel: "Label on the right/end of the track"
       },
       events: {
         onChange: "(value, event)",
         onInput: "(value, event)"
       },
       returns: "HTMLLabelElement | HTMLLIElement (with ._input = HTMLInputElement)",
-      description: "Slider reattivo con label, icone, thumb custom, markers e supporto model/QItem."
+      description: "Reactive slider with label, icons, custom thumb, markers, and model/QItem support."
     };
   }
   // Esempio: CMSwift.ui.Slider({ min: 0, max: 10, model: [get,set] })
@@ -1173,17 +1173,17 @@
         label: "String|Node|Function|Array",
         clearable: "boolean",
         half: "boolean",
-        allowHalf: "Alias di half",
+        allowHalf: "Alias of half",
         noDimming: "boolean",
         readonly: "boolean",
         disabled: "boolean",
         icon: "String|Node|Function|Array",
-        iconSelected: "Alias di checkedIcon",
+        iconSelected: "Alias of checkedIcon",
         checkedIcon: "String|Node|Function|Array",
         uncheckedIcon: "String|Node|Function|Array",
-        iconHalf: "Alias di halfIcon",
+        iconHalf: "Alias of halfIcon",
         halfIcon: "String|Node|Function|Array",
-        iconHovered: "Alias di hoveredIcon",
+        iconHovered: "Alias of hoveredIcon",
         hoveredIcon: "String|Node|Function|Array",
         color: "string",
         colorSelected: "string",
@@ -1205,7 +1205,7 @@
         halfIcon: "Icon when item is half-selected",
         hoveredIcon: "Icon while hovering selected items",
         item: "Custom item renderer",
-        star: "Alias di item/icon"
+        star: "Alias of item/icon"
       },
       events: {
         onChange: "(value, event)",
@@ -1214,7 +1214,7 @@
       },
       keyboard: ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "Enter", "Space", "Delete", "Backspace", "0"],
       returns: "HTMLLabelElement (with ._input, ._rating, ._getValue(), ._setValue(value))",
-      description: "Rating reattivo con label, icone custom, half rating, clearable e supporto model."
+      description: "Reactive rating with label, custom icons, half rating, clearable behavior, and model support."
     };
   }
   // Esempio: CMSwift.ui.Rating({ max: 5, model: [get,set] })
@@ -2648,11 +2648,11 @@
         range: "boolean",
         multiple: "boolean",
         rangeMultiple: "boolean",
-        multipleRange: "Alias di rangeMultiple",
+        multipleRange: "Alias of rangeMultiple",
         min: "string",
         max: "string",
-        minDate: "Alias di min",
-        maxDate: "Alias di max",
+        minDate: "Alias of min",
+        maxDate: "Alias of max",
         minRange: "number",
         maxRange: "number",
         manualInput: "boolean",
@@ -2661,7 +2661,7 @@
         locale: "string",
         shortcuts: "Array<{ label, value }>",
         options: "Array|string|Function",
-        enableDates: "Alias di options",
+        enableDates: "Alias of options",
         disableDates: "Array|string|Function",
         label: "String|Node|Function|Array",
         icon: "String|Node|Function|Array",
@@ -2686,13 +2686,13 @@
         style: "object"
       },
       slots: {
-        day: "Contenuto del giorno ({ date, selected, inRange, disabled, outside })",
-        point: "Punto/icona nel giorno",
-        dayPoint: "Alias di point",
+        day: "Day content ({ date, selected, inRange, disabled, outside })",
+        point: "Point/icon in the day",
+        dayPoint: "Alias of point",
         value: "Footer value renderer ({ value, displayValue, mode })",
-        timeOption: "Renderer per opzione oraria nel footer integrato",
-        timePoint: "Punto/icona nella time option del footer",
-        timeShortcut: "Renderer scorciatoia oraria integrata",
+        timeOption: "Renderer for a time option in the integrated footer",
+        timePoint: "Point/icon in the footer time option",
+        timeShortcut: "Integrated time shortcut renderer",
         label: "Floating label",
         topLabel: "Top label",
         icon: "Left icon",
@@ -2707,7 +2707,7 @@
         onNavigate: "({ month, year })"
       },
       returns: "HTMLDivElement (field wrapper) con ._input, ._open(), ._close(), ._getValue(), ._setValue(value)",
-      description: "Date picker reattivo con overlay fixed, single/range/multiple/multi-range, model, min/max, presets, size xs-xl e supporto opzionale al tempo in interfaccia unificata."
+      description: "Reactive date picker with fixed overlay, single/range/multiple/multi-range modes, model, min/max, presets, xs-xl sizes, and optional time support in a unified interface."
     };
   }
   // Esempio: CMSwift.ui.Date({ value: "2024-01-01" })
@@ -3039,9 +3039,9 @@
         style: "object"
       },
       slots: {
-        option: "Renderer per opzione oraria ({ part, value, label, selected, timeValue })",
-        point: "Punto/icona nella time option selezionata",
-        shortcut: "Renderer scorciatoia",
+        option: "Renderer for a time option ({ part, value, label, selected, timeValue })",
+        point: "Point/icon in the selected time option",
+        shortcut: "Shortcut renderer",
         value: "Footer value renderer ({ value, displayValue })",
         label: "Floating label",
         topLabel: "Top label",
@@ -3056,7 +3056,7 @@
         onClose: "void"
       },
       returns: "HTMLDivElement (field wrapper) con ._input, ._open(), ._close(), ._getValue(), ._setValue(value)",
-      description: "Time picker reattivo con overlay fixed, label/icon slots, point icon, shortcuts, confirm e model."
+      description: "Reactive time picker with fixed overlay, label/icon slots, point icon, shortcuts, confirm, and model."
     };
   }
   // Esempio: CMSwift.ui.Time({ value: "09:30" })

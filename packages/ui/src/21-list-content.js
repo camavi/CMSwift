@@ -270,7 +270,7 @@
         selected: "boolean",
         disabled: "boolean",
         color: "string",
-        state: "Alias di color",
+        state: "Alias of color",
         size: "string|number",
         outline: "boolean",
         shadow: "boolean|string",
@@ -298,7 +298,7 @@
         default: "Fallback body content"
       },
       returns: "HTMLLIElement",
-      description: "Item strutturato per liste semplici, feed, task list e righe cliccabili."
+      description: "Structured item for simple lists, feeds, task lists, and clickable rows."
     };
   }
   // Esempio: CMSwift.ui.Item({}, "Elemento")

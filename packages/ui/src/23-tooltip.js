@@ -319,7 +319,7 @@
         onTriggerClick: "(event) => void"
       },
       returns: "Object { bind(), open(), show(), hide(), close(), toggle(), isOpen() } | HTMLSpanElement",
-      description: "Tooltip ancorato con trigger hover/focus/click, contenuto ricco e API imperativa."
+      description: "Anchored tooltip with hover/focus/click triggers, rich content, and imperative API."
     };
   }
   // Esempio: CMSwift.ui.Tooltip({ title: "Info", text: "Dettaglio rapido" }, CMSwift.ui.Icon({ name: "info" }))

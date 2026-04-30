@@ -391,10 +391,10 @@
       signature: "UI.Tabs(props) | UI.Tabs(props, ...children)",
       props: {
         tabs: "Array<{ value|name|id|key, label|title, note|subtitle|description, icon, badge|counter, disabled, hidden, onClick }>",
-        items: "Alias di tabs",
+        items: "Alias of tabs",
         value: "any",
         defaultValue: "any",
-        default: "Alias di defaultValue",
+        default: "Alias of defaultValue",
         model: "[get,set] signal",
         orientation: "horizontal|vertical",
         variant: "line|pills|soft",
@@ -417,14 +417,14 @@
         style: "object"
       },
       slots: {
-        nav: "Renderer della nav completa",
-        tab: "Renderer del singolo tab",
-        label: "Renderer della label",
-        icon: "Renderer dell'icona",
-        note: "Renderer della nota",
-        badge: "Renderer del badge/counter",
-        extra: "Area extra accanto alla nav",
-        empty: "Fallback quando tabs/items e vuoto",
+        nav: "Full nav renderer",
+        tab: "Single tab renderer",
+        label: "Label renderer",
+        icon: "Icon renderer",
+        note: "Note renderer",
+        badge: "Badge/counter renderer",
+        extra: "Extra area next to the nav",
+        empty: "Fallback when tabs/items are empty",
         default: "Children / extra content fallback"
       },
       events: {
@@ -432,7 +432,7 @@
       },
       keyboard: ["Enter/Space", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"],
       returns: "HTMLDivElement con ._getValue(), ._setValue(value), ._select(value), ._next(), ._prev(), ._getTabs()",
-      description: "Tab bar standardizzata con supporto controlled/uncontrolled, slot strutturati, badge/note/icon e navigazione tastiera."
+      description: "Standardized tab bar with controlled/uncontrolled support, structured slots, badge/note/icon, and keyboard navigation."
     };
   }
   // Esempio: CMSwift.ui.Tabs({ tabs: [{ label: "Overview", value: "overview", icon: "dashboard" }], model: [get,set] })
@@ -666,7 +666,7 @@
         to: "string",
         href: "string",
         active: "boolean",
-        selected: "Alias di active",
+        selected: "Alias of active",
         match: "\"exact\"|\"startsWith\"|RegExp|Function|string",
         matchMode: "\"exact\"|\"startsWith\"",
         exact: "boolean",
@@ -698,7 +698,7 @@
         onNavigate: "(to, event)"
       },
       returns: "HTMLAnchorElement con ._isActive(), ._setActive(boolean|null), ._navigate(event?)",
-      description: "Tab/link standardizzato per navigazione router o href, con slot strutturati, stati e badge."
+      description: "Standardized tab/link for router or href navigation, with structured slots, states, and badges."
     };
   }
   // Esempio: CMSwift.ui.RouteTab({ label: "Home", to: "/" })
@@ -1430,12 +1430,12 @@
         style: "object"
       },
       slots: {
-        start: "Contenuto prima dei controlli",
-        end: "Contenuto dopo i controlli",
+        start: "Content before the controls",
+        end: "Content after the controls",
         first: "First button content",
         prev: "Prev button content",
         page: "Page item content (ctx: { page, active, pages })",
-        item: "Alias di page",
+        item: "Alias of page",
         ellipsis: "Ellipsis content",
         next: "Next button content",
         last: "Last button content",

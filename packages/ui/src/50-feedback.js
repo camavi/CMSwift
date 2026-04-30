@@ -140,7 +140,7 @@
         default: "Extra content rendered near the spinner"
       },
       returns: "HTMLDivElement",
-      description: "Spinner animato con layout flessibile, contenuti opzionali e controllo di dimensioni, velocita e traccia."
+      description: "Animated spinner with flexible layout, optional content, and controls for size, speed, and track."
     };
   }
   // Esempio: CMSwift.ui.Spinner({ size: 24 })
@@ -554,12 +554,12 @@
         iconRight: "String|Node|Function|Array",
         startLabel: "String|Node|Function|Array",
         endLabel: "String|Node|Function|Array",
-        leftLabel: "Alias di startLabel",
-        rightLabel: "Alias di endLabel",
+        leftLabel: "Alias of startLabel",
+        rightLabel: "Alias of endLabel",
         width: "string|number",
         size: "string|number",
         height: "string|number",
-        thickness: "Alias di height",
+        thickness: "Alias of height",
         color: "string",
         state: "primary|secondary|success|warning|danger|info|light|dark",
         trackColor: "string",
@@ -573,17 +573,17 @@
         style: "object"
       },
       slots: {
-        icon: "Icona prima della label",
-        label: "Contenuto principale del progress",
-        note: "Contenuto secondario sotto la label",
-        value: "Valore esterno a destra",
-        inside: "Contenuto dentro la barra",
-        startLabel: "Label a sinistra della barra",
-        endLabel: "Label a destra della barra",
+        icon: "Icon before the label",
+        label: "Main progress content",
+        note: "Secondary content below the label",
+        value: "External value on the right",
+        inside: "Content inside the bar",
+        startLabel: "Label on the left of the bar",
+        endLabel: "Label on the right of the bar",
         default: "Fallback label content"
       },
       returns: "HTMLDivElement",
-      description: "Progress bar standardizzata con header opzionale, buffer, stato semantico e supporto reattivo."
+      description: "Standardized progress bar with optional header, buffer, semantic state, and reactive support."
     };
   }
   // Esempio: CMSwift.ui.Progress({ value: 45 })
@@ -901,7 +901,7 @@
         min: "number",
         max: "number",
         height: "string|number",
-        thickness: "Alias di height",
+        thickness: "Alias of height",
         size: "string|number",
         color: "string",
         state: "primary|secondary|success|warning|danger|info|light|dark",
@@ -929,9 +929,9 @@
         trickleStep: "number",
         trickleInterval: "number",
         trickleMax: "number",
-        trickleTo: "Alias di trickleMax",
+        trickleTo: "Alias of trickleMax",
         doneValue: "number",
-        doneDelay: "Alias di hideDelay",
+        doneDelay: "Alias of hideDelay",
         hideDelay: "number",
         resetValue: "number",
         label: "String|Node|Function|Array",
@@ -948,17 +948,17 @@
         style: "object"
       },
       slots: {
-        icon: "Icona prima della label",
-        label: "Contenuto principale",
-        note: "Contenuto secondario",
-        value: "Valore esterno a destra",
-        inside: "Contenuto dentro la barra",
-        startLabel: "Label a sinistra della barra",
-        endLabel: "Label a destra della barra",
+        icon: "Icon before the label",
+        label: "Main content",
+        note: "Secondary content",
+        value: "External value on the right",
+        inside: "Content inside the bar",
+        startLabel: "Label on the left of the bar",
+        endLabel: "Label on the right of the bar",
         default: "Fallback content"
       },
-      returns: "HTMLDivElement con API imperativa: .set(), .setBuffer(), .inc(), .start(), .done(), .stop(), .reset(), .show(), .hide(), .destroy()",
-      description: "Loading bar basata su UI.Progress, montabile su body o container custom, controllabile via model o API imperativa."
+      returns: "HTMLDivElement with imperative API: .set(), .setBuffer(), .inc(), .start(), .done(), .stop(), .reset(), .show(), .hide(), .destroy()",
+      description: "Loading bar based on UI.Progress, mountable on body or a custom container, controllable via model or imperative API."
     };
   }
   // Esempio: const lb = CMSwift.ui.LoadingBar({ autoStart: true }); lb.done();
@@ -1160,8 +1160,8 @@
       props: {
         id: "string",
         type: "success|warning|danger|error|info|primary|secondary|light|dark",
-        state: "Alias di type",
-        color: "Alias di type",
+        state: "Alias of type",
+        color: "Alias of type",
         title: "String|Node|Function|Array|false",
         message: "String|Node|Function|Array",
         description: "String|Node|Function|Array",
@@ -1171,7 +1171,7 @@
         actions: "Node|Function|Array",
         dismiss: "Node|Function|Array",
         timeout: "number|false",
-        duration: "Alias di timeout",
+        duration: "Alias of timeout",
         closable: "boolean",
         dismissLabel: "string",
         position: "top-left|top-center|top-right|bottom-left|bottom-center|bottom-right",
@@ -1191,7 +1191,7 @@
         default: "Extra body content under the message"
       },
       methods: {
-        show: "Alias di UI.Notify(...)",
+        show: "Alias of UI.Notify(...)",
         success: "UI.Notify.success(message|opts, title?)",
         error: "UI.Notify.error(message|opts, title?)",
         warning: "UI.Notify.warning(message|opts, title?)",
@@ -1202,7 +1202,7 @@
         promise: "UI.Notify.promise(promise|fn, { loading?, success?, error? })"
       },
       returns: "string|null (toast id)",
-      description: "Notify standardizzato con payload strutturato, shortcut semantiche, update/remove/clear e supporto promise."
+      description: "Standardized notify service with structured payloads, semantic shortcuts, update/remove/clear, and promise support."
     };
   }
 

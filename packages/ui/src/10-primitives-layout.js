@@ -230,11 +230,11 @@
       signature: "UI.Row(...children) | UI.Row(props, ...children)",
       props: {
         start: "Node|Function|Array",
-        left: "Alias di start",
+        left: "Alias of start",
         body: "Node|Function|Array",
-        center: "Alias di body",
+        center: "Alias of body",
         end: "Node|Function|Array",
-        right: "Alias di end",
+        right: "Alias of end",
         align: `stretch|flex-start|center|flex-end|baseline`,
         justify: `flex-start|center|flex-end|space-between|space-around|space-evenly`,
         wrap: "boolean|string",
@@ -253,7 +253,7 @@
         pc: "{ gap?, direction?, wrap?, align?, justify?, width?, minWidth?, maxWidth? }",
         startClass: "string",
         bodyClass: "string",
-        centerClass: "Alias di bodyClass",
+        centerClass: "Alias of bodyClass",
         endClass: "string",
         slots: "{ start?, left?, body?, center?, end?, right?, default? }",
         class: "string",
@@ -261,11 +261,11 @@
       },
       slots: {
         start: "Leading content area",
-        left: "Alias di start",
+        left: "Alias of start",
         body: "Main content area",
-        center: "Alias di body",
+        center: "Alias of body",
         end: "Trailing content area",
-        right: "Alias di end",
+        right: "Alias of end",
         default: "Fallback content / children"
       },
       returns: "HTMLDivElement",
@@ -608,7 +608,7 @@
       signature: "UI.Col(...children) | UI.Col(props, ...children)",
       props: {
         col: "number|string",
-        span: "Alias di col",
+        span: "Alias of col",
         sm: "number|string",
         md: "number|string",
         lg: "number|string",
@@ -622,7 +622,7 @@
         stack: "boolean",
         center: "boolean",
         width: "number|string",
-        size: "Alias di width",
+        size: "Alias of width",
         minWidth: "number|string",
         maxWidth: "number|string",
         height: "number|string",
@@ -640,13 +640,13 @@
         tablet: "{ col?, span?, gap?, direction?, align?, justify?, width?, height? }",
         pc: "{ col?, span?, gap?, direction?, align?, justify?, width?, height? }",
         start: "Node|Function|Array",
-        top: "Alias di start",
-        header: "Alias di start",
+        top: "Alias of start",
+        header: "Alias of start",
         body: "Node|Function|Array",
-        content: "Alias di body",
+        content: "Alias of body",
         end: "Node|Function|Array",
-        bottom: "Alias di end",
-        footer: "Alias di end",
+        bottom: "Alias of end",
+        footer: "Alias of end",
         startClass: "string",
         bodyClass: "string",
         endClass: "string",
@@ -655,18 +655,18 @@
         style: "object"
       },
       slots: {
-        start: "Area iniziale della colonna",
-        top: "Alias di start",
-        header: "Alias di start",
-        body: "Area principale della colonna",
-        content: "Alias di body",
-        end: "Area finale della colonna",
-        bottom: "Alias di end",
-        footer: "Alias di end",
-        default: "Contenuto fallback della colonna"
+        start: "Column leading area",
+        top: "Alias of start",
+        header: "Alias of start",
+        body: "Column main area",
+        content: "Alias of body",
+        end: "Column trailing area",
+        bottom: "Alias of end",
+        footer: "Alias of end",
+        default: "Column fallback content"
       },
       returns: "HTMLDivElement",
-      description: "Wrapper responsive a 24 colonne. Di default si comporta come un contenitore normale e attiva il layout flex verticale quando usi gap/allineamento, regioni strutturate o `stack`."
+      description: "Responsive 24-column wrapper. By default it behaves like a regular container and enables vertical flex layout when using gap/alignment, structured regions, or `stack`."
     };
   }
 
@@ -939,7 +939,7 @@
         after: "Bottom content after the main container body"
       },
       returns: "HTMLDivElement",
-      description: "Container composabile con max-width, spacing, layout props e sezioni opzionali."
+      description: "Composable container with max-width, spacing, layout props, and optional sections."
     };
   }
 
@@ -1135,7 +1135,7 @@
     UI.meta = UI.meta || {};
     UI.meta.Card = {
       signature: "UI.Card(...children) | UI.Card(props, ...children)",
-      description: "Card a sezioni con header strutturato, cover/media, body e footer/actions.",
+      description: "Sectioned card with structured header, cover/media, body, and footer/actions.",
       props: {
         title: "String|Node|Function|Array",
         subtitle: "String|Node|Function|Array",
@@ -1841,7 +1841,7 @@
 
     UI.meta.Input = {
       signature: "UI.Input(props)",
-      description: "Field input con floating label, hint/error/success/warning/note, clearable, icon, prefix/suffix e supporto reattivo (rod/signal).",
+      description: "Input field with floating label, hint/error/success/warning/note, clearable control, icon, prefix/suffix, and reactive support (rod/signal).",
       props: {
         // value & model
         model: "rod | [get,set] signal",
@@ -1859,8 +1859,8 @@
 
         // UI / UX
         label: "String|Node|Function (floating label)",
-        topLabel: "String|Node|Function (label sopra, non floating)",
-        placeholder: "string (fallback se non usi label)",
+        topLabel: "String|Node|Function (label above, not floating)",
+        placeholder: "string (fallback when label is not used)",
         hint: "String|Node|Function",
         error: "String|Node|Function",
         success: "String|Node|Function",
@@ -1889,11 +1889,11 @@
       slots: {
         label: "Floating label (via FormField slots.label)",
         topLabel: "Top label (via FormField slots.topLabel)",
-        prefix: "Addon a sinistra (via FormField slots.prefix)",
-        suffix: "Addon a destra (via FormField slots.suffix)",
+        prefix: "Left addon (via FormField slots.prefix)",
+        suffix: "Right addon (via FormField slots.suffix)",
         shortcode: "Shortcut badge (via FormField slots.shortcode)",
-        icon: "Icona a sinistra (via FormField slots.icon)",
-        iconRight: "Icona a destra (via FormField slots.iconRight)",
+        icon: "Left icon (via FormField slots.icon)",
+        iconRight: "Right icon (via FormField slots.iconRight)",
         clear: "Clear button (via FormField slots.clear)",
         hint: "Hint content (via FormField slots.hint)",
         errorMessage: "Error content (via FormField slots.errorMessage)",
@@ -2476,13 +2476,13 @@
     UI.meta = UI.meta || {};
     UI.meta.Search = {
       signature: "UI.Search(props)",
-      description: "Search professionale con FormField, fetch GET, debounce, AbortController, risultati in overlay, cache opzionale, binding reattivo e navigazione tastiera.",
+      description: "Professional search with FormField, GET fetch, debounce, AbortController, overlay results, optional cache, reactive binding, and keyboard navigation.",
       props: {
         model: "rod | [get,set] signal",
         value: "string | rod | [get,set] signal",
         endpoint: "string | (query, ctx) => string",
-        url: "Alias di endpoint",
-        method: "'GET' (interno)",
+        url: "Alias of endpoint",
+        method: "'GET' (internal)",
         queryParam: "string (default: 'q')",
         params: "object | (query, ctx) => object",
         headers: "object",
@@ -2490,8 +2490,8 @@
         parseResponse: "(Response) => Promise<any>",
         mapResponse: "(payload, query) => Array",
         items: "Array | (query, ctx) => Array|Promise<Array>",
-        options: "Alias locale di items",
-        suggestions: "Alias locale di items",
+        options: "Local alias of items",
+        suggestions: "Local alias of items",
         filter: "(item, query) => boolean",
         getLabel: "(item) => string",
         getValue: "(item) => any",
@@ -2511,7 +2511,7 @@
         searchOnFocus: "boolean",
         searchOnInput: "boolean",
         searchOnMount: "boolean",
-        autoSearch: "Alias di searchOnMount",
+        autoSearch: "Alias of searchOnMount",
         closeOnSelect: "boolean",
         commitValue: "'label'|'value'|false",
         disabled: "boolean|Function|rod",
@@ -2527,16 +2527,16 @@
         style: "object"
       },
       slots: {
-        result: "Renderer risultato ({ item, index, active, label, value, query, select })",
-        empty: "Stato vuoto ({ query })",
-        loading: "Stato loading ({ query })",
-        error: "Stato errore ({ error, query })",
+        result: "Result renderer ({ item, index, active, label, value, query, select })",
+        empty: "Empty state ({ query })",
+        loading: "Loading state ({ query })",
+        error: "Error state ({ error, query })",
         label: "Floating label",
         topLabel: "Top label",
-        prefix: "Addon sinistra",
-        suffix: "Addon destra",
-        icon: "Icona sinistra",
-        iconRight: "Icona destra",
+        prefix: "Left addon",
+        suffix: "Right addon",
+        icon: "Left icon",
+        iconRight: "Right icon",
         shortcode: "Shortcut badge",
         clear: "Clear button"
       },
@@ -2553,14 +2553,14 @@
         onBlur: "(event)"
       },
       keyboard: {
-        ArrowDown: "Apre/scorre risultato successivo",
-        ArrowUp: "Scorre risultato precedente",
-        Enter: "Seleziona risultato attivo o sottomette la query",
-        Escape: "Chiude overlay",
-        "Cmd/Ctrl+Home": "Primo risultato",
-        "Cmd/Ctrl+End": "Ultimo risultato"
+        ArrowDown: "Opens/moves to the next result",
+        ArrowUp: "Moves to the previous result",
+        Enter: "Selects the active result or submits the query",
+        Escape: "Closes the overlay",
+        "Cmd/Ctrl+Home": "First result",
+        "Cmd/Ctrl+End": "Last result"
       },
-      returns: "HTMLDivElement (field wrapper) con ._input, ._open(), ._close(), ._searchNow(), ._getResults(), ._setValue(value), ._dispose()"
+      returns: "HTMLDivElement (field wrapper) with ._input, ._open(), ._close(), ._searchNow(), ._getResults(), ._setValue(value), ._dispose()"
     };
   }
 
@@ -3889,19 +3889,19 @@
       slots: {
         header: "Header content",
         aside: "Aside / drawer content",
-        drawer: "Alias di aside",
+        drawer: "Alias of aside",
         nav: "Right-side panel content",
-        asideRight: "Alias di nav",
-        drawerRight: "Alias di nav",
+        asideRight: "Alias of nav",
+        drawerRight: "Alias of nav",
         page: "Page content",
-        main: "Alias di page",
+        main: "Alias of page",
         footer: "Footer content",
         default: "Fallback page content"
       },
-      returns: "HTMLDivElement con methods openAside/closeAside/toggleAside/openNav/closeNav/toggleNav, " +
+      returns: "HTMLDivElement with openAside/closeAside/toggleAside/openNav/closeNav/toggleNav methods, " +
         "isDrawerOpen/isNavOpen/isMobile/reflow, header()/aside()/nav()/page()/footer(), " +
-        "headerUpdate/asideUpdate/navUpdate/pageUpdate/mainUpdate/footerUpdate e _dispose()",
-      description: "Shell layout composabile con drawer sinistro e nav destro indipendenti, width configurabili, resize opzionale con min/max, modalita floating opzionale e update runtime delle sezioni."
+        "headerUpdate/asideUpdate/navUpdate/pageUpdate/mainUpdate/footerUpdate and _dispose()",
+      description: "Composable shell layout with independent left drawer and right nav, configurable widths, optional resize with min/max, optional floating mode, and runtime section updates."
     };
   }
   // Esempio: CMSwift.ui.Layout({ header, aside, page, footer })
@@ -4061,10 +4061,10 @@
         meta: "Node|Function|Array",
         icon: "String|Node|Function|Array",
         left: "Node|Function|Array",
-        start: "Alias di left",
+        start: "Alias of left",
         right: "Node|Function|Array",
-        end: "Alias di right",
-        body: "Alias di content",
+        end: "Alias of right",
+        body: "Alias of content",
         actions: "Node|Function|Array",
         sticky: "boolean",
         dense: "boolean",
@@ -4081,23 +4081,23 @@
         style: "object"
       },
       slots: {
-        left: "Area iniziale del footer",
-        start: "Alias/addon area iniziale",
-        right: "Area finale del footer",
-        end: "Alias/addon area finale",
-        center: "Override completo del body centrale",
-        body: "Alias di center",
-        icon: "Icona leading",
+        left: "Footer leading area",
+        start: "Alias/addon for the leading area",
+        right: "Footer trailing area",
+        end: "Alias/addon for the trailing area",
+        center: "Full override for the central body",
+        body: "Alias of center",
+        icon: "Leading icon",
         eyebrow: "Eyebrow / kicker",
-        title: "Titolo principale",
-        subtitle: "Sottotitolo o nota",
-        meta: "Meta info accanto al contenuto centrale",
-        content: "Contenuto extra o fallback dei children",
-        actions: "Azioni raggruppate nella zona finale",
-        default: "Fallback content per la body area"
+        title: "Main title",
+        subtitle: "Subtitle or note",
+        meta: "Meta info next to the central content",
+        content: "Extra content or children fallback",
+        actions: "Actions grouped in the trailing area",
+        default: "Fallback content for the body area"
       },
       returns: "HTMLElement <footer>",
-      description: "Footer strutturato con regioni start/body/end, copy opzionale, azioni e slot composabili."
+      description: "Structured footer with start/body/end regions, optional copy, actions, and composable slots."
     };
   }
   // Esempio: CMSwift.ui.Footer({}, "Footer")
@@ -4285,16 +4285,16 @@
       props: {
         before: "Node|Function|Array",
         start: "Node|Function|Array",
-        left: "Alias di start",
+        left: "Alias of start",
         center: "Node|Function|Array",
-        body: "Alias di center",
-        content: "Alias di center",
+        body: "Alias of center",
+        content: "Alias of center",
         title: "String|Node|Function|Array",
         subtitle: "String|Node|Function|Array",
         meta: "String|Node|Function|Array",
         end: "Node|Function|Array",
-        right: "Alias di end",
-        actions: "Alias di end",
+        right: "Alias of end",
+        actions: "Alias of end",
         after: "Node|Function|Array",
         dense: "boolean",
         divider: "boolean",
@@ -4303,13 +4303,13 @@
         wrap: "boolean|string",
         align: `stretch|flex-start|center|flex-end|baseline`,
         justify: `flex-start|center|flex-end|space-between|space-around|space-evenly`,
-        gap: "string|number (es: '8px' o 'var(--cms-s-md)')",
+        gap: "string|number (e.g. '8px' or 'var(--cms-s-md)')",
         size: "xxs|xs|sm|md|lg|xl|xxl",
         beforeClass: "string",
         startClass: "string",
         bodyClass: "string",
-        centerClass: "Alias di bodyClass",
-        contentClass: "Alias di bodyClass",
+        centerClass: "Alias of bodyClass",
+        contentClass: "Alias of bodyClass",
         copyClass: "string",
         titleClass: "string",
         subtitleClass: "string",
@@ -4321,25 +4321,25 @@
         style: "object"
       },
       slots: {
-        before: "Row superiore opzionale",
+        before: "Optional top row",
         start: "Leading content area",
-        left: "Alias di start",
+        left: "Alias of start",
         center: "Main content area",
-        body: "Alias di center",
-        content: "Alias di center",
-        title: "Titolo principale della toolbar",
-        subtitle: "Sottotitolo o nota operativa",
-        meta: "Meta info/chips sopra o accanto al titolo",
+        body: "Alias of center",
+        content: "Alias of center",
+        title: "Toolbar main title",
+        subtitle: "Subtitle or operational note",
+        meta: "Meta info/chips above or next to the title",
         end: "Trailing actions area",
-        right: "Alias di end",
-        actions: "Alias di end",
-        after: "Row inferiore opzionale",
+        right: "Alias of end",
+        actions: "Alias of end",
+        after: "Optional bottom row",
         default: "Fallback content / children"
       },
       events: {
         onClick: "MouseEvent"
       },
-      description: "Toolbar composabile con regioni before/start/center/end/after, copy opzionale e fallback compatibile con l'uso flex semplice.",
+      description: "Composable toolbar with before/start/center/end/after regions, optional copy, and fallback compatible with simple flex usage.",
       returns: "HTMLDivElement"
     };
   }
@@ -4913,7 +4913,7 @@
         onKeydown: "KeyboardEvent"
       },
       returns: "HTMLDivElement",
-      description: "Item per CSS Grid con span responsive, layout interno opzionale a stack, regioni start/body/end e varianti visuali leggere."
+      description: "CSS Grid item with responsive spans, optional internal stack layout, start/body/end regions, and lightweight visual variants."
     };
   }
   // Esempio: CMSwift.ui.GridCol({ span: 6, sm: 12 }, "Colonna")

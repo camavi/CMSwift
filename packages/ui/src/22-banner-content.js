@@ -195,7 +195,7 @@ if (CMSwift.isDev?.()) {
       default: "Extra banner body content"
     },
     returns: "HTMLDivElement",
-    description: "Banner strutturato con tono, azioni, dismiss e slots composabili."
+    description: "Structured banner with tone, actions, dismiss, and composable slots."
   };
 }
 // Esempio: CMSwift.ui.Banner({ type: "warning", title: "Pagamento in sospeso", message: "Aggiorna il batch entro le 18:00" })

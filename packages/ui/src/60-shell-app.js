@@ -205,22 +205,22 @@ if (CMSwift.isDev?.()) {
       style: "object"
     },
     slots: {
-      left: "Area sinistra, fallback al toggle drawer",
-      start: "Alias/addon area sinistra",
-      right: "Area destra principale",
-      end: "Alias/addon area destra",
-      center: "Override completo del body centrale",
-      body: "Alias di center",
-      icon: "Icona leading",
+      left: "Left area, falls back to the drawer toggle",
+      start: "Alias/addon for the left area",
+      right: "Main right area",
+      end: "Alias/addon for the right area",
+      center: "Full override for the central body",
+      body: "Alias of center",
+      icon: "Leading icon",
       eyebrow: "Eyebrow / kicker",
-      title: "Titolo",
-      subtitle: "Sottotitolo",
-      meta: "Meta info accanto al contenuto centrale",
-      content: "Contenuto extra sotto il sottotitolo",
-      actions: "Azioni raggruppate nella zona destra"
+      title: "Title",
+      subtitle: "Subtitle",
+      meta: "Meta info next to the central content",
+      content: "Extra content below the subtitle",
+      actions: "Actions grouped in the right area"
     },
     returns: "HTMLDivElement",
-    description: "Header strutturato con regioni start/body/end, toggle drawer integrato, metadata e slot composabili."
+    description: "Structured header with start/body/end regions, integrated drawer toggle, metadata, and composable slots."
   };
 }
 
@@ -759,28 +759,28 @@ if (CMSwift.isDev?.()) {
       style: "object"
     },
     slots: {
-      header: "Header del drawer, override completo",
-      body: "Override completo del body",
-      footer: "Footer del drawer",
-      before: "Contenuto prima della lista items",
-      after: "Contenuto dopo la lista items",
-      empty: "Empty state quando non ci sono contenuti",
-      item: "Override completo di un item semplice",
-      itemLabel: "Label item (ctx: { item, label, note, badge, aside, content })",
-      itemNote: "Note/subtitle item",
-      itemBadge: "Badge item",
-      itemAside: "Aside/meta item",
-      itemContent: "Contenuto extra item",
-      group: "Override completo header di un gruppo (ctx include toggle/isOpen)",
-      groupLabel: "Label gruppo",
-      groupNote: "Note gruppo",
-      groupBadge: "Badge gruppo",
-      groupAside: "Aside/meta gruppo",
-      groupContent: "Contenuto extra gruppo",
-      sectionLabel: "Label per elementi section/heading"
+      header: "Drawer header, full override",
+      body: "Full body override",
+      footer: "Drawer footer",
+      before: "Content before the item list",
+      after: "Content after the item list",
+      empty: "Empty state when there is no content",
+      item: "Full override for a simple item",
+      itemLabel: "Item label (ctx: { item, label, note, badge, aside, content })",
+      itemNote: "Item note/subtitle",
+      itemBadge: "Item badge",
+      itemAside: "Item aside/meta",
+      itemContent: "Extra item content",
+      group: "Full override for a group header (ctx includes toggle/isOpen)",
+      groupLabel: "Group label",
+      groupNote: "Group note",
+      groupBadge: "Group badge",
+      groupAside: "Group aside/meta",
+      groupContent: "Extra group content",
+      sectionLabel: "Label for section/heading items"
     },
-    returns: "HTMLDivElement con methods openDrawer/closeDrawer/toggleDrawer/isDrawerOpen",
-    description: "Drawer strutturato e retro compatibile con header/footer, gruppi, slot estesi, empty state e stato persistente."
+    returns: "HTMLDivElement with openDrawer/closeDrawer/toggleDrawer/isDrawerOpen methods",
+    description: "Structured, backward-compatible drawer with header/footer, groups, extended slots, empty state, and persistent state."
   };
 }
 
@@ -1002,7 +1002,7 @@ if (CMSwift.isDev?.()) {
       default: "Fallback body content"
     },
     returns: "HTMLDivElement",
-    description: "Contenitore pagina strutturato con hero, header, body, footer e layout configurabile."
+    description: "Structured page container with hero, header, body, footer, and configurable layout."
   };
 }
 
@@ -1459,21 +1459,21 @@ if (CMSwift.isDev?.()) {
       style: "object"
     },
     slots: {
-      background: "Contenuto decorativo dentro il layer di sfondo",
-      badge: "Meta badge/chip sopra il contenuto principale",
+      background: "Decorative content inside the background layer",
+      badge: "Meta badge/chip above the main content",
       eyebrow: "Eyebrow/kicker",
-      title: "Titolo principale",
-      subtitle: "Sottotitolo o testo di supporto",
-      header: "Contenuto aggiuntivo in header",
-      aside: "Area laterale header",
-      media: "Contenuto multimediale o card in foreground",
-      content: "Body principale",
-      footer: "Footer informativo",
-      actions: "Area azioni",
+      title: "Main title",
+      subtitle: "Subtitle or supporting text",
+      header: "Additional header content",
+      aside: "Header side area",
+      media: "Media content or foreground card",
+      content: "Main body",
+      footer: "Informational footer",
+      actions: "Actions area",
       default: "Fallback body content"
     },
-    returns: "HTMLDivElement con methods refresh/update/destroy",
-    description: "Hero/section parallax standardizzato con header strutturato, body, actions, slots e API minima di refresh."
+    returns: "HTMLDivElement with refresh/update/destroy methods",
+    description: "Standardized parallax hero/section with structured header, body, actions, slots, and minimal refresh API."
   };
 }
 

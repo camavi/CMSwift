@@ -1752,11 +1752,11 @@ const unitCover = (v, name = 'size') => {
       signature: "UI.Row(...children) | UI.Row(props, ...children)",
       props: {
         start: "Node|Function|Array",
-        left: "Alias di start",
+        left: "Alias of start",
         body: "Node|Function|Array",
-        center: "Alias di body",
+        center: "Alias of body",
         end: "Node|Function|Array",
-        right: "Alias di end",
+        right: "Alias of end",
         align: `stretch|flex-start|center|flex-end|baseline`,
         justify: `flex-start|center|flex-end|space-between|space-around|space-evenly`,
         wrap: "boolean|string",
@@ -1775,7 +1775,7 @@ const unitCover = (v, name = 'size') => {
         pc: "{ gap?, direction?, wrap?, align?, justify?, width?, minWidth?, maxWidth? }",
         startClass: "string",
         bodyClass: "string",
-        centerClass: "Alias di bodyClass",
+        centerClass: "Alias of bodyClass",
         endClass: "string",
         slots: "{ start?, left?, body?, center?, end?, right?, default? }",
         class: "string",
@@ -1783,11 +1783,11 @@ const unitCover = (v, name = 'size') => {
       },
       slots: {
         start: "Leading content area",
-        left: "Alias di start",
+        left: "Alias of start",
         body: "Main content area",
-        center: "Alias di body",
+        center: "Alias of body",
         end: "Trailing content area",
-        right: "Alias di end",
+        right: "Alias of end",
         default: "Fallback content / children"
       },
       returns: "HTMLDivElement",
@@ -2130,7 +2130,7 @@ const unitCover = (v, name = 'size') => {
       signature: "UI.Col(...children) | UI.Col(props, ...children)",
       props: {
         col: "number|string",
-        span: "Alias di col",
+        span: "Alias of col",
         sm: "number|string",
         md: "number|string",
         lg: "number|string",
@@ -2144,7 +2144,7 @@ const unitCover = (v, name = 'size') => {
         stack: "boolean",
         center: "boolean",
         width: "number|string",
-        size: "Alias di width",
+        size: "Alias of width",
         minWidth: "number|string",
         maxWidth: "number|string",
         height: "number|string",
@@ -2162,13 +2162,13 @@ const unitCover = (v, name = 'size') => {
         tablet: "{ col?, span?, gap?, direction?, align?, justify?, width?, height? }",
         pc: "{ col?, span?, gap?, direction?, align?, justify?, width?, height? }",
         start: "Node|Function|Array",
-        top: "Alias di start",
-        header: "Alias di start",
+        top: "Alias of start",
+        header: "Alias of start",
         body: "Node|Function|Array",
-        content: "Alias di body",
+        content: "Alias of body",
         end: "Node|Function|Array",
-        bottom: "Alias di end",
-        footer: "Alias di end",
+        bottom: "Alias of end",
+        footer: "Alias of end",
         startClass: "string",
         bodyClass: "string",
         endClass: "string",
@@ -2177,18 +2177,18 @@ const unitCover = (v, name = 'size') => {
         style: "object"
       },
       slots: {
-        start: "Area iniziale della colonna",
-        top: "Alias di start",
-        header: "Alias di start",
-        body: "Area principale della colonna",
-        content: "Alias di body",
-        end: "Area finale della colonna",
-        bottom: "Alias di end",
-        footer: "Alias di end",
-        default: "Contenuto fallback della colonna"
+        start: "Column leading area",
+        top: "Alias of start",
+        header: "Alias of start",
+        body: "Column main area",
+        content: "Alias of body",
+        end: "Column trailing area",
+        bottom: "Alias of end",
+        footer: "Alias of end",
+        default: "Column fallback content"
       },
       returns: "HTMLDivElement",
-      description: "Wrapper responsive a 24 colonne. Di default si comporta come un contenitore normale e attiva il layout flex verticale quando usi gap/allineamento, regioni strutturate o `stack`."
+      description: "Responsive 24-column wrapper. By default it behaves like a regular container and enables vertical flex layout when using gap/alignment, structured regions, or `stack`."
     };
   }
 
@@ -2461,7 +2461,7 @@ const unitCover = (v, name = 'size') => {
         after: "Bottom content after the main container body"
       },
       returns: "HTMLDivElement",
-      description: "Container composabile con max-width, spacing, layout props e sezioni opzionali."
+      description: "Composable container with max-width, spacing, layout props, and optional sections."
     };
   }
 
@@ -2657,7 +2657,7 @@ const unitCover = (v, name = 'size') => {
     UI.meta = UI.meta || {};
     UI.meta.Card = {
       signature: "UI.Card(...children) | UI.Card(props, ...children)",
-      description: "Card a sezioni con header strutturato, cover/media, body e footer/actions.",
+      description: "Sectioned card with structured header, cover/media, body, and footer/actions.",
       props: {
         title: "String|Node|Function|Array",
         subtitle: "String|Node|Function|Array",
@@ -3363,7 +3363,7 @@ const unitCover = (v, name = 'size') => {
 
     UI.meta.Input = {
       signature: "UI.Input(props)",
-      description: "Field input con floating label, hint/error/success/warning/note, clearable, icon, prefix/suffix e supporto reattivo (rod/signal).",
+      description: "Input field with floating label, hint/error/success/warning/note, clearable control, icon, prefix/suffix, and reactive support (rod/signal).",
       props: {
         // value & model
         model: "rod | [get,set] signal",
@@ -3381,8 +3381,8 @@ const unitCover = (v, name = 'size') => {
 
         // UI / UX
         label: "String|Node|Function (floating label)",
-        topLabel: "String|Node|Function (label sopra, non floating)",
-        placeholder: "string (fallback se non usi label)",
+        topLabel: "String|Node|Function (label above, not floating)",
+        placeholder: "string (fallback when label is not used)",
         hint: "String|Node|Function",
         error: "String|Node|Function",
         success: "String|Node|Function",
@@ -3411,11 +3411,11 @@ const unitCover = (v, name = 'size') => {
       slots: {
         label: "Floating label (via FormField slots.label)",
         topLabel: "Top label (via FormField slots.topLabel)",
-        prefix: "Addon a sinistra (via FormField slots.prefix)",
-        suffix: "Addon a destra (via FormField slots.suffix)",
+        prefix: "Left addon (via FormField slots.prefix)",
+        suffix: "Right addon (via FormField slots.suffix)",
         shortcode: "Shortcut badge (via FormField slots.shortcode)",
-        icon: "Icona a sinistra (via FormField slots.icon)",
-        iconRight: "Icona a destra (via FormField slots.iconRight)",
+        icon: "Left icon (via FormField slots.icon)",
+        iconRight: "Right icon (via FormField slots.iconRight)",
         clear: "Clear button (via FormField slots.clear)",
         hint: "Hint content (via FormField slots.hint)",
         errorMessage: "Error content (via FormField slots.errorMessage)",
@@ -3998,13 +3998,13 @@ const unitCover = (v, name = 'size') => {
     UI.meta = UI.meta || {};
     UI.meta.Search = {
       signature: "UI.Search(props)",
-      description: "Search professionale con FormField, fetch GET, debounce, AbortController, risultati in overlay, cache opzionale, binding reattivo e navigazione tastiera.",
+      description: "Professional search with FormField, GET fetch, debounce, AbortController, overlay results, optional cache, reactive binding, and keyboard navigation.",
       props: {
         model: "rod | [get,set] signal",
         value: "string | rod | [get,set] signal",
         endpoint: "string | (query, ctx) => string",
-        url: "Alias di endpoint",
-        method: "'GET' (interno)",
+        url: "Alias of endpoint",
+        method: "'GET' (internal)",
         queryParam: "string (default: 'q')",
         params: "object | (query, ctx) => object",
         headers: "object",
@@ -4012,8 +4012,8 @@ const unitCover = (v, name = 'size') => {
         parseResponse: "(Response) => Promise<any>",
         mapResponse: "(payload, query) => Array",
         items: "Array | (query, ctx) => Array|Promise<Array>",
-        options: "Alias locale di items",
-        suggestions: "Alias locale di items",
+        options: "Local alias of items",
+        suggestions: "Local alias of items",
         filter: "(item, query) => boolean",
         getLabel: "(item) => string",
         getValue: "(item) => any",
@@ -4033,7 +4033,7 @@ const unitCover = (v, name = 'size') => {
         searchOnFocus: "boolean",
         searchOnInput: "boolean",
         searchOnMount: "boolean",
-        autoSearch: "Alias di searchOnMount",
+        autoSearch: "Alias of searchOnMount",
         closeOnSelect: "boolean",
         commitValue: "'label'|'value'|false",
         disabled: "boolean|Function|rod",
@@ -4049,16 +4049,16 @@ const unitCover = (v, name = 'size') => {
         style: "object"
       },
       slots: {
-        result: "Renderer risultato ({ item, index, active, label, value, query, select })",
-        empty: "Stato vuoto ({ query })",
-        loading: "Stato loading ({ query })",
-        error: "Stato errore ({ error, query })",
+        result: "Result renderer ({ item, index, active, label, value, query, select })",
+        empty: "Empty state ({ query })",
+        loading: "Loading state ({ query })",
+        error: "Error state ({ error, query })",
         label: "Floating label",
         topLabel: "Top label",
-        prefix: "Addon sinistra",
-        suffix: "Addon destra",
-        icon: "Icona sinistra",
-        iconRight: "Icona destra",
+        prefix: "Left addon",
+        suffix: "Right addon",
+        icon: "Left icon",
+        iconRight: "Right icon",
         shortcode: "Shortcut badge",
         clear: "Clear button"
       },
@@ -4075,14 +4075,14 @@ const unitCover = (v, name = 'size') => {
         onBlur: "(event)"
       },
       keyboard: {
-        ArrowDown: "Apre/scorre risultato successivo",
-        ArrowUp: "Scorre risultato precedente",
-        Enter: "Seleziona risultato attivo o sottomette la query",
-        Escape: "Chiude overlay",
-        "Cmd/Ctrl+Home": "Primo risultato",
-        "Cmd/Ctrl+End": "Ultimo risultato"
+        ArrowDown: "Opens/moves to the next result",
+        ArrowUp: "Moves to the previous result",
+        Enter: "Selects the active result or submits the query",
+        Escape: "Closes the overlay",
+        "Cmd/Ctrl+Home": "First result",
+        "Cmd/Ctrl+End": "Last result"
       },
-      returns: "HTMLDivElement (field wrapper) con ._input, ._open(), ._close(), ._searchNow(), ._getResults(), ._setValue(value), ._dispose()"
+      returns: "HTMLDivElement (field wrapper) with ._input, ._open(), ._close(), ._searchNow(), ._getResults(), ._setValue(value), ._dispose()"
     };
   }
 
@@ -5411,19 +5411,19 @@ const unitCover = (v, name = 'size') => {
       slots: {
         header: "Header content",
         aside: "Aside / drawer content",
-        drawer: "Alias di aside",
+        drawer: "Alias of aside",
         nav: "Right-side panel content",
-        asideRight: "Alias di nav",
-        drawerRight: "Alias di nav",
+        asideRight: "Alias of nav",
+        drawerRight: "Alias of nav",
         page: "Page content",
-        main: "Alias di page",
+        main: "Alias of page",
         footer: "Footer content",
         default: "Fallback page content"
       },
-      returns: "HTMLDivElement con methods openAside/closeAside/toggleAside/openNav/closeNav/toggleNav, " +
+      returns: "HTMLDivElement with openAside/closeAside/toggleAside/openNav/closeNav/toggleNav methods, " +
         "isDrawerOpen/isNavOpen/isMobile/reflow, header()/aside()/nav()/page()/footer(), " +
-        "headerUpdate/asideUpdate/navUpdate/pageUpdate/mainUpdate/footerUpdate e _dispose()",
-      description: "Shell layout composabile con drawer sinistro e nav destro indipendenti, width configurabili, resize opzionale con min/max, modalita floating opzionale e update runtime delle sezioni."
+        "headerUpdate/asideUpdate/navUpdate/pageUpdate/mainUpdate/footerUpdate and _dispose()",
+      description: "Composable shell layout with independent left drawer and right nav, configurable widths, optional resize with min/max, optional floating mode, and runtime section updates."
     };
   }
   // Esempio: CMSwift.ui.Layout({ header, aside, page, footer })
@@ -5583,10 +5583,10 @@ const unitCover = (v, name = 'size') => {
         meta: "Node|Function|Array",
         icon: "String|Node|Function|Array",
         left: "Node|Function|Array",
-        start: "Alias di left",
+        start: "Alias of left",
         right: "Node|Function|Array",
-        end: "Alias di right",
-        body: "Alias di content",
+        end: "Alias of right",
+        body: "Alias of content",
         actions: "Node|Function|Array",
         sticky: "boolean",
         dense: "boolean",
@@ -5603,23 +5603,23 @@ const unitCover = (v, name = 'size') => {
         style: "object"
       },
       slots: {
-        left: "Area iniziale del footer",
-        start: "Alias/addon area iniziale",
-        right: "Area finale del footer",
-        end: "Alias/addon area finale",
-        center: "Override completo del body centrale",
-        body: "Alias di center",
-        icon: "Icona leading",
+        left: "Footer leading area",
+        start: "Alias/addon for the leading area",
+        right: "Footer trailing area",
+        end: "Alias/addon for the trailing area",
+        center: "Full override for the central body",
+        body: "Alias of center",
+        icon: "Leading icon",
         eyebrow: "Eyebrow / kicker",
-        title: "Titolo principale",
-        subtitle: "Sottotitolo o nota",
-        meta: "Meta info accanto al contenuto centrale",
-        content: "Contenuto extra o fallback dei children",
-        actions: "Azioni raggruppate nella zona finale",
-        default: "Fallback content per la body area"
+        title: "Main title",
+        subtitle: "Subtitle or note",
+        meta: "Meta info next to the central content",
+        content: "Extra content or children fallback",
+        actions: "Actions grouped in the trailing area",
+        default: "Fallback content for the body area"
       },
       returns: "HTMLElement <footer>",
-      description: "Footer strutturato con regioni start/body/end, copy opzionale, azioni e slot composabili."
+      description: "Structured footer with start/body/end regions, optional copy, actions, and composable slots."
     };
   }
   // Esempio: CMSwift.ui.Footer({}, "Footer")
@@ -5807,16 +5807,16 @@ const unitCover = (v, name = 'size') => {
       props: {
         before: "Node|Function|Array",
         start: "Node|Function|Array",
-        left: "Alias di start",
+        left: "Alias of start",
         center: "Node|Function|Array",
-        body: "Alias di center",
-        content: "Alias di center",
+        body: "Alias of center",
+        content: "Alias of center",
         title: "String|Node|Function|Array",
         subtitle: "String|Node|Function|Array",
         meta: "String|Node|Function|Array",
         end: "Node|Function|Array",
-        right: "Alias di end",
-        actions: "Alias di end",
+        right: "Alias of end",
+        actions: "Alias of end",
         after: "Node|Function|Array",
         dense: "boolean",
         divider: "boolean",
@@ -5825,13 +5825,13 @@ const unitCover = (v, name = 'size') => {
         wrap: "boolean|string",
         align: `stretch|flex-start|center|flex-end|baseline`,
         justify: `flex-start|center|flex-end|space-between|space-around|space-evenly`,
-        gap: "string|number (es: '8px' o 'var(--cms-s-md)')",
+        gap: "string|number (e.g. '8px' or 'var(--cms-s-md)')",
         size: "xxs|xs|sm|md|lg|xl|xxl",
         beforeClass: "string",
         startClass: "string",
         bodyClass: "string",
-        centerClass: "Alias di bodyClass",
-        contentClass: "Alias di bodyClass",
+        centerClass: "Alias of bodyClass",
+        contentClass: "Alias of bodyClass",
         copyClass: "string",
         titleClass: "string",
         subtitleClass: "string",
@@ -5843,25 +5843,25 @@ const unitCover = (v, name = 'size') => {
         style: "object"
       },
       slots: {
-        before: "Row superiore opzionale",
+        before: "Optional top row",
         start: "Leading content area",
-        left: "Alias di start",
+        left: "Alias of start",
         center: "Main content area",
-        body: "Alias di center",
-        content: "Alias di center",
-        title: "Titolo principale della toolbar",
-        subtitle: "Sottotitolo o nota operativa",
-        meta: "Meta info/chips sopra o accanto al titolo",
+        body: "Alias of center",
+        content: "Alias of center",
+        title: "Toolbar main title",
+        subtitle: "Subtitle or operational note",
+        meta: "Meta info/chips above or next to the title",
         end: "Trailing actions area",
-        right: "Alias di end",
-        actions: "Alias di end",
-        after: "Row inferiore opzionale",
+        right: "Alias of end",
+        actions: "Alias of end",
+        after: "Optional bottom row",
         default: "Fallback content / children"
       },
       events: {
         onClick: "MouseEvent"
       },
-      description: "Toolbar composabile con regioni before/start/center/end/after, copy opzionale e fallback compatibile con l'uso flex semplice.",
+      description: "Composable toolbar with before/start/center/end/after regions, optional copy, and fallback compatible with simple flex usage.",
       returns: "HTMLDivElement"
     };
   }
@@ -6435,7 +6435,7 @@ const unitCover = (v, name = 'size') => {
         onKeydown: "KeyboardEvent"
       },
       returns: "HTMLDivElement",
-      description: "Item per CSS Grid con span responsive, layout interno opzionale a stack, regioni start/body/end e varianti visuali leggere."
+      description: "CSS Grid item with responsive spans, optional internal stack layout, start/body/end regions, and lightweight visual variants."
     };
   }
   // Esempio: CMSwift.ui.GridCol({ span: 6, sm: 12 }, "Colonna")
@@ -6557,7 +6557,7 @@ const unitCover = (v, name = 'size') => {
         default: "Custom icon content"
       },
       returns: "HTMLSpanElement",
-      description: "Icona basata su sprite o testo, con size/color configurabili."
+      description: "Sprite- or text-based icon with configurable size/color."
     };
   }
   // Esempio: CMSwift.ui.Icon({ name: "home", size: 18 })
@@ -6738,7 +6738,7 @@ const unitCover = (v, name = 'size') => {
         right: "Icon anchored right"
       },
       returns: "HTMLSpanElement",
-      description: "Badge inline con notification reattiva e 6 slot icona posizionabili."
+      description: "Inline badge with reactive notification and 6 positionable icon slots."
     };
   }
   // Esempio: CMSwift.ui.Badge({ label: "New" })
@@ -6978,20 +6978,20 @@ const unitCover = (v, name = 'size') => {
         style: "object"
       },
       slots: {
-        media: "Media principale custom",
-        default: "Contenuto principale custom al posto di immagine o fallback",
+        media: "Custom main media",
+        default: "Custom main content instead of image or fallback",
         fallback: "Fallback custom quando non c'e immagine",
         label: "Fallback testuale / initials",
-        icon: "Icona fallback",
+        icon: "Fallback icon",
         badge: "Badge overlay, di default top-right",
-        status: "Presence dot o contenuto overlay, di default bottom-right",
-        topLeft: "Contenuto overlay top-left",
-        topRight: "Contenuto overlay top-right",
-        bottomLeft: "Contenuto overlay bottom-left",
-        bottomRight: "Contenuto overlay bottom-right"
+        status: "Presence dot or overlay content, bottom-right by default",
+        topLeft: "Top-left overlay content",
+        topRight: "Top-right overlay content",
+        bottomLeft: "Bottom-left overlay content",
+        bottomRight: "Bottom-right overlay content"
       },
       returns: "HTMLDivElement",
-      description: "Avatar flessibile con immagine, fallback intelligenti, stati, badge e slot overlay."
+      description: "Flexible avatar with image, smart fallbacks, states, badge, and overlay slots."
     };
   }
   // Esempio: CMSwift.ui.Avatar({ label: "CM" })
@@ -7069,7 +7069,7 @@ const unitCover = (v, name = 'size') => {
         onRemove: "MouseEvent"
       },
       returns: "HTMLSpanElement",
-      description: "Chip con icona opzionale e rimozione."
+      description: "Chip with optional icon and removal."
     };
   }
   // Esempio: CMSwift.ui.Chip({ label: "Tag", removable: true })
@@ -7218,7 +7218,7 @@ const unitCover = (v, name = 'size') => {
         default: "Extra body content"
       },
       returns: "HTMLElement",
-      description: "Surface compatta per metriche singole, trend e metadata operative."
+      description: "Compact surface for single metrics, trends, and operational metadata."
     };
   }
   // Esempio: CMSwift.ui.Stat({ label: "Revenue", value: "€ 128k", delta: "+18%" })
@@ -7365,7 +7365,7 @@ const unitCover = (v, name = 'size') => {
         default: "Extra body content"
       },
       returns: "HTMLElement",
-      description: "Surface piu ricca per KPI, metriche headline e mini dashboard summary."
+      description: "Richer surface for KPIs, headline metrics, and mini dashboard summaries."
     };
   }
   // Esempio: CMSwift.ui.Kpi({ title: "Orders", value: "342", delta: "+12%" })
@@ -7688,7 +7688,7 @@ const unitCover = (v, name = 'size') => {
         selected: "boolean",
         disabled: "boolean",
         color: "string",
-        state: "Alias di color",
+        state: "Alias of color",
         size: "string|number",
         outline: "boolean",
         shadow: "boolean|string",
@@ -7716,7 +7716,7 @@ const unitCover = (v, name = 'size') => {
         default: "Fallback body content"
       },
       returns: "HTMLLIElement",
-      description: "Item strutturato per liste semplici, feed, task list e righe cliccabili."
+      description: "Structured item for simple lists, feeds, task lists, and clickable rows."
     };
   }
   // Esempio: CMSwift.ui.Item({}, "Elemento")
@@ -7954,7 +7954,7 @@ if (CMSwift.isDev?.()) {
       default: "Extra banner body content"
     },
     returns: "HTMLDivElement",
-    description: "Banner strutturato con tono, azioni, dismiss e slots composabili."
+    description: "Structured banner with tone, actions, dismiss, and composable slots."
   };
 }
 // Esempio: CMSwift.ui.Banner({ type: "warning", title: "Pagamento in sospeso", message: "Aggiorna il batch entro le 18:00" })
@@ -8567,7 +8567,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         onTriggerClick: "(event) => void"
       },
       returns: "Object { bind(), open(), show(), hide(), close(), toggle(), isOpen() } | HTMLSpanElement",
-      description: "Tooltip ancorato con trigger hover/focus/click, contenuto ricco e API imperativa."
+      description: "Anchored tooltip with hover/focus/click triggers, rich content, and imperative API."
     };
   }
   // Esempio: CMSwift.ui.Tooltip({ title: "Info", text: "Dettaglio rapido" }, CMSwift.ui.Icon({ name: "info" }))
@@ -8797,9 +8797,9 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         checked: "boolean|null",
         model: "[get,set] signal",
         icon: "String|Node|Function|Array",
-        iconOn: "Alias di icon/checkedIcon",
-        iconOff: "Alias di uncheckedIcon",
-        iconStandby: "Icona per stato null/indeterminate",
+        iconOn: "Alias of icon/checkedIcon",
+        iconOff: "Alias of uncheckedIcon",
+        iconStandby: "Icon for null/indeterminate state",
         checkedIcon: "String|Node|Function|Array",
         uncheckedIcon: "String|Node|Function|Array",
         color: "string",
@@ -8842,8 +8842,8 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         checked: "boolean|null",
         model: "[get,set] signal",
         icon: "String|Node|Function|Array",
-        iconOn: "Alias di icon/checkedIcon",
-        iconOff: "Alias di uncheckedIcon",
+        iconOn: "Alias of icon/checkedIcon",
+        iconOff: "Alias of uncheckedIcon",
         checkedIcon: "String|Node|Function|Array",
         uncheckedIcon: "String|Node|Function|Array",
         color: "string",
@@ -8892,15 +8892,15 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
       props: {
         label: "String|Node|Function|Array",
         behavior: "\"checkbox\"|\"radio\"",
-        mode: "Alias di behavior",
+        mode: "Alias of behavior",
         value: "any",
         name: "string",
         checked: "boolean",
         model: "[get,set] signal",
         icon: "String|Node|Function|Array",
-        iconOn: "Alias di icon/checkedIcon",
-        iconOff: "Alias di uncheckedIcon",
-        iconStandby: "Icona per stato null/indeterminate",
+        iconOn: "Alias of icon/checkedIcon",
+        iconOff: "Alias of uncheckedIcon",
+        iconStandby: "Icon for null/indeterminate state",
         checkedIcon: "String|Node|Function|Array",
         uncheckedIcon: "String|Node|Function|Array",
         color: "string",
@@ -9356,22 +9356,22 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         icon: "String|Node|Function|Array",
         iconRight: "String|Node|Function|Array",
         thumbIcon: "String|Node|Function|Array",
-        iconThumb: "Alias di thumbIcon",
-        pointIcon: "Alias di thumbIcon",
+        iconThumb: "Alias of thumbIcon",
+        pointIcon: "Alias of thumbIcon",
         thumbLabel: "String|Node|Function|Array",
         showValue: "boolean",
         labelValue: "String|Node|Function|Array",
         markers: "boolean|number|Array|Object",
         markerLabels: "boolean",
-        labelMarks: "Alias di markerLabels",
+        labelMarks: "Alias of markerLabels",
         startLabel: "String|Node|Function|Array",
         endLabel: "String|Node|Function|Array",
-        leftLabel: "Alias di startLabel",
-        rightLabel: "Alias di endLabel",
-        minLabel: "Alias di startLabel",
-        maxLabel: "Alias di endLabel",
+        leftLabel: "Alias of startLabel",
+        rightLabel: "Alias of endLabel",
+        minLabel: "Alias of startLabel",
+        maxLabel: "Alias of endLabel",
         withQItem: "boolean",
-        qitem: "Alias di withQItem",
+        qitem: "Alias of withQItem",
         item: "boolean",
         itemClass: "string",
         itemStyle: "object",
@@ -9394,15 +9394,15 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         thumbLabel: "Thumb label content",
         marker: "Marker content",
         markerLabel: "Marker label content",
-        startLabel: "Label a sinistra/inizio track",
-        endLabel: "Label a destra/fine track"
+        startLabel: "Label on the left/start of the track",
+        endLabel: "Label on the right/end of the track"
       },
       events: {
         onChange: "(value, event)",
         onInput: "(value, event)"
       },
       returns: "HTMLLabelElement | HTMLLIElement (with ._input = HTMLInputElement)",
-      description: "Slider reattivo con label, icone, thumb custom, markers e supporto model/QItem."
+      description: "Reactive slider with label, icons, custom thumb, markers, and model/QItem support."
     };
   }
   // Esempio: CMSwift.ui.Slider({ min: 0, max: 10, model: [get,set] })
@@ -9747,17 +9747,17 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         label: "String|Node|Function|Array",
         clearable: "boolean",
         half: "boolean",
-        allowHalf: "Alias di half",
+        allowHalf: "Alias of half",
         noDimming: "boolean",
         readonly: "boolean",
         disabled: "boolean",
         icon: "String|Node|Function|Array",
-        iconSelected: "Alias di checkedIcon",
+        iconSelected: "Alias of checkedIcon",
         checkedIcon: "String|Node|Function|Array",
         uncheckedIcon: "String|Node|Function|Array",
-        iconHalf: "Alias di halfIcon",
+        iconHalf: "Alias of halfIcon",
         halfIcon: "String|Node|Function|Array",
-        iconHovered: "Alias di hoveredIcon",
+        iconHovered: "Alias of hoveredIcon",
         hoveredIcon: "String|Node|Function|Array",
         color: "string",
         colorSelected: "string",
@@ -9779,7 +9779,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         halfIcon: "Icon when item is half-selected",
         hoveredIcon: "Icon while hovering selected items",
         item: "Custom item renderer",
-        star: "Alias di item/icon"
+        star: "Alias of item/icon"
       },
       events: {
         onChange: "(value, event)",
@@ -9788,7 +9788,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
       },
       keyboard: ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "Enter", "Space", "Delete", "Backspace", "0"],
       returns: "HTMLLabelElement (with ._input, ._rating, ._getValue(), ._setValue(value))",
-      description: "Rating reattivo con label, icone custom, half rating, clearable e supporto model."
+      description: "Reactive rating with label, custom icons, half rating, clearable behavior, and model support."
     };
   }
   // Esempio: CMSwift.ui.Rating({ max: 5, model: [get,set] })
@@ -11222,11 +11222,11 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         range: "boolean",
         multiple: "boolean",
         rangeMultiple: "boolean",
-        multipleRange: "Alias di rangeMultiple",
+        multipleRange: "Alias of rangeMultiple",
         min: "string",
         max: "string",
-        minDate: "Alias di min",
-        maxDate: "Alias di max",
+        minDate: "Alias of min",
+        maxDate: "Alias of max",
         minRange: "number",
         maxRange: "number",
         manualInput: "boolean",
@@ -11235,7 +11235,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         locale: "string",
         shortcuts: "Array<{ label, value }>",
         options: "Array|string|Function",
-        enableDates: "Alias di options",
+        enableDates: "Alias of options",
         disableDates: "Array|string|Function",
         label: "String|Node|Function|Array",
         icon: "String|Node|Function|Array",
@@ -11260,13 +11260,13 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         style: "object"
       },
       slots: {
-        day: "Contenuto del giorno ({ date, selected, inRange, disabled, outside })",
-        point: "Punto/icona nel giorno",
-        dayPoint: "Alias di point",
+        day: "Day content ({ date, selected, inRange, disabled, outside })",
+        point: "Point/icon in the day",
+        dayPoint: "Alias of point",
         value: "Footer value renderer ({ value, displayValue, mode })",
-        timeOption: "Renderer per opzione oraria nel footer integrato",
-        timePoint: "Punto/icona nella time option del footer",
-        timeShortcut: "Renderer scorciatoia oraria integrata",
+        timeOption: "Renderer for a time option in the integrated footer",
+        timePoint: "Point/icon in the footer time option",
+        timeShortcut: "Integrated time shortcut renderer",
         label: "Floating label",
         topLabel: "Top label",
         icon: "Left icon",
@@ -11281,7 +11281,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         onNavigate: "({ month, year })"
       },
       returns: "HTMLDivElement (field wrapper) con ._input, ._open(), ._close(), ._getValue(), ._setValue(value)",
-      description: "Date picker reattivo con overlay fixed, single/range/multiple/multi-range, model, min/max, presets, size xs-xl e supporto opzionale al tempo in interfaccia unificata."
+      description: "Reactive date picker with fixed overlay, single/range/multiple/multi-range modes, model, min/max, presets, xs-xl sizes, and optional time support in a unified interface."
     };
   }
   // Esempio: CMSwift.ui.Date({ value: "2024-01-01" })
@@ -11613,9 +11613,9 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         style: "object"
       },
       slots: {
-        option: "Renderer per opzione oraria ({ part, value, label, selected, timeValue })",
-        point: "Punto/icona nella time option selezionata",
-        shortcut: "Renderer scorciatoia",
+        option: "Renderer for a time option ({ part, value, label, selected, timeValue })",
+        point: "Point/icon in the selected time option",
+        shortcut: "Shortcut renderer",
         value: "Footer value renderer ({ value, displayValue })",
         label: "Floating label",
         topLabel: "Top label",
@@ -11630,7 +11630,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         onClose: "void"
       },
       returns: "HTMLDivElement (field wrapper) con ._input, ._open(), ._close(), ._getValue(), ._setValue(value)",
-      description: "Time picker reattivo con overlay fixed, label/icon slots, point icon, shortcuts, confirm e model."
+      description: "Reactive time picker with fixed overlay, label/icon slots, point icon, shortcuts, confirm, and model."
     };
   }
   // Esempio: CMSwift.ui.Time({ value: "09:30" })
@@ -12028,10 +12028,10 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
       signature: "UI.Tabs(props) | UI.Tabs(props, ...children)",
       props: {
         tabs: "Array<{ value|name|id|key, label|title, note|subtitle|description, icon, badge|counter, disabled, hidden, onClick }>",
-        items: "Alias di tabs",
+        items: "Alias of tabs",
         value: "any",
         defaultValue: "any",
-        default: "Alias di defaultValue",
+        default: "Alias of defaultValue",
         model: "[get,set] signal",
         orientation: "horizontal|vertical",
         variant: "line|pills|soft",
@@ -12054,14 +12054,14 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         style: "object"
       },
       slots: {
-        nav: "Renderer della nav completa",
-        tab: "Renderer del singolo tab",
-        label: "Renderer della label",
-        icon: "Renderer dell'icona",
-        note: "Renderer della nota",
-        badge: "Renderer del badge/counter",
-        extra: "Area extra accanto alla nav",
-        empty: "Fallback quando tabs/items e vuoto",
+        nav: "Full nav renderer",
+        tab: "Single tab renderer",
+        label: "Label renderer",
+        icon: "Icon renderer",
+        note: "Note renderer",
+        badge: "Badge/counter renderer",
+        extra: "Extra area next to the nav",
+        empty: "Fallback when tabs/items are empty",
         default: "Children / extra content fallback"
       },
       events: {
@@ -12069,7 +12069,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
       },
       keyboard: ["Enter/Space", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"],
       returns: "HTMLDivElement con ._getValue(), ._setValue(value), ._select(value), ._next(), ._prev(), ._getTabs()",
-      description: "Tab bar standardizzata con supporto controlled/uncontrolled, slot strutturati, badge/note/icon e navigazione tastiera."
+      description: "Standardized tab bar with controlled/uncontrolled support, structured slots, badge/note/icon, and keyboard navigation."
     };
   }
   // Esempio: CMSwift.ui.Tabs({ tabs: [{ label: "Overview", value: "overview", icon: "dashboard" }], model: [get,set] })
@@ -12303,7 +12303,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         to: "string",
         href: "string",
         active: "boolean",
-        selected: "Alias di active",
+        selected: "Alias of active",
         match: "\"exact\"|\"startsWith\"|RegExp|Function|string",
         matchMode: "\"exact\"|\"startsWith\"",
         exact: "boolean",
@@ -12335,7 +12335,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         onNavigate: "(to, event)"
       },
       returns: "HTMLAnchorElement con ._isActive(), ._setActive(boolean|null), ._navigate(event?)",
-      description: "Tab/link standardizzato per navigazione router o href, con slot strutturati, stati e badge."
+      description: "Standardized tab/link for router or href navigation, with structured slots, states, and badges."
     };
   }
   // Esempio: CMSwift.ui.RouteTab({ label: "Home", to: "/" })
@@ -13067,12 +13067,12 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         style: "object"
       },
       slots: {
-        start: "Contenuto prima dei controlli",
-        end: "Contenuto dopo i controlli",
+        start: "Content before the controls",
+        end: "Content after the controls",
         first: "First button content",
         prev: "Prev button content",
         page: "Page item content (ctx: { page, active, pages })",
-        item: "Alias di page",
+        item: "Alias of page",
         ellipsis: "Ellipsis content",
         next: "Next button content",
         last: "Last button content",
@@ -13231,7 +13231,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         default: "Extra content rendered near the spinner"
       },
       returns: "HTMLDivElement",
-      description: "Spinner animato con layout flessibile, contenuti opzionali e controllo di dimensioni, velocita e traccia."
+      description: "Animated spinner with flexible layout, optional content, and controls for size, speed, and track."
     };
   }
   // Esempio: CMSwift.ui.Spinner({ size: 24 })
@@ -13645,12 +13645,12 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         iconRight: "String|Node|Function|Array",
         startLabel: "String|Node|Function|Array",
         endLabel: "String|Node|Function|Array",
-        leftLabel: "Alias di startLabel",
-        rightLabel: "Alias di endLabel",
+        leftLabel: "Alias of startLabel",
+        rightLabel: "Alias of endLabel",
         width: "string|number",
         size: "string|number",
         height: "string|number",
-        thickness: "Alias di height",
+        thickness: "Alias of height",
         color: "string",
         state: "primary|secondary|success|warning|danger|info|light|dark",
         trackColor: "string",
@@ -13664,17 +13664,17 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         style: "object"
       },
       slots: {
-        icon: "Icona prima della label",
-        label: "Contenuto principale del progress",
-        note: "Contenuto secondario sotto la label",
-        value: "Valore esterno a destra",
-        inside: "Contenuto dentro la barra",
-        startLabel: "Label a sinistra della barra",
-        endLabel: "Label a destra della barra",
+        icon: "Icon before the label",
+        label: "Main progress content",
+        note: "Secondary content below the label",
+        value: "External value on the right",
+        inside: "Content inside the bar",
+        startLabel: "Label on the left of the bar",
+        endLabel: "Label on the right of the bar",
         default: "Fallback label content"
       },
       returns: "HTMLDivElement",
-      description: "Progress bar standardizzata con header opzionale, buffer, stato semantico e supporto reattivo."
+      description: "Standardized progress bar with optional header, buffer, semantic state, and reactive support."
     };
   }
   // Esempio: CMSwift.ui.Progress({ value: 45 })
@@ -13992,7 +13992,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         min: "number",
         max: "number",
         height: "string|number",
-        thickness: "Alias di height",
+        thickness: "Alias of height",
         size: "string|number",
         color: "string",
         state: "primary|secondary|success|warning|danger|info|light|dark",
@@ -14020,9 +14020,9 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         trickleStep: "number",
         trickleInterval: "number",
         trickleMax: "number",
-        trickleTo: "Alias di trickleMax",
+        trickleTo: "Alias of trickleMax",
         doneValue: "number",
-        doneDelay: "Alias di hideDelay",
+        doneDelay: "Alias of hideDelay",
         hideDelay: "number",
         resetValue: "number",
         label: "String|Node|Function|Array",
@@ -14039,17 +14039,17 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         style: "object"
       },
       slots: {
-        icon: "Icona prima della label",
-        label: "Contenuto principale",
-        note: "Contenuto secondario",
-        value: "Valore esterno a destra",
-        inside: "Contenuto dentro la barra",
-        startLabel: "Label a sinistra della barra",
-        endLabel: "Label a destra della barra",
+        icon: "Icon before the label",
+        label: "Main content",
+        note: "Secondary content",
+        value: "External value on the right",
+        inside: "Content inside the bar",
+        startLabel: "Label on the left of the bar",
+        endLabel: "Label on the right of the bar",
         default: "Fallback content"
       },
-      returns: "HTMLDivElement con API imperativa: .set(), .setBuffer(), .inc(), .start(), .done(), .stop(), .reset(), .show(), .hide(), .destroy()",
-      description: "Loading bar basata su UI.Progress, montabile su body o container custom, controllabile via model o API imperativa."
+      returns: "HTMLDivElement with imperative API: .set(), .setBuffer(), .inc(), .start(), .done(), .stop(), .reset(), .show(), .hide(), .destroy()",
+      description: "Loading bar based on UI.Progress, mountable on body or a custom container, controllable via model or imperative API."
     };
   }
   // Esempio: const lb = CMSwift.ui.LoadingBar({ autoStart: true }); lb.done();
@@ -14251,8 +14251,8 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
       props: {
         id: "string",
         type: "success|warning|danger|error|info|primary|secondary|light|dark",
-        state: "Alias di type",
-        color: "Alias di type",
+        state: "Alias of type",
+        color: "Alias of type",
         title: "String|Node|Function|Array|false",
         message: "String|Node|Function|Array",
         description: "String|Node|Function|Array",
@@ -14262,7 +14262,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         actions: "Node|Function|Array",
         dismiss: "Node|Function|Array",
         timeout: "number|false",
-        duration: "Alias di timeout",
+        duration: "Alias of timeout",
         closable: "boolean",
         dismissLabel: "string",
         position: "top-left|top-center|top-right|bottom-left|bottom-center|bottom-right",
@@ -14282,7 +14282,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         default: "Extra body content under the message"
       },
       methods: {
-        show: "Alias di UI.Notify(...)",
+        show: "Alias of UI.Notify(...)",
         success: "UI.Notify.success(message|opts, title?)",
         error: "UI.Notify.error(message|opts, title?)",
         warning: "UI.Notify.warning(message|opts, title?)",
@@ -14293,7 +14293,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         promise: "UI.Notify.promise(promise|fn, { loading?, success?, error? })"
       },
       returns: "string|null (toast id)",
-      description: "Notify standardizzato con payload strutturato, shortcut semantiche, update/remove/clear e supporto promise."
+      description: "Standardized notify service with structured payloads, semantic shortcuts, update/remove/clear, and promise support."
     };
   }
 
@@ -14505,22 +14505,22 @@ if (CMSwift.isDev?.()) {
       style: "object"
     },
     slots: {
-      left: "Area sinistra, fallback al toggle drawer",
-      start: "Alias/addon area sinistra",
-      right: "Area destra principale",
-      end: "Alias/addon area destra",
-      center: "Override completo del body centrale",
-      body: "Alias di center",
-      icon: "Icona leading",
+      left: "Left area, falls back to the drawer toggle",
+      start: "Alias/addon for the left area",
+      right: "Main right area",
+      end: "Alias/addon for the right area",
+      center: "Full override for the central body",
+      body: "Alias of center",
+      icon: "Leading icon",
       eyebrow: "Eyebrow / kicker",
-      title: "Titolo",
-      subtitle: "Sottotitolo",
-      meta: "Meta info accanto al contenuto centrale",
-      content: "Contenuto extra sotto il sottotitolo",
-      actions: "Azioni raggruppate nella zona destra"
+      title: "Title",
+      subtitle: "Subtitle",
+      meta: "Meta info next to the central content",
+      content: "Extra content below the subtitle",
+      actions: "Actions grouped in the right area"
     },
     returns: "HTMLDivElement",
-    description: "Header strutturato con regioni start/body/end, toggle drawer integrato, metadata e slot composabili."
+    description: "Structured header with start/body/end regions, integrated drawer toggle, metadata, and composable slots."
   };
 }
 
@@ -15059,28 +15059,28 @@ if (CMSwift.isDev?.()) {
       style: "object"
     },
     slots: {
-      header: "Header del drawer, override completo",
-      body: "Override completo del body",
-      footer: "Footer del drawer",
-      before: "Contenuto prima della lista items",
-      after: "Contenuto dopo la lista items",
-      empty: "Empty state quando non ci sono contenuti",
-      item: "Override completo di un item semplice",
-      itemLabel: "Label item (ctx: { item, label, note, badge, aside, content })",
-      itemNote: "Note/subtitle item",
-      itemBadge: "Badge item",
-      itemAside: "Aside/meta item",
-      itemContent: "Contenuto extra item",
-      group: "Override completo header di un gruppo (ctx include toggle/isOpen)",
-      groupLabel: "Label gruppo",
-      groupNote: "Note gruppo",
-      groupBadge: "Badge gruppo",
-      groupAside: "Aside/meta gruppo",
-      groupContent: "Contenuto extra gruppo",
-      sectionLabel: "Label per elementi section/heading"
+      header: "Drawer header, full override",
+      body: "Full body override",
+      footer: "Drawer footer",
+      before: "Content before the item list",
+      after: "Content after the item list",
+      empty: "Empty state when there is no content",
+      item: "Full override for a simple item",
+      itemLabel: "Item label (ctx: { item, label, note, badge, aside, content })",
+      itemNote: "Item note/subtitle",
+      itemBadge: "Item badge",
+      itemAside: "Item aside/meta",
+      itemContent: "Extra item content",
+      group: "Full override for a group header (ctx includes toggle/isOpen)",
+      groupLabel: "Group label",
+      groupNote: "Group note",
+      groupBadge: "Group badge",
+      groupAside: "Group aside/meta",
+      groupContent: "Extra group content",
+      sectionLabel: "Label for section/heading items"
     },
-    returns: "HTMLDivElement con methods openDrawer/closeDrawer/toggleDrawer/isDrawerOpen",
-    description: "Drawer strutturato e retro compatibile con header/footer, gruppi, slot estesi, empty state e stato persistente."
+    returns: "HTMLDivElement with openDrawer/closeDrawer/toggleDrawer/isDrawerOpen methods",
+    description: "Structured, backward-compatible drawer with header/footer, groups, extended slots, empty state, and persistent state."
   };
 }
 
@@ -15302,7 +15302,7 @@ if (CMSwift.isDev?.()) {
       default: "Fallback body content"
     },
     returns: "HTMLDivElement",
-    description: "Contenitore pagina strutturato con hero, header, body, footer e layout configurabile."
+    description: "Structured page container with hero, header, body, footer, and configurable layout."
   };
 }
 
@@ -15759,21 +15759,21 @@ if (CMSwift.isDev?.()) {
       style: "object"
     },
     slots: {
-      background: "Contenuto decorativo dentro il layer di sfondo",
-      badge: "Meta badge/chip sopra il contenuto principale",
+      background: "Decorative content inside the background layer",
+      badge: "Meta badge/chip above the main content",
       eyebrow: "Eyebrow/kicker",
-      title: "Titolo principale",
-      subtitle: "Sottotitolo o testo di supporto",
-      header: "Contenuto aggiuntivo in header",
-      aside: "Area laterale header",
-      media: "Contenuto multimediale o card in foreground",
-      content: "Body principale",
-      footer: "Footer informativo",
-      actions: "Area azioni",
+      title: "Main title",
+      subtitle: "Subtitle or supporting text",
+      header: "Additional header content",
+      aside: "Header side area",
+      media: "Media content or foreground card",
+      content: "Main body",
+      footer: "Informational footer",
+      actions: "Actions area",
       default: "Fallback body content"
     },
-    returns: "HTMLDivElement con methods refresh/update/destroy",
-    description: "Hero/section parallax standardizzato con header strutturato, body, actions, slots e API minima di refresh."
+    returns: "HTMLDivElement with refresh/update/destroy methods",
+    description: "Standardized parallax hero/section with structured header, body, actions, slots, and minimal refresh API."
   };
 }
 
@@ -16740,12 +16740,12 @@ if (CMSwift.isDev?.()) {
         eyebrow: "String|Node|Function|Array|({ close })=>Node",
         icon: "String|Node|Function|Array",
         content: "Node|Function|Array|({ close })=>Node",
-        body: "Alias di content",
+        body: "Alias of content",
         actions: "Node|Function|Array|({ close })=>Node",
-        footer: "Alias di actions",
+        footer: "Alias of actions",
         size: "xs|sm|md|lg|xl|full",
         state: "primary|secondary|warning|danger|success|info|light|dark",
-        color: "Alias di state",
+        color: "Alias of state",
         width: "string|number",
         minWidth: "string|number",
         maxWidth: "string|number",
@@ -16782,18 +16782,18 @@ if (CMSwift.isDev?.()) {
       },
       slots: {
         icon: "Dialog icon ({ close })",
-        eyebrow: "Eyebrow sopra il titolo ({ close })",
+        eyebrow: "Eyebrow above the title ({ close })",
         title: "Dialog title ({ close })",
         subtitle: "Dialog subtitle ({ close })",
-        header: "Header personalizzato ({ close })",
+        header: "Custom header ({ close })",
         content: "Dialog body ({ close })",
-        body: "Alias di content ({ close })",
-        footer: "Footer personalizzato ({ close })",
+        body: "Alias of content ({ close })",
+        footer: "Custom footer ({ close })",
         actions: "Dialog actions ({ close })",
         close: "Close action ({ close })",
         default: "Fallback body content ({ close })"
       },
-      description: "Dialog overlay standardizzato con varianti, animazioni, slots strutturati e API imperativa.",
+      description: "Standardized dialog overlay with variants, animations, structured slots, and imperative API.",
       returns: "Object { open(overrides?), close(), toggle(overrides?), update(props), isOpen(), entry(), props() }"
     };
   }
@@ -17342,192 +17342,192 @@ if (CMSwift.isDev?.()) {
       props: {
         tabs: {
           type: "Array<{ name?, value?, label?, title?, note?, subtitle?, icon?, badge?, content?, panel?, body?, children?, disabled?, hidden?, tabClass?, panelClass? }>",
-          description: "Definizione dei tab. Supporta alias multipli per label e contenuto.",
+          description: "Tab definition. Supports multiple aliases for label and content.",
           category: "data"
         },
         items: {
           type: "Array",
-          description: "Alias di `tabs`.",
+          description: "Alias of `tabs`.",
           category: "data"
         },
         value: {
           type: "any",
-          description: "Valore iniziale o controllato del tab attivo.",
+          description: "Initial or controlled value of the active tab.",
           category: "data"
         },
         defaultValue: {
           type: "any",
-          description: "Alias esplicito per il tab iniziale quando non usi `model`.",
+          description: "Explicit alias for the initial tab when `model` is not used.",
           category: "data"
         },
         model: {
           type: "[get,set] signal",
-          description: "Binding reattivo del tab attivo.",
+          description: "Reactive binding for the active tab.",
           category: "data"
         },
         orientation: {
           type: "vertical|horizontal",
-          description: "Orientamento della navigazione.",
+          description: "Navigation orientation.",
           values: ["vertical", "horizontal"],
           default: "vertical",
           category: "layout"
         },
         navPosition: {
           type: "before|after",
-          description: "Posizione della barra tab rispetto ai pannelli.",
+          description: "Tab bar position relative to the panels.",
           values: ["before", "after"],
           default: "before",
           category: "layout"
         },
         variant: {
           type: "line|pills|soft",
-          description: "Stile visivo della navigazione tab.",
+          description: "Visual style of the tab navigation.",
           values: ["line", "pills", "soft"],
           default: "line",
           category: "style"
         },
         wrap: {
           type: "boolean",
-          description: "Permette al nav di andare a capo quando lo spazio non basta.",
+          description: "Allows the nav to wrap when space is limited.",
           default: false,
           category: "layout"
         },
         navFill: {
           type: "boolean",
-          description: "Distribuisce i tab sulla larghezza disponibile.",
+          description: "Distributes tabs across the available width.",
           default: false,
           category: "layout"
         },
         swipeable: {
           type: "boolean",
-          description: "Abilita swipe sui pannelli.",
+          description: "Enables swipe gestures on panels.",
           default: false,
           category: "behavior"
         },
         infinite: {
           type: "boolean",
-          description: "Quando attivo, next/prev cicla dal primo all'ultimo tab.",
+          description: "When enabled, next/prev cycles from the first to the last tab.",
           default: false,
           category: "behavior"
         },
         animated: {
           type: "boolean",
-          description: "Abilita la transizione fra pannelli.",
+          description: "Enables the transition between panels.",
           default: false,
           category: "behavior"
         },
         transitionDuration: {
           type: "number",
-          description: "Durata animazione in millisecondi.",
+          description: "Animation duration in milliseconds.",
           default: 220,
           category: "behavior"
         },
         transitionEasing: {
           type: "string",
-          description: "Timing function CSS dell'animazione.",
+          description: "CSS timing function for the animation.",
           default: "ease",
           category: "behavior"
         },
         transitionPrev: {
           type: "string",
-          description: "Classi custom applicate durante la transizione verso il tab precedente.",
+          description: "Custom classes applied during the transition to the previous tab.",
           category: "behavior"
         },
         transitionNext: {
           type: "string",
-          description: "Classi custom applicate durante la transizione verso il tab successivo.",
+          description: "Custom classes applied during the transition to the next tab.",
           category: "behavior"
         },
         tabClass: {
           type: "string",
-          description: "Classi aggiuntive per tutti i bottoni tab.",
+          description: "Additional classes for all tab buttons.",
           category: "style"
         },
         tabStyle: {
           type: "object",
-          description: "Style inline applicato a tutti i bottoni tab.",
+          description: "Inline style applied to all tab buttons.",
           category: "style"
         },
         navClass: {
           type: "string",
-          description: "Classi aggiuntive per il wrapper della nav.",
+          description: "Additional classes for the nav wrapper.",
           category: "style"
         },
         panelsClass: {
           type: "string",
-          description: "Classi aggiuntive per il wrapper dei pannelli.",
+          description: "Additional classes for the panels wrapper.",
           category: "style"
         },
         panelClass: {
           type: "string",
-          description: "Classi aggiuntive comuni per ogni pannello.",
+          description: "Common additional classes for each panel.",
           category: "style"
         },
         panelStyle: {
           type: "object",
-          description: "Style inline comune per ogni pannello.",
+          description: "Common inline style for each panel.",
           category: "style"
         },
         empty: {
           type: "Node|Function|Array",
-          description: "Fallback visuale quando `tabs` e `items` sono vuoti.",
+          description: "Visual fallback when `tabs` and `items` are empty.",
           category: "state"
         },
         disabled: {
           type: "boolean",
-          description: "Disabilita l'intero componente.",
+          description: "Disables the entire component.",
           default: false,
           category: "state"
         },
         slots: {
           type: "{ nav?, tab?, label?, icon?, note?, badge?, panel?, empty?, default? }",
-          description: "Slot strutturati per personalizzare nav, label, badge e contenuto.",
+          description: "Structured slots for customizing nav, label, badge, and content.",
           category: "general"
         }
       },
       slots: {
         nav: {
           type: "Function|Node|Array",
-          description: "Renderer completo della navigazione. Riceve `tabs`, `active()`, `activeTab()`, `select()`, `next()`, `prev()`, `nodes`, `orientation`, `position`, `variant`."
+          description: "Full navigation renderer. Receives `tabs`, `active()`, `activeTab()`, `select()`, `next()`, `prev()`, `nodes`, `orientation`, `position`, `variant`."
         },
         tab: {
           type: "Function|Node|Array",
-          description: "Contenuto interno del bottone tab. Riceve `tab`, `name`, `index`, `active`, `label`, `icon`, `note`, `badge`, `select()`."
+          description: "Inner content of the tab button. Receives `tab`, `name`, `index`, `active`, `label`, `icon`, `note`, `badge`, `select()`."
         },
         label: {
           type: "Function|Node|Array",
-          description: "Label del tab."
+          description: "Tab label."
         },
         icon: {
           type: "Function|Node|Array",
-          description: "Icona del tab."
+          description: "Tab icon."
         },
         note: {
           type: "Function|Node|Array",
-          description: "Nota, subtitle o descrizione breve sotto la label."
+          description: "Note, subtitle, or short description below the label."
         },
         badge: {
           type: "Function|Node|Array",
-          description: "Badge o counter allineato a destra del tab."
+          description: "Badge or counter aligned to the right of the tab."
         },
         panel: {
           type: "Function|Node|Array",
-          description: "Renderer del pannello attivo/inattivo. Riceve `tab`, `name`, `index`, `active`, `select()`, `next()`, `prev()`."
+          description: "Active/inactive panel renderer. Receives `tab`, `name`, `index`, `active`, `select()`, `next()`, `prev()`."
         },
         empty: {
           type: "Function|Node|Array",
-          description: "Fallback quando non ci sono tab."
+          description: "Fallback when there are no tabs."
         },
         default: {
           type: "Node|Array|Function",
-          description: "Contenuto extra appendato dopo il componente."
+          description: "Extra content appended after the component."
         }
       },
       events: {
         onChange: "(name, tab, index)"
       },
-      returns: "HTMLDivElement con API `_getValue()`, `_setValue(value)`, `_select(value)`, `_next()`, `_prev()`, `_active()`, `_tabs()`",
-      description: "Tab panel standardizzato con nav accessibile, slot strutturati, model reattivo, swipe e animazioni."
+      returns: "HTMLDivElement with API `_getValue()`, `_setValue(value)`, `_select(value)`, `_next()`, `_prev()`, `_active()`, `_tabs()`",
+      description: "Standardized tab panel with accessible nav, structured slots, reactive model, swipe, and animations."
     };
   }
 
@@ -18367,27 +18367,27 @@ transition: width 200ms ease;
         style: "object"
       },
       slots: {
-        default: "Contenuto introduttivo sopra la tabella",
-        toolbarStart: "Area sinistra toolbar",
-        toolbar: "Toolbar centrale/custom",
-        toolbarEnd: "Area destra toolbar",
-        search: "Sostituisce la search box built-in",
-        header: "Header custom per colonna",
-        cell: "Render globale celle",
-        actions: "Render globale azioni riga",
-        actionsHeader: "Header colonna azioni",
-        caption: "Caption sopra la tabella",
-        status: "Contenuto extra nella status row",
-        loading: "Stato loading",
-        empty: "Stato empty",
-        footer: "Contenuto extra nel footer"
+        default: "Introductory content above the table",
+        toolbarStart: "Toolbar left area",
+        toolbar: "Central/custom toolbar",
+        toolbarEnd: "Toolbar right area",
+        search: "Replaces the built-in search box",
+        header: "Custom column header",
+        cell: "Global cell renderer",
+        actions: "Global row actions renderer",
+        actionsHeader: "Actions column header",
+        caption: "Caption above the table",
+        status: "Extra content in the status row",
+        loading: "Loading state",
+        empty: "Empty state",
+        footer: "Extra content in the footer"
       },
       events: {
         onRowClick: "(row, ctx, event) => void",
         onRowDblClick: "(row, ctx, event) => void"
       },
       returns: "HTMLDivElement",
-      description: "Tabella standardizzata con toolbar, ricerca, sorting, paginazione, stati e rendering flessibile."
+      description: "Standardized table with toolbar, search, sorting, pagination, states, and flexible rendering."
     };
   }
 
@@ -18996,7 +18996,7 @@ transition: width 200ms ease;
         eyebrow: "String|Node|Function|Array|({ close })=>Node",
         icon: "String|Node|Function|Array",
         content: "Node|Function|Array|({ close })=>Node",
-        body: "Alias di content",
+        body: "Alias of content",
         items: "Array<string|object>|Function|Array",
         before: "Node|Function|Array",
         after: "Node|Function|Array",
@@ -19005,25 +19005,25 @@ transition: width 200ms ease;
         empty: "Node|Function|Array",
         size: "xs|sm|md|lg|xl",
         state: "primary|secondary|warning|danger|success|info|light|dark",
-        color: "Alias di state",
+        color: "Alias of state",
         trigger: "click|hover|focus|manual|Array",
         placement: "string",
         offsetX: "number",
         offsetY: "number",
-        offset: "Alias di offsetY",
+        offset: "Alias of offsetY",
         width: "string|number",
         minWidth: "string|number",
         maxWidth: "string|number",
         maxHeight: "string|number",
         bodyMaxHeight: "string|number",
-        contentMaxHeight: "Alias di bodyMaxHeight",
+        contentMaxHeight: "Alias of bodyMaxHeight",
         closeOnSelect: "boolean",
         closeOnOutside: "boolean",
         closeOnEsc: "boolean",
         autoFocus: "boolean",
         anchorEl: "HTMLElement|VirtualAnchor",
-        triggerEl: "Alias di anchorEl",
-        target: "Alias di anchorEl",
+        triggerEl: "Alias of anchorEl",
+        target: "Alias of anchorEl",
         slots: "{ before?, icon?, eyebrow?, title?, subtitle?, header?, content?, body?, item?, itemTitle?, itemSubtitle?, itemBadge?, itemShortcut?, groupLabel?, empty?, status?, footer?, after?, default? }",
         class: "string",
         panelClass: "string",
@@ -19036,24 +19036,24 @@ transition: width 200ms ease;
         onTriggerClick: "function"
       },
       slots: {
-        before: "Area sopra header/body ({ close })",
+        before: "Region above header/body ({ close })",
         icon: "Menu icon",
         eyebrow: "Menu eyebrow ({ close })",
         title: "Menu title ({ close })",
         subtitle: "Menu subtitle ({ close })",
         header: "Header custom ({ close })",
         content: "Custom content ({ close })",
-        body: "Alias di content ({ close })",
+        body: "Alias of content ({ close })",
         item: "Custom item body ({ item, close })",
         itemTitle: "Item title ({ item, close })",
         itemSubtitle: "Item subtitle ({ item, close })",
         itemBadge: "Item badge ({ item, close })",
         itemShortcut: "Item shortcut ({ item, close })",
-        groupLabel: "Label gruppi ({ item, close })",
+        groupLabel: "Group label ({ item, close })",
         empty: "Empty state ({ close })",
         status: "Status row ({ close })",
         footer: "Footer actions ({ close })",
-        after: "Area sotto body/footer ({ close })",
+        after: "Region below body/footer ({ close })",
         default: "Fallback content ({ close })"
       },
       events: {
@@ -19062,7 +19062,7 @@ transition: width 200ms ease;
         onItemClick: "item click"
       },
       returns: "Object { open(), close(), show(), hide(), toggle(), update(), bind(), isOpen() }",
-      description: "Menu overlay standardizzato con item model, slot ricchi, trigger bindabili, header/footer e API imperativa."
+      description: "Standardized menu overlay with item model, rich slots, bindable triggers, header/footer, and imperative API."
     };
   }
 
@@ -19503,23 +19503,23 @@ transition: width 200ms ease;
         eyebrow: "String|Node|Function|Array|({ close })=>Node",
         icon: "String|Node|Function|Array",
         content: "Node|Function|Array|({ close })=>Node",
-        body: "Alias di content",
+        body: "Alias of content",
         actions: "Node|Function|Array|({ close })=>Node",
-        footer: "Alias di actions",
+        footer: "Alias of actions",
         size: "xs|sm|md|lg|xl",
         state: "primary|secondary|warning|danger|success|info|light|dark",
-        color: "Alias di state",
+        color: "Alias of state",
         trigger: "click|hover|focus|manual|Array",
         placement: "string",
         offsetX: "number",
         offsetY: "number",
-        offset: "Alias di offsetY",
+        offset: "Alias of offsetY",
         width: "string|number",
         minWidth: "string|number",
         maxWidth: "string|number",
         maxHeight: "string|number",
         bodyMaxHeight: "string|number",
-        contentMaxHeight: "Alias di bodyMaxHeight",
+        contentMaxHeight: "Alias of bodyMaxHeight",
         backdrop: "boolean",
         lockScroll: "boolean",
         trapFocus: "boolean",
@@ -19532,8 +19532,8 @@ transition: width 200ms ease;
         closeOnEsc: "boolean",
         open: "boolean|rod|signal",
         anchorEl: "HTMLElement|VirtualAnchor",
-        triggerEl: "Alias di anchorEl",
-        target: "Alias di anchorEl",
+        triggerEl: "Alias of anchorEl",
+        target: "Alias of anchorEl",
         slots: "{ icon?, eyebrow?, title?, subtitle?, header?, content?, body?, footer?, actions?, close?, default? }",
         class: "string",
         panelClass: "string",
@@ -19550,9 +19550,9 @@ transition: width 200ms ease;
         subtitle: "Popover subtitle ({ close })",
         header: "Header custom ({ close })",
         content: "Popover body ({ close })",
-        body: "Alias di content ({ close })",
+        body: "Alias of content ({ close })",
         footer: "Popover footer ({ close })",
-        actions: "Alias di footer ({ close })",
+        actions: "Alias of footer ({ close })",
         close: "Close button slot ({ close })",
         default: "Fallback body ({ close })"
       },
@@ -19561,7 +19561,7 @@ transition: width 200ms ease;
         onClose: "void"
       },
       returns: "Object { open(), close(), show(), hide(), toggle(), update(), bind(), isOpen() }",
-      description: "Popover ancorato standardizzato con layout ricco, slot completi, trigger bindabili e API imperativa."
+      description: "Standardized anchored popover with rich layout, complete slots, bindable triggers, and imperative API."
     };
   }
 
@@ -19764,7 +19764,7 @@ transition: width 200ms ease;
         eyebrow: "String|Node|Function|Array|({ close })=>Node",
         icon: "String|Node|Function|Array",
         content: "Node|Function|Array|({ close })=>Node",
-        body: "Alias di content",
+        body: "Alias of content",
         items: "Array<string|object>|Function|Array",
         before: "Node|Function|Array",
         after: "Node|Function|Array",
@@ -19773,23 +19773,23 @@ transition: width 200ms ease;
         empty: "Node|Function|Array",
         size: "xs|sm|md|lg|xl",
         state: "primary|secondary|warning|danger|success|info|light|dark",
-        color: "Alias di state",
+        color: "Alias of state",
         placement: "string",
         offsetX: "number",
         offsetY: "number",
-        offset: "Alias di offsetY",
+        offset: "Alias of offsetY",
         width: "string|number",
         minWidth: "string|number",
         maxWidth: "string|number",
         maxHeight: "string|number",
         bodyMaxHeight: "string|number",
-        contentMaxHeight: "Alias di bodyMaxHeight",
+        contentMaxHeight: "Alias of bodyMaxHeight",
         closeOnSelect: "boolean",
         closeOnOutside: "boolean",
         closeOnEsc: "boolean",
         anchorEl: "HTMLElement|VirtualAnchor",
-        triggerEl: "Alias di anchorEl",
-        target: "Alias di anchorEl",
+        triggerEl: "Alias of anchorEl",
+        target: "Alias of anchorEl",
         slots: "{ before?, icon?, eyebrow?, title?, subtitle?, header?, content?, body?, item?, itemTitle?, itemSubtitle?, itemBadge?, itemShortcut?, groupLabel?, empty?, status?, footer?, after?, default? }",
         class: "string",
         panelClass: "string",
@@ -19802,34 +19802,34 @@ transition: width 200ms ease;
         onTrigger: "(event, ctx) => boolean|void"
       },
       slots: {
-        before: "Area sopra header/body ({ close })",
+        before: "Region above header/body ({ close })",
         icon: "Context icon",
         eyebrow: "Context eyebrow ({ close })",
         title: "Context title ({ close })",
         subtitle: "Context subtitle ({ close })",
         header: "Header custom ({ close })",
         content: "Context menu content ({ close })",
-        body: "Alias di content ({ close })",
+        body: "Alias of content ({ close })",
         item: "Custom item body ({ item, close })",
         itemTitle: "Item title ({ item, close })",
         itemSubtitle: "Item subtitle ({ item, close })",
         itemBadge: "Item badge ({ item, close })",
         itemShortcut: "Item shortcut ({ item, close })",
-        groupLabel: "Label gruppi ({ item, close })",
+        groupLabel: "Group label ({ item, close })",
         empty: "Empty state ({ close })",
         status: "Status row ({ close })",
         footer: "Footer actions ({ close })",
-        after: "Area sotto body/footer ({ close })",
+        after: "Region below body/footer ({ close })",
         default: "Fallback content ({ close })"
       },
       events: {
         onOpen: "void",
         onClose: "void",
         onItemClick: "item click",
-        onTrigger: "trigger contextmenu / tastiera"
+        onTrigger: "contextmenu / keyboard trigger"
       },
       returns: "Object { open(), openAt(), openFromEvent(), show(), hide(), close(), toggle(), update(), bind(), isOpen() }",
-      description: "Specializzazione di Menu per click destro e tasto context menu, con items, slot ricchi, runtime overrides e posizionamento su coordinate."
+      description: "Menu specialization for right-click and context-menu key interactions, with items, rich slots, runtime overrides, and coordinate-based positioning."
     };
   }
 })(CMSwift);

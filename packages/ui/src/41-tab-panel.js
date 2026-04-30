@@ -542,192 +542,192 @@
       props: {
         tabs: {
           type: "Array<{ name?, value?, label?, title?, note?, subtitle?, icon?, badge?, content?, panel?, body?, children?, disabled?, hidden?, tabClass?, panelClass? }>",
-          description: "Definizione dei tab. Supporta alias multipli per label e contenuto.",
+          description: "Tab definition. Supports multiple aliases for label and content.",
           category: "data"
         },
         items: {
           type: "Array",
-          description: "Alias di `tabs`.",
+          description: "Alias of `tabs`.",
           category: "data"
         },
         value: {
           type: "any",
-          description: "Valore iniziale o controllato del tab attivo.",
+          description: "Initial or controlled value of the active tab.",
           category: "data"
         },
         defaultValue: {
           type: "any",
-          description: "Alias esplicito per il tab iniziale quando non usi `model`.",
+          description: "Explicit alias for the initial tab when `model` is not used.",
           category: "data"
         },
         model: {
           type: "[get,set] signal",
-          description: "Binding reattivo del tab attivo.",
+          description: "Reactive binding for the active tab.",
           category: "data"
         },
         orientation: {
           type: "vertical|horizontal",
-          description: "Orientamento della navigazione.",
+          description: "Navigation orientation.",
           values: ["vertical", "horizontal"],
           default: "vertical",
           category: "layout"
         },
         navPosition: {
           type: "before|after",
-          description: "Posizione della barra tab rispetto ai pannelli.",
+          description: "Tab bar position relative to the panels.",
           values: ["before", "after"],
           default: "before",
           category: "layout"
         },
         variant: {
           type: "line|pills|soft",
-          description: "Stile visivo della navigazione tab.",
+          description: "Visual style of the tab navigation.",
           values: ["line", "pills", "soft"],
           default: "line",
           category: "style"
         },
         wrap: {
           type: "boolean",
-          description: "Permette al nav di andare a capo quando lo spazio non basta.",
+          description: "Allows the nav to wrap when space is limited.",
           default: false,
           category: "layout"
         },
         navFill: {
           type: "boolean",
-          description: "Distribuisce i tab sulla larghezza disponibile.",
+          description: "Distributes tabs across the available width.",
           default: false,
           category: "layout"
         },
         swipeable: {
           type: "boolean",
-          description: "Abilita swipe sui pannelli.",
+          description: "Enables swipe gestures on panels.",
           default: false,
           category: "behavior"
         },
         infinite: {
           type: "boolean",
-          description: "Quando attivo, next/prev cicla dal primo all'ultimo tab.",
+          description: "When enabled, next/prev cycles from the first to the last tab.",
           default: false,
           category: "behavior"
         },
         animated: {
           type: "boolean",
-          description: "Abilita la transizione fra pannelli.",
+          description: "Enables the transition between panels.",
           default: false,
           category: "behavior"
         },
         transitionDuration: {
           type: "number",
-          description: "Durata animazione in millisecondi.",
+          description: "Animation duration in milliseconds.",
           default: 220,
           category: "behavior"
         },
         transitionEasing: {
           type: "string",
-          description: "Timing function CSS dell'animazione.",
+          description: "CSS timing function for the animation.",
           default: "ease",
           category: "behavior"
         },
         transitionPrev: {
           type: "string",
-          description: "Classi custom applicate durante la transizione verso il tab precedente.",
+          description: "Custom classes applied during the transition to the previous tab.",
           category: "behavior"
         },
         transitionNext: {
           type: "string",
-          description: "Classi custom applicate durante la transizione verso il tab successivo.",
+          description: "Custom classes applied during the transition to the next tab.",
           category: "behavior"
         },
         tabClass: {
           type: "string",
-          description: "Classi aggiuntive per tutti i bottoni tab.",
+          description: "Additional classes for all tab buttons.",
           category: "style"
         },
         tabStyle: {
           type: "object",
-          description: "Style inline applicato a tutti i bottoni tab.",
+          description: "Inline style applied to all tab buttons.",
           category: "style"
         },
         navClass: {
           type: "string",
-          description: "Classi aggiuntive per il wrapper della nav.",
+          description: "Additional classes for the nav wrapper.",
           category: "style"
         },
         panelsClass: {
           type: "string",
-          description: "Classi aggiuntive per il wrapper dei pannelli.",
+          description: "Additional classes for the panels wrapper.",
           category: "style"
         },
         panelClass: {
           type: "string",
-          description: "Classi aggiuntive comuni per ogni pannello.",
+          description: "Common additional classes for each panel.",
           category: "style"
         },
         panelStyle: {
           type: "object",
-          description: "Style inline comune per ogni pannello.",
+          description: "Common inline style for each panel.",
           category: "style"
         },
         empty: {
           type: "Node|Function|Array",
-          description: "Fallback visuale quando `tabs` e `items` sono vuoti.",
+          description: "Visual fallback when `tabs` and `items` are empty.",
           category: "state"
         },
         disabled: {
           type: "boolean",
-          description: "Disabilita l'intero componente.",
+          description: "Disables the entire component.",
           default: false,
           category: "state"
         },
         slots: {
           type: "{ nav?, tab?, label?, icon?, note?, badge?, panel?, empty?, default? }",
-          description: "Slot strutturati per personalizzare nav, label, badge e contenuto.",
+          description: "Structured slots for customizing nav, label, badge, and content.",
           category: "general"
         }
       },
       slots: {
         nav: {
           type: "Function|Node|Array",
-          description: "Renderer completo della navigazione. Riceve `tabs`, `active()`, `activeTab()`, `select()`, `next()`, `prev()`, `nodes`, `orientation`, `position`, `variant`."
+          description: "Full navigation renderer. Receives `tabs`, `active()`, `activeTab()`, `select()`, `next()`, `prev()`, `nodes`, `orientation`, `position`, `variant`."
         },
         tab: {
           type: "Function|Node|Array",
-          description: "Contenuto interno del bottone tab. Riceve `tab`, `name`, `index`, `active`, `label`, `icon`, `note`, `badge`, `select()`."
+          description: "Inner content of the tab button. Receives `tab`, `name`, `index`, `active`, `label`, `icon`, `note`, `badge`, `select()`."
         },
         label: {
           type: "Function|Node|Array",
-          description: "Label del tab."
+          description: "Tab label."
         },
         icon: {
           type: "Function|Node|Array",
-          description: "Icona del tab."
+          description: "Tab icon."
         },
         note: {
           type: "Function|Node|Array",
-          description: "Nota, subtitle o descrizione breve sotto la label."
+          description: "Note, subtitle, or short description below the label."
         },
         badge: {
           type: "Function|Node|Array",
-          description: "Badge o counter allineato a destra del tab."
+          description: "Badge or counter aligned to the right of the tab."
         },
         panel: {
           type: "Function|Node|Array",
-          description: "Renderer del pannello attivo/inattivo. Riceve `tab`, `name`, `index`, `active`, `select()`, `next()`, `prev()`."
+          description: "Active/inactive panel renderer. Receives `tab`, `name`, `index`, `active`, `select()`, `next()`, `prev()`."
         },
         empty: {
           type: "Function|Node|Array",
-          description: "Fallback quando non ci sono tab."
+          description: "Fallback when there are no tabs."
         },
         default: {
           type: "Node|Array|Function",
-          description: "Contenuto extra appendato dopo il componente."
+          description: "Extra content appended after the component."
         }
       },
       events: {
         onChange: "(name, tab, index)"
       },
-      returns: "HTMLDivElement con API `_getValue()`, `_setValue(value)`, `_select(value)`, `_next()`, `_prev()`, `_active()`, `_tabs()`",
-      description: "Tab panel standardizzato con nav accessibile, slot strutturati, model reattivo, swipe e animazioni."
+      returns: "HTMLDivElement with API `_getValue()`, `_setValue(value)`, `_select(value)`, `_next()`, `_prev()`, `_active()`, `_tabs()`",
+      description: "Standardized tab panel with accessible nav, structured slots, reactive model, swipe, and animations."
     };
   }
 
