@@ -4077,6 +4077,7 @@ select {
   border-radius: var(--cms-r-md);
   box-shadow: var(--cms-shadow-sm);
   color: var(--cms-text);
+  --set-background-color: var(--cms-panel);
 }
 
 .cms-overlay-panel.enter {
@@ -4088,6 +4089,7 @@ select {
   opacity: 1;
   transform: translateY(0);
   transition: opacity 160ms ease, transform 160ms ease;
+  --set-background-color: var(--cms-panel);
 }
 
 .cms-overlay-panel.leave {
@@ -8679,9 +8681,9 @@ select {
 
 .cms-dialog.sticky-actions .cms-dialog-actions {
   position: sticky;
-  bottom: 0;
+  bottom: -15px;
   z-index: 2;
-  background: color-mix(in srgb, var(--cms-panel) 92%, transparent);
+  background-color: color-mix(in srgb, var(--set-background-color) 90%, var(--set-color-3));
   backdrop-filter: blur(12px);
 }
 
@@ -8769,16 +8771,16 @@ select {
 .cms-dialog.success,
 .cms-dialog.cms-state-success {
   --cms-dialog-accent: var(--cms-success);
-  --set-background-color: var(--set-color-0);
-  --set-text-color: var(--set-color-4);
+  --set-background-color: color-mix(in srgb, var(--set-color-3) 10%, var(--cms-theme-color-1));
+  --set-text-color: var(--set-color-2);
   --set-color: var(--set-text-color);
 }
 
 .cms-dialog.warning,
 .cms-dialog.cms-state-warning {
   --cms-dialog-accent: var(--cms-warning);
-  --set-background-color: var(--set-color-0);
-  --set-text-color: var(--set-color-4);
+  --set-background-color: color-mix(in srgb, var(--set-color-3) 10%, var(--cms-theme-color-1));
+  --set-text-color: var(--set-color-2);
   --set-color: var(--set-text-color);
 }
 
@@ -8786,48 +8788,48 @@ select {
 .cms-dialog.danger,
 .cms-dialog.cms-state-danger {
   --cms-dialog-accent: var(--cms-danger);
-  --set-background-color: var(--set-color-0);
-  --set-text-color: var(--set-color-4);
+  --set-background-color: color-mix(in srgb, var(--set-color-3) 10%, var(--cms-theme-color-1));
+  --set-text-color: var(--set-color-2);
   --set-color: var(--set-text-color);
 }
 
 .cms-dialog.info,
 .cms-dialog.cms-state-info {
   --cms-dialog-accent: var(--cms-info);
-  --set-background-color: var(--set-color-0);
-  --set-text-color: var(--set-color-4);
+  --set-background-color: color-mix(in srgb, var(--set-color-3) 10%, var(--cms-theme-color-1));
+  --set-text-color: var(--set-color-2);
   --set-color: var(--set-text-color);
 }
 
 .cms-dialog.primary,
 .cms-dialog.cms-state-primary {
   --cms-dialog-accent: var(--cms-primary);
-  --set-background-color: var(--set-color-0);
-  --set-text-color: var(--set-color-4);
+  --set-background-color: color-mix(in srgb, var(--set-color-3) 10%, var(--cms-theme-color-1));
+  --set-text-color: var(--set-color-2);
   --set-color: var(--set-text-color);
 }
 
 .cms-dialog.secondary,
 .cms-dialog.cms-state-secondary {
   --cms-dialog-accent: var(--cms-secondary);
-  --set-background-color: var(--set-color-0);
-  --set-text-color: var(--set-color-4);
+  --set-background-color: color-mix(in srgb, var(--set-color-3) 10%, var(--cms-theme-color-1));
+  --set-text-color: var(--set-color-2);
   --set-color: var(--set-text-color);
 }
 
 .cms-dialog.light,
 .cms-dialog.cms-state-light {
   --cms-dialog-accent: var(--cms-light);
-  --set-background-color: var(--set-color-0);
-  --set-text-color: var(--set-color-4);
+  --set-background-color: color-mix(in srgb, var(--set-color-3) 10%, var(--cms-theme-color-1));
+  --set-text-color: var(--set-color-2);
   --set-color: var(--set-text-color);
 }
 
 .cms-dialog.dark,
 .cms-dialog.cms-state-dark {
   --cms-dialog-accent: var(--cms-dark);
-  --set-background-color: var(--set-color-0);
-  --set-text-color: var(--set-color-4);
+  --set-background-color: color-mix(in srgb, var(--set-color-3) 10%, var(--cms-theme-color-1));
+  --set-text-color: var(--set-color-2);
   --set-color: var(--set-text-color);
 }
 
@@ -11934,7 +11936,7 @@ a.cms-breadcrumb {
 .cms-state-warning>.cms-control {
   --set-border-color: var(--cms-warning-hover);
   --set-color: var(--cms-warning-text);
-  --set-background-color: color-mix(in srgb, var(--cms-warning) 40%, var(--cms-theme-color-1));
+  --set-background-color: color-mix(in srgb, var(--cms-warning) 80%, var(--cms-theme-color-1));
   --set-shadow: 0 3px 6px color-mix(in srgb, var(--cms-warning-950) 40%, transparent);
   --set-hover: var(--cms-warning-hover);
   --set-color-0: var(--cms-warning-50);
@@ -12224,11 +12226,11 @@ a.cms-breadcrumb {
 }
 
 /*tutti che iniziano con cms-state-*/
-[class*='cms-state-']:not(.cms-outline, .cms-state-secondary) {
+[class*='cms-state-']:not(.cms-outline, .cms-state-secondary, .cms-dialog) {
   --set-color: var(--set-color-1);
 }
 
-.cms-state-secondary:not(.cms-outline) {
+.cms-state-secondary:not(.cms-outline, .cms-dialog) {
   --set-color: var(--set-color-1);
 }
 
