@@ -5,8 +5,10 @@ CMSwift.ready(() => {
     window.CMSwiftDemoI18n?.t(`playground.ui.${key}`, replacements) ?? key;
 
   const nameModel = _.rod("Carlos");
+  const bioModel = _.rod("Frontend CMSwift");
   const roleModel = _.rod("developer");
   const searchModel = _.rod("");
+  const dateModel = _.rod("");
   const searchItems = [
     { title: "Dashboard", description: "Panoramica e metriche principali", value: "dashboard" },
     { title: "Utenti", description: "Gestione account e ruoli", value: "users" },
@@ -34,11 +36,25 @@ CMSwift.ready(() => {
             model: nameModel,
             clearable: true,
           }),
+          _.Textarea({
+            placeholder: "Bio",
+            model: bioModel,
+            rows: 3,
+            clearable: true,
+          }),
           _.Select({
             label: t("roleLabel"),
             model: roleModel,
             options: ["developer", "designer", "operator"],
             icon: "account_box",
+          }),
+          _.Slider({
+            label: "Slider",
+            model: roleModel,
+            min: 0,
+            max: 100,
+            step: 10,
+            size: "xs",
           }),
           _.Search({
             label: "Search",
@@ -54,6 +70,7 @@ CMSwift.ready(() => {
           _.Checkbox({ model: [getUpdates, setUpdates] }, t("updatesLabel")),
           _.input({ placeholder: 'prova', name: "test" }),
           _.Input({ placeholder: 'prova', name: "test" }),
+          _.Date({ model: dateModel, mode: "range", label: t("updatesLabel") }),
           _.div(
 
             _.Btn(

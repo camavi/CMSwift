@@ -253,6 +253,7 @@ Practical generation rules:
 - `FormField`
 - `InputRaw`
 - `Input`
+- `Textarea`
 - `Select`
 - `Checkbox`
 - `Radio`

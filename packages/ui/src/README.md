@@ -113,7 +113,7 @@ Planned families:
 - bootstrap/helpers:
   rod path proxy, argument normalization, shared helpers, meta/dev wrapping
 - primitives/layout:
-  `Row`, `Col`, `Spacer`, `Container`, `Card`, `Footer`, `Toolbar`, `Grid`, `GridCol`, `FormField`, `InputRaw`, `Input`, `Select`
+  `Row`, `Col`, `Spacer`, `Container`, `Card`, `Footer`, `Toolbar`, `Grid`, `GridCol`, `FormField`, `InputRaw`, `Input`, `Textarea`, `Select`
 - display/content:
   `Icon`, `Badge`, `Avatar`, `Chip`
 - list/content:

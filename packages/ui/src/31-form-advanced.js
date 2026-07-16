@@ -370,11 +370,23 @@
       "markers", "markerLabels", "labelMarks", "leftLabel", "rightLabel",
       "startLabel", "endLabel", "minLabel", "maxLabel", "withQItem", "qitem",
       "item", "itemClass", "itemStyle", "showValue", "thumbLabel", "labelValue",
-      "selectionColor", "trackColor", "thumbColor", "inputClass", "readonly"
+      "selectionColor", "trackColor", "thumbColor", "inputClass", "readonly", "size"
     ]);
     inputProps.type = "range";
     inputProps.class = uiClass(["cms-slider-input", props.inputClass]);
     const input = _.input(inputProps);
+
+    const sliderStyle = { ...(props.style || {}) };
+    const sizeValue = uiUnwrap(props.size);
+    if (sizeValue != null) {
+      const sliderSize = (typeof sizeValue === "string" && CMSwift.uiSizes?.includes(sizeValue))
+        ? `var(--cms-size-${sizeValue})`
+        : toCssSize(sizeValue);
+      sliderStyle["--cms-slider-size"] = sliderSize;
+      sliderStyle["--cms-slider-track-size"] = `max(4px, calc(${sliderSize} / 4))`;
+      sliderStyle["--cms-slider-box-height"] = `calc(${sliderSize} * 1.5)`;
+      sliderStyle["--cms-slider-marker-size"] = `max(6px, calc(${sliderSize} / 3))`;
+    }
 
     const wrap = _.label({
       class: uiClass([
@@ -384,7 +396,7 @@
         uiWhen(props.dense, "dense"),
         props.class
       ]),
-      style: props.style
+      style: sliderStyle
     });
     setPropertyProps(wrap, props);
 
@@ -412,16 +424,29 @@
       class: "cms-slider-main"
     });
     const sliderBox = _.div({
-      class: "cms-slider-box"
+      class: "cms-slider-box",
+      style: {
+        minHeight: "var(--cms-slider-box-height, 36px)"
+      }
     });
     const rail = _.span({
-      class: "cms-slider-rail"
+      class: "cms-slider-rail",
+      style: {
+        height: "var(--cms-slider-track-size, 6px)"
+      }
     });
     const selection = _.span({
-      class: "cms-slider-selection"
+      class: "cms-slider-selection",
+      style: {
+        height: "var(--cms-slider-track-size, 6px)"
+      }
     });
     const thumb = _.span({
-      class: "cms-slider-thumb"
+      class: "cms-slider-thumb",
+      style: {
+        width: "var(--cms-slider-size, 24px)",
+        height: "var(--cms-slider-size, 24px)"
+      }
     });
     const thumbIconHost = _.span({
       class: "cms-slider-thumb-icon"
@@ -614,6 +639,8 @@
         const markerTick = _.span({
           class: "cms-slider-marker-tick",
           style: {
+            width: "var(--cms-slider-marker-size, 8px)",
+            height: "var(--cms-slider-marker-size, 8px)",
             background: active ? (uiUnwrap(props.color) || "var(--cms-primary)") : "var(--cms-border-color)"
           }
         });
@@ -804,6 +831,7 @@
         selectionColor: "string",
         trackColor: "string",
         thumbColor: "string",
+        size: "string|number",
         readonly: "boolean",
         inputClass: "string",
         slots: "{ label?, default?, value?, icon?, iconRight?, thumbIcon?, thumbLabel?, marker?, markerLabel?, startLabel?, endLabel? }",
@@ -1913,17 +1941,22 @@
       return -1;
     };
 
+    const fieldProps = {
+      ...props,
+      label: props.label ?? props.placeholder
+    };
+    const hasFloatingLabel = fieldProps.label != null || CMSwift.ui.getSlot(slots, "label") != null;
+    const defaultPlaceholder = mode === "range"
+      ? "Seleziona andata e ritorno"
+      : (mode === "range-multiple"
+        ? "Seleziona intervalli"
+        : (mode === "multiple" ? "Seleziona date" : "Seleziona data"));
+
     const displayInput = _.input({
       class: uiClass(["cms-input", "cms-date-display", sizeValue, uiWhen(props.manualInput, "is-manual"), props.inputClass]),
       type: "text",
       autocomplete: "off",
-      placeholder: props.placeholder || (
-        mode === "range"
-          ? "Seleziona andata e ritorno"
-          : (mode === "range-multiple"
-            ? "Seleziona intervalli"
-            : (mode === "multiple" ? "Seleziona date" : "Seleziona data"))
-      ),
+      placeholder: hasFloatingLabel ? "" : (props.placeholder ?? defaultPlaceholder),
       readOnly: !uiUnwrap(props.manualInput),
       disabled: !!uiUnwrap(props.disabled),
       value: formatDisplayValue(localValue, localTimeValue)
@@ -1932,7 +1965,7 @@
     const controlNode = _.div({ class: "cms-date-control", style: { display: "contents" } }, displayInput, hiddenHost);
 
     const field = UI.FormField({
-      ...props,
+      ...fieldProps,
       iconRight: props.iconRight ?? "calendar_month",
       control: controlNode,
       getValue: () => displayInput.value,
@@ -2752,11 +2785,17 @@
     let entry = null;
     let panelRoot = null;
 
+    const fieldProps = {
+      ...props,
+      label: props.label ?? props.placeholder
+    };
+    const hasFloatingLabel = fieldProps.label != null || CMSwift.ui.getSlot(slots, "label") != null;
+
     const displayInput = _.input({
       class: uiClass(["cms-input", "cms-time-display", sizeValue, uiWhen(props.manualInput, "is-manual"), props.inputClass]),
       type: "text",
       autocomplete: "off",
-      placeholder: props.placeholder || "Seleziona orario",
+      placeholder: hasFloatingLabel ? "" : (props.placeholder ?? "Seleziona orario"),
       readOnly: !uiUnwrap(props.manualInput),
       disabled: !!uiUnwrap(props.disabled),
       value: formatDisplayValue(localValue)
@@ -2766,7 +2805,7 @@
     const controlNode = _.div({ class: "cms-time-control", style: { display: "contents" } }, displayInput, hiddenHost);
 
     const field = UI.FormField({
-      ...props,
+      ...fieldProps,
       iconRight: props.iconRight ?? "schedule",
       control: controlNode,
       getValue: () => displayInput.value,

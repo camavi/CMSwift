@@ -3198,6 +3198,10 @@ const unitCover = (v, name = 'size') => {
 
   UI.Input = (props = {}) => {
     const slots = props.slots || {};
+    const fieldProps = {
+      ...props,
+      label: props.label ?? props.placeholder
+    };
     const input = _.input({
       class: uiClass(["cms-input", props.class]),
       type: props.type || "text",
@@ -3333,7 +3337,7 @@ const unitCover = (v, name = 'size') => {
       : inputSlot;
 
     const field = UI.FormField({
-      ...props,
+      ...fieldProps,
       control: controlNode,
       getValue: () => input.value,
       onClear: () => {
@@ -3382,7 +3386,7 @@ const unitCover = (v, name = 'size') => {
         // UI / UX
         label: "String|Node|Function (floating label)",
         topLabel: "String|Node|Function (label above, not floating)",
-        placeholder: "string (fallback when label is not used)",
+        placeholder: "String|Node|Function (alias of label when label is not set)",
         hint: "String|Node|Function",
         error: "String|Node|Function",
         success: "String|Node|Function",
@@ -3426,6 +3430,186 @@ const unitCover = (v, name = 'size') => {
       },
 
       returns: "HTMLDivElement (field wrapper) con ._input = HTMLInputElement"
+    };
+  }
+
+  UI.Textarea = (props = {}) => {
+    const slots = props.slots || {};
+    const fieldProps = {
+      ...props,
+      label: props.label ?? props.placeholder,
+      wrapClass: uiClass(["cms-textarea-field", props.wrapClass])
+    };
+    const textarea = _.textarea({
+      class: uiClass(["cms-input", "cms-textarea", props.class]),
+      name: props.name,
+      autocomplete: props.autocomplete,
+      inputmode: props.inputmode,
+      rows: props.rows,
+      cols: props.cols,
+      maxLength: props.maxLength ?? props.maxlength,
+      minLength: props.minLength ?? props.minlength,
+      wrap: props.wrap,
+      value: props.value ?? "",
+      disabled: !!props.disabled,
+      readOnly: !!props.readonly
+    });
+
+    textarea.addEventListener("input", () => {
+      props.onInput?.(textarea.value);
+    });
+    textarea.addEventListener("change", () => {
+      props.onChange?.(textarea.value);
+    });
+    textarea.addEventListener("focus", (e) => {
+      props.onFocus?.(e);
+    });
+    textarea.addEventListener("blur", (e) => {
+      props.onBlur?.(e);
+    });
+
+    const model = props.model;
+    if (model) {
+      const bindTextareaRod = (rod) => {
+        let syncing = false;
+
+        const updateFromRod = (v) => {
+          const next = v ?? "";
+          if (textarea.value === next) return;
+          textarea.value = next;
+        };
+
+        rod.action((v) => {
+          if (syncing) return;
+          syncing = true;
+          try { updateFromRod(v); } finally { syncing = false; }
+        });
+
+        updateFromRod(rod.value);
+
+        const onInput = (e) => {
+          if (syncing || e?.isComposing) return;
+          const next = textarea.value;
+          if (rod.value === next) return;
+          syncing = true;
+          try { rod.value = next; } finally { syncing = false; }
+        };
+
+        textarea.addEventListener("input", onInput);
+        textarea.addEventListener("compositionend", onInput);
+
+        if (typeof rod.onDispose === "function") {
+          rod.onDispose(() => {
+            textarea.removeEventListener("input", onInput);
+            textarea.removeEventListener("compositionend", onInput);
+          });
+        }
+      };
+      if (typeof model === "object" && typeof model._bind === "function") {
+        bindTextareaRod(model);
+      } else if (Array.isArray(model) && typeof model[0] === "function" && typeof model[1] === "function") {
+        const r = CMSwift.rodFromSignal(model[0], model[1]);
+        bindTextareaRod(r);
+      }
+    }
+
+    const textareaSlotName = CMSwift.ui.getSlot(slots, "textarea") != null ? "textarea" : "input";
+    const textareaSlot = CMSwift.ui.renderSlot(slots, textareaSlotName, { textarea, input: textarea, props }, textarea);
+    const controlNode = Array.isArray(textareaSlot)
+      ? _.div({ style: { display: "contents" } }, ...textareaSlot)
+      : textareaSlot;
+
+    const field = UI.FormField({
+      ...fieldProps,
+      control: controlNode,
+      getValue: () => textarea.value,
+      onClear: () => {
+        if (textarea.disabled || textarea.readOnly) return;
+        textarea.value = "";
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+      },
+      onFocus: () => textarea.focus()
+    });
+
+    textarea.addEventListener("input", () => field._refresh?.());
+    textarea.addEventListener("change", () => field._refresh?.());
+
+    field._input = textarea;
+    field._textarea = textarea;
+    uiRegisterShortcode(textarea, props, {
+      isEnabled: () => !textarea.disabled,
+      action: () => uiFocusShortcutTarget(textarea, { selectText: !!props.selectOnShortcode })
+    });
+
+    return field;
+  };
+  if (CMSwift.isDev?.()) {
+    UI.meta = UI.meta || {};
+
+    UI.meta.Textarea = {
+      signature: "UI.Textarea(props)",
+      description: "Textarea field with floating label, hint/error/success/warning/note, clearable control, icon, prefix/suffix, and reactive support (rod/signal).",
+      props: {
+        model: "rod | [get,set] signal",
+        value: "string",
+
+        name: "string",
+        autocomplete: "string",
+        inputmode: "string",
+        rows: "number|string",
+        cols: "number|string",
+        maxLength: "number|string",
+        minLength: "number|string",
+        wrap: "string",
+        disabled: "boolean",
+        readonly: "boolean",
+        shortcode: "string|Array<string>|object",
+        showShortcode: "boolean",
+
+        label: "String|Node|Function (floating label)",
+        topLabel: "String|Node|Function (label above, not floating)",
+        placeholder: "String|Node|Function (alias of label when label is not set)",
+        hint: "String|Node|Function",
+        error: "String|Node|Function",
+        success: "String|Node|Function",
+        warning: "String|Node|Function",
+        note: "String|Node|Function",
+        clearable: "boolean",
+
+        icon: "String|Node|Function",
+        iconRight: "String|Node|Function",
+        prefix: "String|Node|Function",
+        suffix: "String|Node|Function",
+
+        class: "string (applicata alla textarea)",
+        wrapClass: "string (applicata al field wrapper)",
+        style: "object",
+
+        onInput: "(value:string) => void",
+        onChange: "(value:string) => void",
+        onFocus: "(event) => void",
+        onBlur: "(event) => void"
+      },
+
+      slots: {
+        label: "Floating label (via FormField slots.label)",
+        topLabel: "Top label (via FormField slots.topLabel)",
+        prefix: "Left addon (via FormField slots.prefix)",
+        suffix: "Right addon (via FormField slots.suffix)",
+        shortcode: "Shortcut badge (via FormField slots.shortcode)",
+        icon: "Left icon (via FormField slots.icon)",
+        iconRight: "Right icon (via FormField slots.iconRight)",
+        clear: "Clear button (via FormField slots.clear)",
+        hint: "Hint content (via FormField slots.hint)",
+        errorMessage: "Error content (via FormField slots.errorMessage)",
+        success: "Success content (via FormField slots.success)",
+        warning: "Warning content (via FormField slots.warning)",
+        note: "Note content (via FormField slots.note)",
+        textarea: "Custom textarea node (ctx: { textarea, input, props })",
+        input: "Alias slot for custom textarea node (ctx: { textarea, input, props })"
+      },
+
+      returns: "HTMLDivElement (field wrapper) con ._textarea = HTMLTextAreaElement"
     };
   }
 
@@ -4087,6 +4271,10 @@ const unitCover = (v, name = 'size') => {
   }
 
   UI.Select = (props = {}) => {
+    const fieldProps = {
+      ...props,
+      label: props.label ?? props.placeholder
+    };
     const filterable = props.filterable;
     const isMulti = !!props.multiple || !!props.multi;
     const allowCustom = !!props.allowCustom || !!props.allowCustomValue;
@@ -4738,7 +4926,7 @@ const unitCover = (v, name = 'size') => {
 
     // Wrap in FormField
     const field = UI.FormField({
-      ...props,
+      ...fieldProps,
       control: root,
       clearable: props.clearable,
       disabled: isDisabled(),
@@ -4788,6 +4976,7 @@ const unitCover = (v, name = 'size') => {
         model: "rod | [get,set] signal",
 
         label: "String|Node|Function (floating)",
+        placeholder: "String|Node|Function (alias of label when label is not set)",
         topLabel: "String|Node|Function",
         hint: "String|Node|Function",
         error: "String|Node|Function",
@@ -9108,11 +9297,23 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
       "markers", "markerLabels", "labelMarks", "leftLabel", "rightLabel",
       "startLabel", "endLabel", "minLabel", "maxLabel", "withQItem", "qitem",
       "item", "itemClass", "itemStyle", "showValue", "thumbLabel", "labelValue",
-      "selectionColor", "trackColor", "thumbColor", "inputClass", "readonly"
+      "selectionColor", "trackColor", "thumbColor", "inputClass", "readonly", "size"
     ]);
     inputProps.type = "range";
     inputProps.class = uiClass(["cms-slider-input", props.inputClass]);
     const input = _.input(inputProps);
+
+    const sliderStyle = { ...(props.style || {}) };
+    const sizeValue = uiUnwrap(props.size);
+    if (sizeValue != null) {
+      const sliderSize = (typeof sizeValue === "string" && CMSwift.uiSizes?.includes(sizeValue))
+        ? `var(--cms-size-${sizeValue})`
+        : toCssSize(sizeValue);
+      sliderStyle["--cms-slider-size"] = sliderSize;
+      sliderStyle["--cms-slider-track-size"] = `max(4px, calc(${sliderSize} / 4))`;
+      sliderStyle["--cms-slider-box-height"] = `calc(${sliderSize} * 1.5)`;
+      sliderStyle["--cms-slider-marker-size"] = `max(6px, calc(${sliderSize} / 3))`;
+    }
 
     const wrap = _.label({
       class: uiClass([
@@ -9122,7 +9323,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         uiWhen(props.dense, "dense"),
         props.class
       ]),
-      style: props.style
+      style: sliderStyle
     });
     setPropertyProps(wrap, props);
 
@@ -9150,16 +9351,29 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
       class: "cms-slider-main"
     });
     const sliderBox = _.div({
-      class: "cms-slider-box"
+      class: "cms-slider-box",
+      style: {
+        minHeight: "var(--cms-slider-box-height, 36px)"
+      }
     });
     const rail = _.span({
-      class: "cms-slider-rail"
+      class: "cms-slider-rail",
+      style: {
+        height: "var(--cms-slider-track-size, 6px)"
+      }
     });
     const selection = _.span({
-      class: "cms-slider-selection"
+      class: "cms-slider-selection",
+      style: {
+        height: "var(--cms-slider-track-size, 6px)"
+      }
     });
     const thumb = _.span({
-      class: "cms-slider-thumb"
+      class: "cms-slider-thumb",
+      style: {
+        width: "var(--cms-slider-size, 24px)",
+        height: "var(--cms-slider-size, 24px)"
+      }
     });
     const thumbIconHost = _.span({
       class: "cms-slider-thumb-icon"
@@ -9352,6 +9566,8 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         const markerTick = _.span({
           class: "cms-slider-marker-tick",
           style: {
+            width: "var(--cms-slider-marker-size, 8px)",
+            height: "var(--cms-slider-marker-size, 8px)",
             background: active ? (uiUnwrap(props.color) || "var(--cms-primary)") : "var(--cms-border-color)"
           }
         });
@@ -9542,6 +9758,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
         selectionColor: "string",
         trackColor: "string",
         thumbColor: "string",
+        size: "string|number",
         readonly: "boolean",
         inputClass: "string",
         slots: "{ label?, default?, value?, icon?, iconRight?, thumbIcon?, thumbLabel?, marker?, markerLabel?, startLabel?, endLabel? }",
@@ -10651,17 +10868,22 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
       return -1;
     };
 
+    const fieldProps = {
+      ...props,
+      label: props.label ?? props.placeholder
+    };
+    const hasFloatingLabel = fieldProps.label != null || CMSwift.ui.getSlot(slots, "label") != null;
+    const defaultPlaceholder = mode === "range"
+      ? "Seleziona andata e ritorno"
+      : (mode === "range-multiple"
+        ? "Seleziona intervalli"
+        : (mode === "multiple" ? "Seleziona date" : "Seleziona data"));
+
     const displayInput = _.input({
       class: uiClass(["cms-input", "cms-date-display", sizeValue, uiWhen(props.manualInput, "is-manual"), props.inputClass]),
       type: "text",
       autocomplete: "off",
-      placeholder: props.placeholder || (
-        mode === "range"
-          ? "Seleziona andata e ritorno"
-          : (mode === "range-multiple"
-            ? "Seleziona intervalli"
-            : (mode === "multiple" ? "Seleziona date" : "Seleziona data"))
-      ),
+      placeholder: hasFloatingLabel ? "" : (props.placeholder ?? defaultPlaceholder),
       readOnly: !uiUnwrap(props.manualInput),
       disabled: !!uiUnwrap(props.disabled),
       value: formatDisplayValue(localValue, localTimeValue)
@@ -10670,7 +10892,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
     const controlNode = _.div({ class: "cms-date-control", style: { display: "contents" } }, displayInput, hiddenHost);
 
     const field = UI.FormField({
-      ...props,
+      ...fieldProps,
       iconRight: props.iconRight ?? "calendar_month",
       control: controlNode,
       getValue: () => displayInput.value,
@@ -11490,11 +11712,17 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
     let entry = null;
     let panelRoot = null;
 
+    const fieldProps = {
+      ...props,
+      label: props.label ?? props.placeholder
+    };
+    const hasFloatingLabel = fieldProps.label != null || CMSwift.ui.getSlot(slots, "label") != null;
+
     const displayInput = _.input({
       class: uiClass(["cms-input", "cms-time-display", sizeValue, uiWhen(props.manualInput, "is-manual"), props.inputClass]),
       type: "text",
       autocomplete: "off",
-      placeholder: props.placeholder || "Seleziona orario",
+      placeholder: hasFloatingLabel ? "" : (props.placeholder ?? "Seleziona orario"),
       readOnly: !uiUnwrap(props.manualInput),
       disabled: !!uiUnwrap(props.disabled),
       value: formatDisplayValue(localValue)
@@ -11504,7 +11732,7 @@ const setDrawerOpen = (open, key = drawerStateKey) => {
     const controlNode = _.div({ class: "cms-time-control", style: { display: "contents" } }, displayInput, hiddenHost);
 
     const field = UI.FormField({
-      ...props,
+      ...fieldProps,
       iconRight: props.iconRight ?? "schedule",
       control: controlNode,
       getValue: () => displayInput.value,

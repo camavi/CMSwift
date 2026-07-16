@@ -1,7 +1,7 @@
 {
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs": true,
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "editor.detectIndentation": false,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": ["source.fixAll.eslint"],
@@ -19,7 +19,7 @@
     "editor.defaultFormatter": "bmewburn.vscode-intelephense-client",
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
-    "editor.detectIndentation": false,
+    "editor.detectIndentation": false
   },
   "[html]": {
     "editor.suggest.insertMode": "replace",
@@ -29,7 +29,7 @@
   "html.validate.scripts": true,
   "html.validate.styles": true,
   "editor.insertSpaces": true,
-  "html.format.wrapAttributes":"aligned-multiple",
+  "html.format.wrapAttributes": "aligned-multiple",
   "editor.tabSize": 2,
   "html.format.contentUnformatted": "pre,code,textarea",
   "html.format.extraLiners": "head, body, /html",
@@ -38,16 +38,14 @@
   "html.format.maxPreserveNewLines": null,
   "html.format.preserveNewLines": true,
   "html.format.wrapLineLength": 120,
-  "htmlhint.documentSelector": [ "html", "htm","twig" ],
+  "htmlhint.documentSelector": ["html", "htm", "twig"],
   "[css]": {
     "editor.suggest.insertMode": "replace",
     "cSpell.fixSpellingWithRenameProvider": false,
     "editor.tabSize": 2,
-    "editor.defaultFormatter": "vscode.css-language-features",
+    "editor.defaultFormatter": "vscode.css-language-features"
   },
-  "cSpell.words": [
-    "cmswift"
-  ],
+  "cSpell.words": ["cmswift"],
   "tabnine.codeLensEnabled": true,
   "tabnine.disableFileRegex": []
 }

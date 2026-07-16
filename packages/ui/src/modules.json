@@ -89,7 +89,7 @@
     {
       "file": "30-form-core.js",
       "status": "merged-into-10-primitives-layout.js",
-      "scope": ["FormField", "InputRaw", "Input", "Select"]
+      "scope": ["FormField", "InputRaw", "Input", "Textarea", "Select"]
     },
     {
       "file": "31-form-advanced.js",

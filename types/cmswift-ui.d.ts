@@ -6065,6 +6065,8 @@ declare global {
 
     function InputRaw(props?: Record<string, any>): HTMLElement;
 
+    function Textarea(props?: Record<string, any>): HTMLElement;
+
     function Item(...args: any[]): HTMLElement;
 
     function Layout(props?: {
