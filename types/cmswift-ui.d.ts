@@ -5998,6 +5998,8 @@ declare global {
       name?: IconName | object | Function | any[] | null | undefined;
       size?: number | string;
       color?: string;
+      tooltip?: any;
+      tooltipProps?: Record<string, any>;
       slots?: { default?: any };
       class?: string;
       style?: object;

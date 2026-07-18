@@ -6839,6 +6839,15 @@ const unitCover = (v, name = 'size') => {
     });
 
     const hasVisualSurface = !!(props.color || props.clickable || props.border || props.glossy || props.glow || props.glass || props.shadow || props.outline || props.gradient || props.textGradient || props.lightShadow || props.radius);
+    const wrapIcon = (icon) => {
+      const tooltip = uiUnwrap(props.tooltip);
+      if (tooltip == null || tooltip === false || !UI.Tooltip) return icon;
+      const tooltipProps = isPlainObject(tooltip)
+        ? { ...tooltip }
+        : { text: tooltip };
+      if (isPlainObject(props.tooltipProps)) Object.assign(tooltipProps, props.tooltipProps);
+      return UI.Tooltip({ ...tooltipProps, target: icon });
+    };
 
     const cls = uiClass([
       "cms-icon",
@@ -6847,14 +6856,16 @@ const unitCover = (v, name = 'size') => {
       sizeClass,
       props.class
     ]);
-    const p = CMSwift.omit(props, ["name", "size", "class", "style", "label", "border", "color", "icon", "iconRight", "removable", "onRemove", "dense", "flat", "glossy", "outline", "slots"]);
+    const p = CMSwift.omit(props, ["name", "size", "class", "style", "label", "border", "color", "icon", "iconRight", "removable", "onRemove", "dense", "flat", "glossy", "outline", "slots", "tooltip", "tooltipProps"]);
     p.class = cls;
     if (Object.keys(style).length) p.style = style;
 
     if (typeof name === "function" || (name && typeof name === "object")) {
       const customNode = CMSwift.ui.renderSlot(slots, "default", {}, name);
       const content = renderSlotToArray(null, "default", {}, customNode);
-      return _.span({ ...p, "data-icon": "custom" }, ...content);
+      const icon = _.span({ ...p, "data-icon": "custom" }, ...content);
+      setPropertyProps(icon, props);
+      return wrapIcon(icon);
     }
 
     const nameStr = String(name);
@@ -6881,7 +6892,7 @@ const unitCover = (v, name = 'size') => {
     }
 
     setPropertyProps(icon, props);
-    return icon;
+    return wrapIcon(icon);
   };
   if (CMSwift.isDev?.()) {
     UI.meta = UI.meta || {};
@@ -6902,6 +6913,8 @@ const unitCover = (v, name = 'size') => {
         outline: "boolean",
         textGradient: "boolean",
         radius: "number|string",
+        tooltip: "String|Node|Function|Object",
+        tooltipProps: "object",
         slots: "{ default? }",
         class: "string",
         style: "object"

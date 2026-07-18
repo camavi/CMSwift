@@ -69,7 +69,7 @@ CMSwift.ready(() => {
           }),
           _.Checkbox({ model: [getUpdates, setUpdates] }, t("updatesLabel")),
           _.input({ placeholder: 'prova', name: "test" }),
-          _.Input({ placeholder: 'prova', name: "test" }),
+          _.Input({ placeholder: 'prova', name: "test", iconRight: _.Icon({name:'search', tooltip:"Cerca"}) }),
           _.Date({ model: dateModel, mode: "range", label: t("updatesLabel") }),
           _.div(
 

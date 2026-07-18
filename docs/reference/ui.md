@@ -240,6 +240,7 @@ Practical generation rules:
 ### Content
 
 - `Icon`
+  - supports `tooltip` shorthand, e.g. `_.Icon({ name: "home", tooltip: "Home" })`
 - `Badge`
 - `Avatar`
 - `Chip`
