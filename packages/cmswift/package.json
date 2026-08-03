@@ -1,6 +1,6 @@
 {
   "name": "cmswift",
-  "version": "1.0.27",
+  "version": "1.0.28",
   "description": "Umbrella package for CMSwift core + UI",
   "license": "MIT",
   "type": "module",
@@ -11,6 +11,7 @@
     "./min": "./dist/min-cmswift.js",
     "./cmswift.min.js": "./dist/cmswift.min.js",
     "./img/logo.svg": "./dist/img/logo.svg",
+    "./img/svg/tabler-icons-sprite.svg": "./dist/img/svg/tabler-icons-sprite.svg",
     "./css/base.css": "./dist/css/base.css",
     "./css/ui.css": "./dist/css/ui.css",
     "./css/min-ui.css": "./dist/css/min-ui.css",

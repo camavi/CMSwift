@@ -12,6 +12,7 @@
   const uiRodPathWrappedUI = Symbol("cms.ui.rodPathWrappedUI");
   const uiRodPathAccess = new WeakMap();
   const uiRodPathProxyCache = new WeakMap();
+  const uiWrappedFunctionCache = new WeakMap();
   const uiRodPathReadBuffer = [];
   const uiIsIndexKey = (key) => {
     if (typeof key === "number") return Number.isInteger(key) && key >= 0;
@@ -240,6 +241,8 @@
   };
   const uiWrapUIFunction = (fn) => {
     if (typeof fn !== "function" || fn[uiRodPathWrappedUI]) return fn;
+    const cached = uiWrappedFunctionCache.get(fn);
+    if (cached) return cached;
     const wrapped = function uiWrappedComponent(...args) {
       const cursor = uiCreateRodPathCursor();
       if (!cursor) return fn.apply(this, args);
@@ -252,6 +255,7 @@
       return fn.apply(this, changed ? patchedArgs : args);
     };
     Object.defineProperty(wrapped, uiRodPathWrappedUI, { value: true, configurable: false });
+    uiWrappedFunctionCache.set(fn, wrapped);
     return wrapped;
   };
   const uiInstallUIProxy = () => {

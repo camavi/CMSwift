@@ -77,9 +77,14 @@
     const useHref = nameStr.includes("#") ? nameStr : "";
     let icon = null;
     if (useHref) {
+      const spriteUrl =
+        props.spriteUrl ||
+        CMSwift.config?.iconSpriteUrl ||
+        (typeof globalThis !== "undefined" ? globalThis.CMSwift_setting?.iconSpriteUrl : null) ||
+        "/_cmswift-fe/img/svg/tabler-icons-sprite.svg";
       const svg = _.svg(
         { width: "100%", height: "100%" },
-        _.use({ href: "/_cmswift-fe/img/svg/tabler-icons-sprite.svg" + useHref })
+        _.use({ href: spriteUrl + useHref })
       );
       if (isFill) svg.style.fill = "currentColor";
       icon = _.span({ ...p, "data-icon": nameStr }, svg, ...children);
@@ -118,6 +123,7 @@
         outline: "boolean",
         textGradient: "boolean",
         radius: "number|string",
+        spriteUrl: "string",
         tooltip: "String|Node|Function|Object",
         tooltipProps: "object",
         slots: "{ default? }",

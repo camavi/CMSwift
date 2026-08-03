@@ -1283,6 +1283,9 @@
     });
     return btn;
   }
+  UI.Button = UI.Btn;
+  CMSwift.ui.Btn = UI.Btn;
+  CMSwift.ui.Button = UI.Button;
   if (CMSwift.isDev?.()) {
     UI.meta.Btn = {
       signature: "UI.Btn(...children) | UI.Btn(props, ...children)",
@@ -1310,6 +1313,7 @@
       events: ["click", "pointerdown", "focus", "blur"],
       returns: "HTMLButtonElement"
     };
+    UI.meta.Button = UI.meta.Btn;
   }
   // Esempio: CMSwift.ui.QBtn({ color: "primary", icon: "save", label: "Salva" })
 

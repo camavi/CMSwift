@@ -12,6 +12,7 @@
   const uiRodPathWrappedUI = Symbol("cms.ui.rodPathWrappedUI");
   const uiRodPathAccess = new WeakMap();
   const uiRodPathProxyCache = new WeakMap();
+  const uiWrappedFunctionCache = new WeakMap();
   const uiRodPathReadBuffer = [];
   const uiIsIndexKey = (key) => {
     if (typeof key === "number") return Number.isInteger(key) && key >= 0;
@@ -240,6 +241,8 @@
   };
   const uiWrapUIFunction = (fn) => {
     if (typeof fn !== "function" || fn[uiRodPathWrappedUI]) return fn;
+    const cached = uiWrappedFunctionCache.get(fn);
+    if (cached) return cached;
     const wrapped = function uiWrappedComponent(...args) {
       const cursor = uiCreateRodPathCursor();
       if (!cursor) return fn.apply(this, args);
@@ -252,6 +255,7 @@
       return fn.apply(this, changed ? patchedArgs : args);
     };
     Object.defineProperty(wrapped, uiRodPathWrappedUI, { value: true, configurable: false });
+    uiWrappedFunctionCache.set(fn, wrapped);
     return wrapped;
   };
   const uiInstallUIProxy = () => {
@@ -2805,6 +2809,9 @@ const unitCover = (v, name = 'size') => {
     });
     return btn;
   }
+  UI.Button = UI.Btn;
+  CMSwift.ui.Btn = UI.Btn;
+  CMSwift.ui.Button = UI.Button;
   if (CMSwift.isDev?.()) {
     UI.meta.Btn = {
       signature: "UI.Btn(...children) | UI.Btn(props, ...children)",
@@ -2832,6 +2839,7 @@ const unitCover = (v, name = 'size') => {
       events: ["click", "pointerdown", "focus", "blur"],
       returns: "HTMLButtonElement"
     };
+    UI.meta.Button = UI.meta.Btn;
   }
   // Esempio: CMSwift.ui.QBtn({ color: "primary", icon: "save", label: "Salva" })
 
@@ -6872,9 +6880,14 @@ const unitCover = (v, name = 'size') => {
     const useHref = nameStr.includes("#") ? nameStr : "";
     let icon = null;
     if (useHref) {
+      const spriteUrl =
+        props.spriteUrl ||
+        CMSwift.config?.iconSpriteUrl ||
+        (typeof globalThis !== "undefined" ? globalThis.CMSwift_setting?.iconSpriteUrl : null) ||
+        "/_cmswift-fe/img/svg/tabler-icons-sprite.svg";
       const svg = _.svg(
         { width: "100%", height: "100%" },
-        _.use({ href: "/_cmswift-fe/img/svg/tabler-icons-sprite.svg" + useHref })
+        _.use({ href: spriteUrl + useHref })
       );
       if (isFill) svg.style.fill = "currentColor";
       icon = _.span({ ...p, "data-icon": nameStr }, svg, ...children);
@@ -6913,6 +6926,7 @@ const unitCover = (v, name = 'size') => {
         outline: "boolean",
         textGradient: "boolean",
         radius: "number|string",
+        spriteUrl: "string",
         tooltip: "String|Node|Function|Object",
         tooltipProps: "object",
         slots: "{ default? }",

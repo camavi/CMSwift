@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
+import vm from "node:vm";
 
 import { loadCMS } from "./helpers/load-cms.mjs";
 
@@ -1241,6 +1244,26 @@ test("ui.meta docTable renders missing-meta fallback", async () => {
   assert.equal(out.tagName, "DIV");
   assert.equal(out.getAttribute("class"), "cms-muted");
   assert.equal(collectText(out), "Meta non trovata: UnknownProbe");
+});
+
+test("UI.Button aliases UI.Btn", async () => {
+  const CMS = await loadCMS();
+  const filename = path.resolve("pages/_cmswift-fe/js/ui.js");
+  const source = await fs.readFile(filename, "utf8");
+  vm.runInThisContext(source, { filename });
+
+  assert.equal(CMS.Button, CMS.Btn);
+  assert.equal(globalThis._.Button, globalThis._.Btn);
+  assert.equal(CMS.ui.Button, CMS.ui.Btn);
+
+  const out = CMS.Button({ label: "Salva", color: "primary" });
+  const uiOut = CMS.ui.Button({ label: "Annulla" });
+
+  assert.equal(out.tagName, "BUTTON");
+  assert.equal(collectText(out), "Salva");
+  assert.equal(out.classList.contains("cms-btn"), true);
+  assert.equal(uiOut.tagName, "BUTTON");
+  assert.equal(collectText(uiOut), "Annulla");
 });
 
 test("ui.meta docTable fallback works without TabPanel and without props", async () => {
