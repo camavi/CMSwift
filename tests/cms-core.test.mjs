@@ -1266,6 +1266,25 @@ test("UI.Button aliases UI.Btn", async () => {
   assert.equal(collectText(uiOut), "Annulla");
 });
 
+test("UI.Icon uses built-in inline sprite fallback without external URL", async () => {
+  const CMS = await loadCMS();
+  const filename = path.resolve("pages/_cmswift-fe/js/ui.js");
+  const source = await fs.readFile(filename, "utf8");
+  vm.runInThisContext(source, { filename });
+
+  delete CMS.config.iconSpriteUrl;
+  delete globalThis.CMSwift_setting.iconSpriteUrl;
+
+  const out = CMS.Icon("#chevron-down");
+  const uses = findNodes(out, (node) => node.tagName === "USE");
+  const paths = findNodes(out, (node) => node.tagName === "PATH");
+
+  assert.equal(out.tagName, "SPAN");
+  assert.equal(uses.length, 0);
+  assert.equal(paths.length, 1);
+  assert.equal(paths[0].getAttribute("d"), "M6 9l6 6l6 -6");
+});
+
 test("ui.meta docTable fallback works without TabPanel and without props", async () => {
   const CMS = await loadCMS();
   CMS.ui.meta.ProbeMeta = {

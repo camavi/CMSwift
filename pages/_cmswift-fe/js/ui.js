@@ -6847,6 +6847,20 @@ const unitCover = (v, name = 'size') => {
     });
 
     const hasVisualSurface = !!(props.color || props.clickable || props.border || props.glossy || props.glow || props.glass || props.shadow || props.outline || props.gradient || props.textGradient || props.lightShadow || props.radius);
+    const builtInSpriteIcons = {
+      "chevron-down": {
+        viewBox: "0 0 24 24",
+        paths: [{ d: "M6 9l6 6l6 -6", fill: "none", stroke: "currentColor", "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round" }]
+      }
+    };
+    const createBuiltInSpriteIcon = (id) => {
+      const def = builtInSpriteIcons[id];
+      if (!def) return null;
+      return _.svg(
+        { width: "100%", height: "100%", viewBox: def.viewBox, fill: "none", "aria-hidden": "true", focusable: "false" },
+        ...def.paths.map((path) => _.path(path))
+      );
+    };
     const wrapIcon = (icon) => {
       const tooltip = uiUnwrap(props.tooltip);
       if (tooltip == null || tooltip === false || !UI.Tooltip) return icon;
@@ -6864,7 +6878,7 @@ const unitCover = (v, name = 'size') => {
       sizeClass,
       props.class
     ]);
-    const p = CMSwift.omit(props, ["name", "size", "class", "style", "label", "border", "color", "icon", "iconRight", "removable", "onRemove", "dense", "flat", "glossy", "outline", "slots", "tooltip", "tooltipProps"]);
+    const p = CMSwift.omit(props, ["name", "size", "class", "style", "label", "border", "color", "icon", "iconRight", "removable", "onRemove", "dense", "flat", "glossy", "outline", "slots", "spriteUrl", "tooltip", "tooltipProps"]);
     p.class = cls;
     if (Object.keys(style).length) p.style = style;
 
@@ -6883,12 +6897,17 @@ const unitCover = (v, name = 'size') => {
       const spriteUrl =
         props.spriteUrl ||
         CMSwift.config?.iconSpriteUrl ||
-        (typeof globalThis !== "undefined" ? globalThis.CMSwift_setting?.iconSpriteUrl : null) ||
-        "/_cmswift-fe/img/svg/tabler-icons-sprite.svg";
-      const svg = _.svg(
-        { width: "100%", height: "100%" },
-        _.use({ href: spriteUrl + useHref })
-      );
+        (typeof globalThis !== "undefined" ? globalThis.CMSwift_setting?.iconSpriteUrl : null);
+      const symbolId = useHref.slice(useHref.indexOf("#") + 1);
+      const svg = spriteUrl
+        ? _.svg(
+          { width: "100%", height: "100%" },
+          _.use({ href: spriteUrl + useHref })
+        )
+        : createBuiltInSpriteIcon(symbolId) || _.svg(
+          { width: "100%", height: "100%" },
+          _.use({ href: useHref })
+        );
       if (isFill) svg.style.fill = "currentColor";
       icon = _.span({ ...p, "data-icon": nameStr }, svg, ...children);
     } else {
